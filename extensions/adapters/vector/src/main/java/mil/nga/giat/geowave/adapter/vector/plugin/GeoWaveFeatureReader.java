@@ -18,19 +18,6 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TimeZone;
 
-import org.apache.log4j.Logger;
-import org.geotools.data.FeatureReader;
-import org.geotools.data.Query;
-import org.geotools.filter.FidFilterImpl;
-import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.AttributeDescriptor;
-import org.opengis.filter.Filter;
-
-import com.google.common.collect.Iterators;
-import com.vividsolutions.jts.geom.Geometry;
-
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveTransaction;
 import mil.nga.giat.geowave.adapter.vector.query.cql.CQLQuery;
 import mil.nga.giat.geowave.adapter.vector.render.DistributableRenderer;
@@ -50,6 +37,19 @@ import mil.nga.giat.geowave.core.store.query.BasicQuery;
 import mil.nga.giat.geowave.core.store.query.BasicQuery.Constraints;
 import mil.nga.giat.geowave.core.store.query.DataIdQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
+
+import org.apache.log4j.Logger;
+import org.geotools.data.FeatureReader;
+import org.geotools.data.Query;
+import org.geotools.filter.FidFilterImpl;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeDescriptor;
+import org.opengis.filter.Filter;
+
+import com.google.common.collect.Iterators;
+import com.vividsolutions.jts.geom.Geometry;
 
 /**
  * This class wraps a geotools data store as well as one for statistics (for
@@ -109,7 +109,9 @@ public class GeoWaveFeatureReader implements
 		if (it != null) {
 			// protect againt GeoTools forgetting to call close()
 			// on this FeatureReader, which causes a resource leak
-			if (!it.hasNext()) ((CloseableIterator<?>) it).close();
+			if (!it.hasNext()) {
+				((CloseableIterator<?>) it).close();
+			}
 			return it.hasNext();
 		}
 		it = featureCollection.openIterator();
@@ -144,6 +146,9 @@ public class GeoWaveFeatureReader implements
 		try (CloseableIterator<Index<?, ?>> indexIt = getComponents().getIndexStore().getIndices()) {
 			while (indexIt.hasNext()) {
 				final PrimaryIndex index = (PrimaryIndex) indexIt.next();
+				if (!DimensionalityType.SPATIAL.isCompatible(index)) {
+					continue;
+				}
 
 				final Constraints timeConstraints = QueryIndexHelper.composeTimeBoundedConstraints(
 						components.getAdapter().getType(),
@@ -175,7 +180,7 @@ public class GeoWaveFeatureReader implements
 							statsMap,
 							jtsBounds);
 
-					if (timeConstraints.isSupported(index)) {
+					if (!timeConstraints.isEmpty() && timeConstraints.isSupported(index)) {
 
 						results.add(issuer.query(
 								index,
