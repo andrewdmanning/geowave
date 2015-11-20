@@ -164,7 +164,7 @@ public class BasicMapReduceIT extends
 				IndexType.SPATIAL_VECTOR,
 				OSM_GPX_INPUT_DIR);
 		testMapReduceIngest(
-				IndexType.SPATIAL_TEMPORAL_VECTOR,
+				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR,
 				OSM_GPX_INPUT_DIR);
 		final WritableDataAdapter<SimpleFeature>[] adapters = new GpxIngestPlugin().getDataAdapters(null);
 
@@ -226,7 +226,7 @@ public class BasicMapReduceIT extends
 				},
 				new PrimaryIndex[] {
 					IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-					IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex()
+					IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
 				});
 
 		// now try all adapters and the spatial temporal index, the result
@@ -236,7 +236,7 @@ public class BasicMapReduceIT extends
 				null,
 				adapters,
 				new PrimaryIndex[] {
-					IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex()
+					IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
 				});
 
 		// and finally run with nothing set, should be the full data set

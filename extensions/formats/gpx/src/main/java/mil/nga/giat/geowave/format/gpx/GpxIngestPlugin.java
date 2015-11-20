@@ -62,7 +62,9 @@ public class GpxIngestPlugin extends
 	public GpxIngestPlugin() {
 		supportedIndices = new PrimaryIndex[] {
 			IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex()
+			IndexType.SPATIAL_TEMPORAL_VECTOR_DAY.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_MONTH.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
 		};
 
 	}

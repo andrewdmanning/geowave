@@ -1,5 +1,6 @@
 package mil.nga.giat.geowave.core.cli;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -92,7 +93,7 @@ abstract public class GenericStoreCommandLineOptions<T>
 		return cliOption;
 	}
 
-	protected static Pair<Map<String, Object>, CommandLine> getConfigOptionsForStoreFactory(
+	public static Pair<Map<String, Object>, CommandLine> getConfigOptionsForStoreFactory(
 			final String prefix,
 			final Options currentOptions,
 			final CommandLineOptions currentCommandLine,
@@ -116,9 +117,9 @@ abstract public class GenericStoreCommandLineOptions<T>
 				cliOptions,
 				currentCommandLine.getArgs(),
 				true);
-		CommandLineUtils.addOptions(
-				commandLineWithStoreOptions,
-				currentCommandLine.getOptions());
+		// CommandLineUtils.addOptions(
+		// commandLineWithStoreOptions,
+		// currentCommandLine.getOptions());
 		final Map<String, Object> configOptions = new HashMap<String, Object>();
 		for (final AbstractConfigOption<?> option : storeOptions) {
 			final String cliOptionName = ConfigUtils.cleanOptionName(prefix != null ? prefix + option.getName() : option.getName());
@@ -476,6 +477,43 @@ abstract public class GenericStoreCommandLineOptions<T>
 			LOGGER.warn(matchingCommandLineOptions.getResult().getFactory().getName() + " will be automatically chosen");
 		}
 		return matchingCommandLineOptions;
+	}
+
+	public static CommandLine getCommandLineFromConfigOptions(
+			final Map<String, String> configOptions,
+			final GenericStoreFactory<?> genericStoreFactory )
+			throws Exception {
+		final AbstractConfigOption<?>[] storeOptions = genericStoreFactory.getOptions();
+
+		final List<String> args = new ArrayList<String>();
+		for (final AbstractConfigOption<?> option : storeOptions) {
+			final String cliOptionName = ConfigUtils.cleanOptionName(option.getName());
+			final Class<?> cls = GenericTypeResolver.resolveTypeArgument(
+					option.getClass(),
+					AbstractConfigOption.class);
+			final boolean isBoolean = Boolean.class.isAssignableFrom(cls);
+			final String value = configOptions.get(option.getName());
+			if (value != null) {
+				if (isBoolean) {
+					if (value.equalsIgnoreCase("true")) {
+						args.add("-" + cliOptionName);
+					}
+				}
+				else {
+					args.add("-" + cliOptionName);
+					args.add(value);
+				}
+			}
+		}
+		final BasicParser parser = new BasicParser();
+		final Options options = new Options();
+		GenericStoreCommandLineOptions.applyStoreOptions(
+				genericStoreFactory,
+				options);
+		return parser.parse(
+				options,
+				args.toArray(new String[] {}),
+				true);
 	}
 
 	protected static interface CommandLineHelper<T, F extends GenericStoreFactory<T>>

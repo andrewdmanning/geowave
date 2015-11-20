@@ -5,7 +5,7 @@ import mil.nga.giat.geowave.core.ingest.IndexCompatibilityVisitor;
 import mil.nga.giat.geowave.core.ingest.IngestDimensionalityTypeProviderSpi;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
-public class SpatialTemporalDimensionalityTypeProvider implements
+public class SpatialTemporalByYearDimensionalityTypeProvider implements
 		IngestDimensionalityTypeProviderSpi
 {
 	@Override
@@ -15,18 +15,17 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 
 	@Override
 	public String getDimensionalityTypeName() {
-		return "spatial-temporal";
+		return "spatial-temporal-by-year";
 	}
 
 	@Override
 	public String getDimensionalityTypeDescription() {
-		return "This dimensionality type matches all indices that only require Latitude, Longitude, and Time definitions and will default to a year periodicity.";
+		return "This dimensionality type matches all indices that only require Latitude, Longitude, and Time definitions using a year periodicity.";
 	}
 
 	@Override
 	public int getPriority() {
-		// arbitrary - just lower than spatial so that the default
-		// will be spatial over spatial-temporal
+		// arbitrary - just lower than spatial-temporal
 		return 5;
 	}
 

@@ -21,12 +21,15 @@ public enum IndexType {
 	SPATIAL_RASTER(
 			DimensionalityType.SPATIAL,
 			DataType.RASTER),
-	SPATIAL_TEMPORAL_VECTOR(
-			DimensionalityType.SPATIAL_TEMPORAL,
+	SPATIAL_TEMPORAL_VECTOR_YEAR(
+			DimensionalityType.SPATIAL_TEMPORAL_YEAR,
 			DataType.VECTOR),
-	SPATIAL_TEMPORAL_RASTER(
-			DimensionalityType.SPATIAL_TEMPORAL,
-			DataType.RASTER);
+	SPATIAL_TEMPORAL_VECTOR_MONTH(
+			DimensionalityType.SPATIAL_TEMPORAL_MONTH,
+			DataType.VECTOR),
+	SPATIAL_TEMPORAL_VECTOR_DAY(
+			DimensionalityType.SPATIAL_TEMPORAL_DAY,
+			DataType.VECTOR);
 
 	private DimensionalityType dimensionalityType;
 	private DataType dataType;
@@ -68,7 +71,7 @@ public enum IndexType {
 		}
 
 		public static PrimaryIndex createSpatialTemporalVectorIndex() {
-			return IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex();
+			return IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex();
 		}
 
 		public static PrimaryIndex createSpatialRasterIndex() {
@@ -76,7 +79,7 @@ public enum IndexType {
 		}
 
 		public static PrimaryIndex createSpatialTemporalRasterIndex() {
-			return IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex();
+			return IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex();
 		}
 	}
 }

@@ -58,7 +58,7 @@ public class PersistenceEncodingTest
 				Unit.YEAR),
 	};
 
-	private static final CommonIndexModel model = DimensionalityType.SPATIAL_TEMPORAL.getDefaultIndexModel();
+	private static final CommonIndexModel model = DimensionalityType.SPATIAL_TEMPORAL_YEAR.getDefaultIndexModel();
 
 	private static final NumericIndexStrategy strategy = TieredSFCIndexFactory.createSingleTierStrategy(
 			SPATIAL_TEMPORAL_DIMENSIONS,

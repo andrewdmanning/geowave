@@ -5,7 +5,7 @@ import org.apache.commons.cli.CommandLine;
 public class CommandLineResult<T>
 {
 	private final T result;
-	private final boolean commandLineChange;
+	// private final boolean commandLineChange;
 	private final CommandLine commandLine;
 
 	public CommandLineResult(
@@ -20,8 +20,11 @@ public class CommandLineResult<T>
 			final T result,
 			final boolean commandLineChange,
 			final CommandLine commandLine ) {
+		if (commandLineChange) {
+			System.out.println("command line changed");
+		}
 		this.result = result;
-		this.commandLineChange = commandLineChange;
+		// this.commandLineChange = commandLineChange;
 		this.commandLine = commandLine;
 	}
 
@@ -30,7 +33,7 @@ public class CommandLineResult<T>
 	}
 
 	public boolean isCommandLineChange() {
-		return commandLineChange;
+		return false;
 	}
 
 	public CommandLine getCommandLine() {

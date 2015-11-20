@@ -63,7 +63,9 @@ public class TdriveIngestPlugin extends
 				tdrivepointType);
 		supportedIndices = new PrimaryIndex[] {
 			IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex()
+			IndexType.SPATIAL_TEMPORAL_VECTOR_DAY.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_MONTH.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
 		};
 
 	}
@@ -71,7 +73,8 @@ public class TdriveIngestPlugin extends
 	@Override
 	public String[] getFileExtensionFilters() {
 		return new String[] {
-			"csv"
+			"csv",
+			"txt"
 		};
 	}
 

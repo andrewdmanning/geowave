@@ -38,7 +38,7 @@ public class CQLQueryTest
 		final CQLQuery query = new CQLQuery(
 				"BBOX(geometry,27.20,41.30,27.30,41.20) and when during 2005-05-19T20:32:56Z/2005-05-19T21:32:56Z",
 				adapter);
-		final MultiDimensionalNumericData constraints = query.getIndexConstraints(IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndexStrategy());
+		final MultiDimensionalNumericData constraints = query.getIndexConstraints(IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndexStrategy());
 		assertTrue(Arrays.equals(
 				constraints.getMinValuesPerDimension(),
 				new double[] {
@@ -114,7 +114,7 @@ public class CQLQueryTest
 				"pid = '10'",
 				adapter);
 		assertTrue(query.getIndexConstraints(
-				IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndexStrategy()).isEmpty());
+				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndexStrategy()).isEmpty());
 	}
 
 	@Test
@@ -124,7 +124,7 @@ public class CQLQueryTest
 				"BBOX(geometry,27.20,41.30,27.30,41.20)",
 				adapter);
 		assertTrue(query.getIndexConstraints(
-				IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndexStrategy()).isEmpty());
+				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndexStrategy()).isEmpty());
 	}
 
 }

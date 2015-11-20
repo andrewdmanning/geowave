@@ -52,7 +52,7 @@ public class GeoTemporalQueryExample
 	private static MiniAccumuloCluster accumulo;
 	private static AccumuloDataStore dataStore;
 
-	private static final PrimaryIndex index = IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex();
+	private static final PrimaryIndex index = IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex();
 
 	// Points (to be ingested into GeoWave Data Store)
 	private static final Coordinate washingtonMonument = new Coordinate(

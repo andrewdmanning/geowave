@@ -81,7 +81,9 @@ public class GeoLifeIngestPlugin extends
 
 		supportedIndices = new PrimaryIndex[] {
 			IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex()
+			IndexType.SPATIAL_TEMPORAL_VECTOR_DAY.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_MONTH.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
 		};
 		try {
 			crs = CRS.decode("EPSG:4326");

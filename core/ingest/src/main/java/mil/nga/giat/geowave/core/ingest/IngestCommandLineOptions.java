@@ -5,7 +5,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.CompoundIndexStrategy;
+import mil.nga.giat.geowave.core.index.simple.RoundRobinKeyIndexStrategy;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
+import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 import org.apache.commons.cli.CommandLine;
@@ -24,14 +28,17 @@ public class IngestCommandLineOptions
 	private final String visibility;
 	private final boolean clearNamespace;
 	private final String dimensionalityType;
+	private final int randomPartitions;
 
 	public IngestCommandLineOptions(
 			final String visibility,
 			final boolean clearNamespace,
-			final String dimensionalityType ) {
+			final String dimensionalityType,
+			final int randomPartitions ) {
 		this.visibility = visibility;
 		this.clearNamespace = clearNamespace;
 		this.dimensionalityType = dimensionalityType;
+		this.randomPartitions = randomPartitions;
 	}
 
 	public String getVisibility() {
@@ -46,12 +53,25 @@ public class IngestCommandLineOptions
 		return clearNamespace;
 	}
 
+	public int getRandomPartitions() {
+		return randomPartitions;
+	}
+
 	public PrimaryIndex getIndex(
 			final PrimaryIndex[] supportedIndices ) {
 		final IndexCompatibilityVisitor compatibilityVisitor = getSelectedIndexCompatibility(getDimensionalityType());
 		for (final PrimaryIndex i : supportedIndices) {
 			if (compatibilityVisitor.isCompatible(i)) {
-				return i;
+				if (randomPartitions > 1) {
+					return new CustomIdIndex(
+							new CompoundIndexStrategy(
+									new RoundRobinKeyIndexStrategy(
+											randomPartitions),
+									i.getIndexStrategy()),
+							i.getIndexModel(),
+							new ByteArrayId(
+									i.getId().getString() + "_RAND" + randomPartitions));
+				}
 			}
 		}
 		return null;
@@ -133,6 +153,7 @@ public class IngestCommandLineOptions
 			throws ParseException {
 		final boolean success = true;
 		boolean clearNamespace = false;
+		int randomPartitions = -1;
 		if (commandLine.hasOption("c")) {
 			clearNamespace = true;
 		}
@@ -147,10 +168,14 @@ public class IngestCommandLineOptions
 			throw new ParseException(
 					"Required option is missing");
 		}
+		if (commandLine.hasOption("randompartitions")) {
+			randomPartitions = Integer.parseInt(commandLine.getOptionValue("randompartitions"));
+		}
 		return new IngestCommandLineOptions(
 				visibility,
 				clearNamespace,
-				dimensionalityType);
+				dimensionalityType,
+				randomPartitions);
 	}
 
 	public static void applyOptions(
@@ -173,5 +198,10 @@ public class IngestCommandLineOptions
 				"clear",
 				false,
 				"Clear ALL data stored with the same prefix as this namespace (optional; default is to append data to the namespace if it exists)"));
+		allOptions.addOption(new Option(
+				"randompartitions",
+				"random partitions",
+				false,
+				"Prefix data with this many unique identifiers to enforce random pre-splits for the index"));
 	}
 }

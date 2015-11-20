@@ -56,7 +56,9 @@ public class GeoToolsVectorDataStoreIngestPlugin implements
 		// the data will be ingested as the original type
 		supportedIndices = new PrimaryIndex[] {
 			IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex()
+			IndexType.SPATIAL_TEMPORAL_VECTOR_DAY.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_MONTH.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
 		};
 		this.retypingPlugin = retypingPlugin;
 		this.filter = filter;

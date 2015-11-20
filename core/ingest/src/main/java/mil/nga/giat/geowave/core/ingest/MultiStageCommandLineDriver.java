@@ -31,14 +31,16 @@ public class MultiStageCommandLineDriver extends
 		for (final AbstractIngestCommandLineDriver stage : orderedStages) {
 			if (!stage.runInternal(
 					args,
-					pluginProviders)) return false;
+					pluginProviders)) {
+				return false;
+			}
 		}
 		return true;
 	}
 
 	@Override
 	public void parseOptionsInternal(
-			Options options,
+			final Options options,
 			final CommandLine commandLine )
 			throws ParseException {
 		for (final AbstractIngestCommandLineDriver stage : orderedStages) {

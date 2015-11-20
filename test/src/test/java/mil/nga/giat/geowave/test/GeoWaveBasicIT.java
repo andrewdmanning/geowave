@@ -406,10 +406,10 @@ public class GeoWaveBasicIT extends
 		final PrimaryIndex spatialTemporalIndex = IndexType.SPATIAL_VECTOR.createDefaultIndex();
 		// ingest both lines and points
 		testLocalIngest(
-				IndexType.SPATIAL_TEMPORAL_VECTOR,
+				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR,
 				HAIL_SHAPEFILE_FILE);
 		testLocalIngest(
-				IndexType.SPATIAL_TEMPORAL_VECTOR,
+				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR,
 				TORNADO_TRACKS_SHAPEFILE_FILE);
 		try {
 			testQuery(
@@ -485,7 +485,7 @@ public class GeoWaveBasicIT extends
 			testDelete(
 					new File(
 							TEST_POLYGON_TEMPORAL_FILTER_FILE).toURI().toURL(),
-					IndexType.SPATIAL_TEMPORAL_VECTOR);
+					IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR);
 		}
 		catch (final Exception e) {
 			e.printStackTrace();

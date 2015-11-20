@@ -120,7 +120,7 @@ public class KSamplerJobRunner extends
 
 		runTimeProperties.storeIfEmpty(
 				SampleParameters.Sample.INDEX_ID,
-				IndexType.SPATIAL_TEMPORAL_VECTOR.getDefaultId());
+				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.getDefaultId());
 		runTimeProperties.setConfig(
 				new ParameterEnum[] {
 					GlobalParameters.Global.BATCH_ID,

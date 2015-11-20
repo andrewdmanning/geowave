@@ -179,7 +179,7 @@ public class SpatialTemporalQueryTest
 								34)
 					})
 		};
-		final CommonIndexModel model = IndexType.SPATIAL_TEMPORAL_VECTOR.getDefaultIndexModel();
+		final CommonIndexModel model = IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.getDefaultIndexModel();
 		int pos = 0;
 		for (final CommonIndexedPersistenceEncoding dataItem : data) {
 			for (final QueryFilter filter : queryCopy.createFilters(model)) {

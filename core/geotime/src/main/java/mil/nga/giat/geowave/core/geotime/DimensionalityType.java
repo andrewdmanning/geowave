@@ -21,13 +21,31 @@ public enum DimensionalityType {
 						new LatitudeField()
 					}),
 			new SpatialFactory()),
-	SPATIAL_TEMPORAL(
+	SPATIAL_TEMPORAL_YEAR(
 			new BasicIndexModel(
 					new NumericDimensionField[] {
 						new LongitudeField(),
 						new LatitudeField(),
 						new TimeField(
 								Unit.YEAR)
+					}),
+			new SpatialTemporalFactory()),
+	SPATIAL_TEMPORAL_MONTH(
+			new BasicIndexModel(
+					new NumericDimensionField[] {
+						new LongitudeField(),
+						new LatitudeField(),
+						new TimeField(
+								Unit.MONTH)
+					}),
+			new SpatialTemporalFactory()),
+	SPATIAL_TEMPORAL_DAY(
+			new BasicIndexModel(
+					new NumericDimensionField[] {
+						new LongitudeField(),
+						new LatitudeField(),
+						new TimeField(
+								Unit.DAY)
 					}),
 			new SpatialTemporalFactory()),
 	OTHER(

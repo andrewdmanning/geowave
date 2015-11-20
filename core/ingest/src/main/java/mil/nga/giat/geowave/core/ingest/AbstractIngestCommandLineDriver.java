@@ -11,9 +11,6 @@ import java.util.Map.Entry;
 import java.util.ServiceLoader;
 
 import mil.nga.giat.geowave.core.cli.CLIOperationDriver;
-import mil.nga.giat.geowave.core.cli.CommandLineOptions.CommandLineWrapper;
-import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.DataStoreFactorySpi;
 import mil.nga.giat.geowave.core.store.GeoWaveStoreFinder;
@@ -35,7 +32,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * of ingest format plugins and using them to drive an ingestion process. The
  * class is sub-classed to perform the specific ingestion required based on the
  * operation set by the user.
- * 
+ *
  */
 abstract public class AbstractIngestCommandLineDriver implements
 		CLIOperationDriver
@@ -68,9 +65,10 @@ abstract public class AbstractIngestCommandLineDriver implements
 			final String[] args )
 			throws ParseException {
 		final List<IngestFormatPluginProviderSpi<?, ?>> pluginProviders = applyArguments(args);
-		return runInternal(
+		final boolean retVal = runInternal(
 				args,
 				pluginProviders);
+		return retVal;
 	}
 
 	@SuppressFBWarnings(value = "DM_EXIT", justification = "Exiting JVM with System.exit(0) is intentional")

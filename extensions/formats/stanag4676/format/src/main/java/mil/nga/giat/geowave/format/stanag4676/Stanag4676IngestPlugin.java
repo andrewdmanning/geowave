@@ -71,7 +71,9 @@ public class Stanag4676IngestPlugin extends
 		super();
 		supportedIndices = new PrimaryIndex[] {
 			IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_DAY.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_MONTH.createDefaultIndex(),
+			IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex(),
 			IMAGE_CHIP_INDEX
 		};
 	}

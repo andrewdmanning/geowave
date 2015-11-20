@@ -50,8 +50,8 @@ public class ClusteringUtils
 				indexStore.addIndex(index);
 				return index;
 			}
-			else if (indexId.equals(IndexType.SPATIAL_TEMPORAL_VECTOR.getDefaultId())) {
-				final PrimaryIndex index = IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex();
+			else if (indexId.equals(IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.getDefaultId())) {
+				final PrimaryIndex index = IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex();
 				indexStore.addIndex(index);
 				return index;
 			}

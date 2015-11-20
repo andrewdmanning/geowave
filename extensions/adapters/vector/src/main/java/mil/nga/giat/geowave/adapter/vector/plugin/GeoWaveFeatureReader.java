@@ -24,10 +24,12 @@ import mil.nga.giat.geowave.adapter.vector.render.DistributableRenderer;
 import mil.nga.giat.geowave.adapter.vector.stats.FeatureStatistic;
 import mil.nga.giat.geowave.adapter.vector.util.QueryIndexHelper;
 import mil.nga.giat.geowave.core.geotime.DimensionalityType;
+import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.geotime.store.query.TemporalConstraintsSet;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
+import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
@@ -167,7 +169,7 @@ public class GeoWaveFeatureReader implements
 				 * QueryPlanner that takes the full set of constraints and has
 				 * in-depth knowledge of each indices capabilities.
 				 */
-				if ((jtsBounds == null) || (DimensionalityType.SPATIAL_TEMPORAL.isCompatible(index) && timeConstraints.isEmpty())) {
+				if ((jtsBounds == null) || (hasTime(index) && timeConstraints.isEmpty())) {
 					// full table scan
 					results.add(issuer.query(
 							index,
@@ -221,6 +223,19 @@ public class GeoWaveFeatureReader implements
 							}
 						},
 						Iterators.concat(results.iterator())));
+	}
+
+	protected static boolean hasTime(
+			final PrimaryIndex index ) {
+		if ((index == null) || (index.getIndexStrategy() == null) || (index.getIndexStrategy().getOrderedDimensionDefinitions() == null)) {
+			return false;
+		}
+		for (final NumericDimensionDefinition dimension : index.getIndexStrategy().getOrderedDimensionDefinitions()) {
+			if (dimension instanceof TimeDefinition) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private class BaseIssuer implements

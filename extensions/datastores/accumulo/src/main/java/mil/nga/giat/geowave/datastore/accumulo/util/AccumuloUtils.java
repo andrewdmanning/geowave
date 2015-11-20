@@ -20,6 +20,7 @@ import java.util.TreeSet;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.StringUtils;
+import mil.nga.giat.geowave.core.index.simple.RoundRobinKeyIndexStrategy;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreEntryInfo;
@@ -576,7 +577,7 @@ public class AccumuloUtils
 				adapters.add(itr.next());
 			}
 		}
-		catch (IOException e) {
+		catch (final IOException e) {
 			LOGGER.error(
 					"Unable to close iterator",
 					e);
@@ -607,13 +608,54 @@ public class AccumuloUtils
 				indices.add(itr.next());
 			}
 		}
-		catch (IOException e) {
+		catch (final IOException e) {
 			LOGGER.error(
 					"Unable to close iterator",
 					e);
 		}
 
 		return indices;
+	}
+
+	/**
+	 * Set splits on a table based on a partition ID
+	 * 
+	 * @param namespace
+	 * @param index
+	 * @param randomParitions
+	 *            number of partition IDs
+	 * @throws AccumuloException
+	 * @throws AccumuloSecurityException
+	 * @throws IOException
+	 * @throws TableNotFoundException
+	 */
+	public static void setSplitsByRandomPartitions(
+			final Connector connector,
+			final String namespace,
+			final PrimaryIndex index,
+			final int randomPartitions )
+			throws AccumuloException,
+			AccumuloSecurityException,
+			IOException,
+			TableNotFoundException {
+		final AccumuloOperations operations = new BasicAccumuloOperations(
+				connector,
+				namespace);
+		operations.createTable(index.getId().getString());
+		final RoundRobinKeyIndexStrategy partitions = new RoundRobinKeyIndexStrategy(
+				randomPartitions);
+		final SortedSet<Text> splits = new TreeSet<Text>();
+		for (final ByteArrayRange p : partitions.keySet) {
+			splits.add(new Text(
+					p.getStart().getBytes()));
+		}
+
+		final String tableName = AccumuloUtils.getQualifiedTableName(
+				namespace,
+				index.getId().getString());
+		connector.tableOperations().addSplits(
+				tableName,
+				splits);
 	}
 
 	/**
@@ -637,7 +679,10 @@ public class AccumuloUtils
 			AccumuloSecurityException,
 			IOException,
 			TableNotFoundException {
-		final SortedSet<Text> splits = new TreeSet<Text>();
+		final long count = getEntries(
+				connector,
+				namespace,
+				index);
 
 		try (final CloseableIterator<Entry<Key, Value>> iterator = getIterator(
 				connector,
@@ -645,48 +690,26 @@ public class AccumuloUtils
 				index)) {
 
 			if (iterator == null) {
-				LOGGER.error("could not get iterator instance, getIterator returned null");
+				LOGGER.error("Could not get iterator instance, getIterator returned null");
 				throw new IOException(
-						"could not get iterator instance, getIterator returned null");
+						"Could not get iterator instance, getIterator returned null");
 			}
 
-			final int numberSplits = quantile - 1;
-			BigInteger min = null;
-			BigInteger max = null;
-
+			long ii = 0;
+			final long splitInterval = (long) Math.ceil((double) count / (double) quantile);
+			final SortedSet<Text> splits = new TreeSet<Text>();
 			while (iterator.hasNext()) {
 				final Entry<Key, Value> entry = iterator.next();
-				final byte[] bytes = entry.getKey().getRow().getBytes();
-				final BigInteger value = new BigInteger(
-						bytes);
-				if ((min == null) || (max == null)) {
-					min = value;
-					max = value;
+				ii++;
+				if (ii >= splitInterval) {
+					ii = 0;
+					splits.add(entry.getKey().getRow());
 				}
-				min = min.min(value);
-				max = max.max(value);
-			}
-
-			final BigDecimal dMax = new BigDecimal(
-					max);
-			final BigDecimal dMin = new BigDecimal(
-					min);
-			BigDecimal delta = dMax.subtract(dMin);
-			delta = delta.divideToIntegralValue(new BigDecimal(
-					quantile));
-
-			for (int ii = 1; ii <= numberSplits; ii++) {
-				final BigDecimal temp = delta.multiply(BigDecimal.valueOf(ii));
-				final BigInteger value = min.add(temp.toBigInteger());
-
-				final Text split = new Text(
-						value.toByteArray());
-				splits.add(split);
 			}
 
 			final String tableName = AccumuloUtils.getQualifiedTableName(
 					namespace,
-					StringUtils.stringFromBinary(index.getId().getBytes()));
+					index.getId().getString());
 			connector.tableOperations().addSplits(
 					tableName,
 					splits);
@@ -715,15 +738,12 @@ public class AccumuloUtils
 			final Connector connector,
 			final String namespace,
 			final PrimaryIndex index,
-			final int numberSplits )
+			final int numSplits )
 			throws AccumuloException,
 			AccumuloSecurityException,
 			IOException,
 			TableNotFoundException {
-		final long count = getEntries(
-				connector,
-				namespace,
-				index);
+		final SortedSet<Text> splits = new TreeSet<Text>();
 
 		try (final CloseableIterator<Entry<Key, Value>> iterator = getIterator(
 				connector,
@@ -731,21 +751,43 @@ public class AccumuloUtils
 				index)) {
 
 			if (iterator == null) {
-				LOGGER.error("Could not get iterator instance, getIterator returned null");
+				LOGGER.error("could not get iterator instance, getIterator returned null");
 				throw new IOException(
-						"Could not get iterator instance, getIterator returned null");
+						"could not get iterator instance, getIterator returned null");
 			}
 
-			long ii = 0;
-			final long splitInterval = count / numberSplits;
-			final SortedSet<Text> splits = new TreeSet<Text>();
+			final int numberSplits = numSplits - 1;
+			BigInteger min = null;
+			BigInteger max = null;
+
 			while (iterator.hasNext()) {
 				final Entry<Key, Value> entry = iterator.next();
-				ii++;
-				if (ii >= splitInterval) {
-					ii = 0;
-					splits.add(entry.getKey().getRow());
+				final byte[] bytes = entry.getKey().getRow().getBytes();
+				final BigInteger value = new BigInteger(
+						bytes);
+				if ((min == null) || (max == null)) {
+					min = value;
+					max = value;
 				}
+				min = min.min(value);
+				max = max.max(value);
+			}
+
+			final BigDecimal dMax = new BigDecimal(
+					max);
+			final BigDecimal dMin = new BigDecimal(
+					min);
+			BigDecimal delta = dMax.subtract(dMin);
+			delta = delta.divideToIntegralValue(new BigDecimal(
+					numSplits));
+
+			for (int ii = 1; ii <= numberSplits; ii++) {
+				final BigDecimal temp = delta.multiply(BigDecimal.valueOf(ii));
+				final BigInteger value = min.add(temp.toBigInteger());
+
+				final Text split = new Text(
+						value.toByteArray());
+				splits.add(split);
 			}
 
 			final String tableName = AccumuloUtils.getQualifiedTableName(
@@ -1019,17 +1061,15 @@ public class AccumuloUtils
 			TableNotFoundException {
 		CloseableIterator<Entry<Key, Value>> iterator = null;
 		final AccumuloOperations operations = new BasicAccumuloOperations(
-				connector);
+				connector,
+				namespace);
 		final AccumuloIndexStore indexStore = new AccumuloIndexStore(
 				operations);
 		final AccumuloAdapterStore adapterStore = new AccumuloAdapterStore(
 				operations);
 
 		if (indexStore.indexExists(index.getId())) {
-			final String tableName = AccumuloUtils.getQualifiedTableName(
-					namespace,
-					StringUtils.stringFromBinary(index.getId().getBytes()));
-			final ScannerBase scanner = operations.createBatchScanner(tableName);
+			final ScannerBase scanner = operations.createBatchScanner(index.getId().getString());
 			((BatchScanner) scanner).setRanges(AccumuloUtils.byteArrayRangesToAccumuloRanges(null));
 
 			final IteratorSetting iteratorSettings = new IteratorSetting(
@@ -1133,7 +1173,7 @@ public class AccumuloUtils
 			final Collection<String> fieldIds,
 			final CloseableIterator<DataAdapter<?>> dataAdapters ) {
 
-		Set<ByteArrayId> uniqueDimensions = new HashSet<>();
+		final Set<ByteArrayId> uniqueDimensions = new HashSet<>();
 		for (final NumericDimensionField<? extends CommonIndexValue> dimension : index.getIndexModel().getDimensions()) {
 			uniqueDimensions.add(dimension.getFieldId());
 		}
@@ -1146,7 +1186,7 @@ public class AccumuloUtils
 					dataAdapters.next().getAdapterId().getBytes());
 
 			// dimension fields must be included
-			for (ByteArrayId dimension : uniqueDimensions) {
+			for (final ByteArrayId dimension : uniqueDimensions) {
 				scanner.fetchColumn(
 						colFam,
 						new Text(
@@ -1154,7 +1194,7 @@ public class AccumuloUtils
 			}
 
 			// configure scanner to fetch only the specified fieldIds
-			for (String fieldId : fieldIds) {
+			for (final String fieldId : fieldIds) {
 				scanner.fetchColumn(
 						colFam,
 						new Text(
@@ -1165,7 +1205,7 @@ public class AccumuloUtils
 		try {
 			dataAdapters.close();
 		}
-		catch (IOException e) {
+		catch (final IOException e) {
 			LOGGER.error(
 					"Unable to close iterator",
 					e);
