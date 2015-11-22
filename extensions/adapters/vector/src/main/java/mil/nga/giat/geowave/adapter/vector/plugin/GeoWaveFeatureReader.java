@@ -24,6 +24,7 @@ import mil.nga.giat.geowave.adapter.vector.render.DistributableRenderer;
 import mil.nga.giat.geowave.adapter.vector.stats.FeatureStatistic;
 import mil.nga.giat.geowave.adapter.vector.util.QueryIndexHelper;
 import mil.nga.giat.geowave.core.geotime.DimensionalityType;
+import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.geotime.store.query.TemporalConstraintsSet;
@@ -148,7 +149,7 @@ public class GeoWaveFeatureReader implements
 		try (CloseableIterator<Index<?, ?>> indexIt = getComponents().getIndexStore().getIndices()) {
 			while (indexIt.hasNext()) {
 				final PrimaryIndex index = (PrimaryIndex) indexIt.next();
-				if (!DimensionalityType.SPATIAL.isCompatible(index)) {
+				if (!hasAtLeastSpatial(index)) {
 					continue;
 				}
 
@@ -223,6 +224,24 @@ public class GeoWaveFeatureReader implements
 							}
 						},
 						Iterators.concat(results.iterator())));
+	}
+
+	protected static boolean hasAtLeastSpatial(
+			final PrimaryIndex index ) {
+		if ((index == null) || (index.getIndexStrategy() == null) || (index.getIndexStrategy().getOrderedDimensionDefinitions() == null)) {
+			return false;
+		}
+		boolean hasLatitude = false;
+		boolean hasLongitude = false;
+		for (final NumericDimensionDefinition dimension : index.getIndexStrategy().getOrderedDimensionDefinitions()) {
+			if (dimension instanceof LatitudeDefinition) {
+				hasLatitude = true;
+			}
+			if (dimension instanceof LatitudeDefinition) {
+				hasLongitude = true;
+			}
+		}
+		return hasLatitude && hasLongitude;
 	}
 
 	protected static boolean hasTime(

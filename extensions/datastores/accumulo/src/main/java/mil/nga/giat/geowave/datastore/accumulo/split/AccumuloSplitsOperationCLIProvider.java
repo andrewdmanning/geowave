@@ -2,19 +2,19 @@ package mil.nga.giat.geowave.datastore.accumulo.split;
 
 import java.io.IOException;
 
-import mil.nga.giat.geowave.core.cli.CLIOperation;
-import mil.nga.giat.geowave.core.cli.CLIOperationCategory;
-import mil.nga.giat.geowave.core.cli.CLIOperationProviderSpi;
-import mil.nga.giat.geowave.core.cli.CustomOperationCategory;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
-
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import mil.nga.giat.geowave.core.cli.CLIOperation;
+import mil.nga.giat.geowave.core.cli.CLIOperationCategory;
+import mil.nga.giat.geowave.core.cli.CLIOperationProviderSpi;
+import mil.nga.giat.geowave.core.cli.CustomOperationCategory;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
 
 public class AccumuloSplitsOperationCLIProvider implements
 		CLIOperationProviderSpi
@@ -90,7 +90,7 @@ public class AccumuloSplitsOperationCLIProvider implements
 								final String namespace,
 								final long number ) {
 							try {
-								AccumuloUtils.setSplitsByNumSplits(
+								AccumuloUtils.setSplitsByRandomPartitions(
 										connector,
 										namespace,
 										index,
@@ -104,6 +104,12 @@ public class AccumuloSplitsOperationCLIProvider implements
 							}
 							return true;
 						}
+
+						@Override
+						protected boolean isPreSplit() {
+							return true;
+						}
+
 					}),
 			new CLIOperation(
 					"splitnumrecords",

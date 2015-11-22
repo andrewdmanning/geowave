@@ -47,8 +47,7 @@ public class GeoToolsRasterDataStoreIngestPlugin implements
 	public GeoToolsRasterDataStoreIngestPlugin(
 			final RasterOptionProvider optionProvider ) {
 		supportedIndices = new PrimaryIndex[] {
-			IndexType.SPATIAL_RASTER.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_RASTER.createDefaultIndex()
+			IndexType.SPATIAL_RASTER.createDefaultIndex()
 		};
 		this.optionProvider = optionProvider;
 	}

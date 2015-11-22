@@ -29,7 +29,8 @@ public enum DimensionalityType {
 						new TimeField(
 								Unit.YEAR)
 					}),
-			new SpatialTemporalFactory()),
+			new SpatialTemporalFactory(
+					Unit.YEAR)),
 	SPATIAL_TEMPORAL_MONTH(
 			new BasicIndexModel(
 					new NumericDimensionField[] {
@@ -38,7 +39,8 @@ public enum DimensionalityType {
 						new TimeField(
 								Unit.MONTH)
 					}),
-			new SpatialTemporalFactory()),
+			new SpatialTemporalFactory(
+					Unit.MONTH)),
 	SPATIAL_TEMPORAL_DAY(
 			new BasicIndexModel(
 					new NumericDimensionField[] {
@@ -47,7 +49,8 @@ public enum DimensionalityType {
 						new TimeField(
 								Unit.DAY)
 					}),
-			new SpatialTemporalFactory()),
+			new SpatialTemporalFactory(
+					Unit.DAY)),
 	OTHER(
 			null,
 			null);

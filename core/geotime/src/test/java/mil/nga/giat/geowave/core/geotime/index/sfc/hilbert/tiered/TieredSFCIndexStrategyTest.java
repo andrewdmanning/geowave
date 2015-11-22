@@ -80,7 +80,8 @@ public class TieredSFCIndexStrategyTest
 
 		MultiDimensionalNumericData indexedData = new BasicNumericDataset(
 				dataPerDimension1);
-		final NumericIndexStrategy strategy = new SpatialTemporalFactory().createIndexStrategy(DataType.VECTOR);
+		final NumericIndexStrategy strategy = new SpatialTemporalFactory(
+				Unit.YEAR).createIndexStrategy(DataType.VECTOR);
 
 		final List<ByteArrayId> ids1 = strategy.getInsertionIds(indexedData);
 		assertEquals(

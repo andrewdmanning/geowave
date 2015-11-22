@@ -72,6 +72,9 @@ public class IngestCommandLineOptions
 							new ByteArrayId(
 									i.getId().getString() + "_RAND" + randomPartitions));
 				}
+				else {
+					return i;
+				}
 			}
 		}
 		return null;
@@ -201,7 +204,7 @@ public class IngestCommandLineOptions
 		allOptions.addOption(new Option(
 				"randompartitions",
 				"random partitions",
-				false,
+				true,
 				"Prefix data with this many unique identifiers to enforce random pre-splits for the index"));
 	}
 }

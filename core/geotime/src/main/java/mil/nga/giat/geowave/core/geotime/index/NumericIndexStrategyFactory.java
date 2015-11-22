@@ -1,5 +1,7 @@
 package mil.nga.giat.geowave.core.geotime.index;
 
+import org.apache.commons.lang3.ArrayUtils;
+
 import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
@@ -91,15 +93,21 @@ public interface NumericIndexStrategyFactory
 		private static final int LONGITUDE_BITS = 20;
 		private static final int LATITUDE_BITS = 20;
 		private static final int TIME_BITS = 20;
-		private static final NumericDimensionDefinition[] SPATIAL_TEMPORAL_DIMENSIONS = new NumericDimensionDefinition[] {
-			new LongitudeDefinition(),
-			new LatitudeDefinition(
-					true),
-			// just use the same range for latitude to make square sfc values in
-			// decimal degrees (EPSG:4326)
-			new TimeDefinition(
-					Unit.YEAR),
-		};
+		private final NumericDimensionDefinition[] spatialTemporalDimensions;
+
+		public SpatialTemporalFactory(
+				Unit unit ) {
+			spatialTemporalDimensions = new NumericDimensionDefinition[] {
+				new LongitudeDefinition(),
+				new LatitudeDefinition(
+						true),
+				// just use the same range for latitude to make square sfc
+				// values in
+				// decimal degrees (EPSG:4326)
+				new TimeDefinition(
+						unit)
+			};
+		}
 
 		@Override
 		public NumericIndexStrategy createIndexStrategy(
@@ -110,7 +118,7 @@ public interface NumericIndexStrategyFactory
 							"There is not a default spatial-temporal index strategy for 'OTHER' data types");
 				case RASTER:
 					return TieredSFCIndexFactory.createEqualIntervalPrecisionTieredStrategy(
-							SPATIAL_TEMPORAL_DIMENSIONS,
+							spatialTemporalDimensions,
 							new int[] {
 								LONGITUDE_BITS,
 								LATITUDE_BITS,
@@ -120,7 +128,7 @@ public interface NumericIndexStrategyFactory
 				case VECTOR:
 				default:
 					return TieredSFCIndexFactory.createEqualIntervalPrecisionTieredStrategy(
-							SPATIAL_TEMPORAL_DIMENSIONS,
+							spatialTemporalDimensions,
 							new int[] {
 								LONGITUDE_BITS,
 								LATITUDE_BITS,
@@ -132,7 +140,7 @@ public interface NumericIndexStrategyFactory
 
 		@Override
 		public NumericDimensionDefinition[] getFactoryDefinition() {
-			return SPATIAL_TEMPORAL_DIMENSIONS;
+			return spatialTemporalDimensions;
 		}
 	}
 }
