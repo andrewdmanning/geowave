@@ -2,10 +2,9 @@ package mil.nga.giat.geowave.adapter.vector.query.cql;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.KryoFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.plugin.ExtractGeometryFilterVisitor;
 import mil.nga.giat.geowave.adapter.vector.plugin.ExtractTimeFilterVisitor;
 import mil.nga.giat.geowave.adapter.vector.util.QueryIndexHelper;
@@ -21,6 +20,7 @@ import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.BasicNumericDataset;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
@@ -33,6 +33,7 @@ import mil.nga.giat.geowave.core.store.query.Query;
 import org.apache.log4j.Logger;
 import org.geotools.filter.text.cql2.CQL;
 import org.geotools.filter.text.cql2.CQLException;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.filter.Filter;
 
 import com.vividsolutions.jts.geom.Geometry;
@@ -49,7 +50,7 @@ public class CQLQuery implements
 
 	public CQLQuery(
 			final String cql,
-			final FeatureDataAdapter adapter )
+			final DataAdapter<SimpleFeature> adapter )
 			throws CQLException {
 		this(
 				cql,
@@ -60,7 +61,7 @@ public class CQLQuery implements
 	public CQLQuery(
 			final String cql,
 			final CompareOperation geoCompareOp,
-			final FeatureDataAdapter adapter )
+			final DataAdapter<SimpleFeature> adapter )
 			throws CQLException {
 		cqlFilter = CQL.toFilter(cql);
 		this.filter = new CQLQueryFilter(
@@ -68,13 +69,13 @@ public class CQLQuery implements
 				adapter);
 		final Geometry geometry = ExtractGeometryFilterVisitor.getConstraints(
 				cqlFilter,
-				adapter.getType().getCoordinateReferenceSystem());
+				((KryoFeatureDataAdapter) adapter).getType().getCoordinateReferenceSystem());
 		final TemporalConstraintsSet timeConstraintSet = new ExtractTimeFilterVisitor().getConstraints(cqlFilter);
 
 		// determine which time constraints are associated with an indexable
 		// field
 		final TemporalConstraints temporalConstraints = QueryIndexHelper.getTemporalConstraintsForIndex(
-				adapter.getTimeDescriptors(),
+				((KryoFeatureDataAdapter) adapter).getTimeDescriptors(),
 				timeConstraintSet);
 		// convert to constraints
 		final Constraints timeConstraints = SpatialTemporalQuery.createConstraints(
@@ -101,7 +102,7 @@ public class CQLQuery implements
 	public CQLQuery(
 			final Query baseQuery,
 			final Filter filter,
-			final FeatureDataAdapter adapter ) {
+			final DataAdapter<SimpleFeature> adapter ) {
 		this.baseQuery = baseQuery;
 		this.cqlFilter = filter;
 		this.filter = new CQLQueryFilter(

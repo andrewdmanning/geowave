@@ -6,9 +6,18 @@ import java.net.URLClassLoader;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import org.apache.commons.vfs2.FileObject;
+import org.apache.commons.vfs2.impl.VFSClassLoader;
+import org.apache.log4j.Logger;
+import org.geotools.factory.GeoTools;
+import org.geotools.filter.text.ecql.ECQL;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.filter.Filter;
+
+import mil.nga.giat.geowave.adapter.vector.KryoFeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.IndexedAdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.data.IndexedPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.data.PersistentDataset;
@@ -19,21 +28,13 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.spi.SPIServiceRegistry;
 
-import org.apache.commons.vfs2.FileObject;
-import org.apache.commons.vfs2.impl.VFSClassLoader;
-import org.apache.log4j.Logger;
-import org.geotools.factory.GeoTools;
-import org.geotools.filter.text.ecql.ECQL;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.filter.Filter;
-
 public class CQLQueryFilter implements
 		DistributableQueryFilter
 {
 	private final static Logger LOGGER = Logger.getLogger(CQLQueryFilter.class);
 	private static final Object MUTEX = new Object();
 	private static boolean classLoaderInitialized = false;
-	private FeatureDataAdapter adapter;
+	private DataAdapter<SimpleFeature> adapter;
 	private Filter filter;
 
 	protected CQLQueryFilter() {
@@ -42,7 +43,7 @@ public class CQLQueryFilter implements
 
 	public CQLQueryFilter(
 			final Filter filter,
-			final FeatureDataAdapter adapter ) {
+			final DataAdapter<SimpleFeature> adapter ) {
 		this.filter = filter;
 		this.adapter = adapter;
 	}
@@ -206,7 +207,7 @@ public class CQLQueryFilter implements
 			try {
 				adapter = PersistenceUtils.fromBinary(
 						adapterBytes,
-						FeatureDataAdapter.class);
+						KryoFeatureDataAdapter.class);
 			}
 			catch (final Exception e) {
 				throw new IllegalArgumentException(
