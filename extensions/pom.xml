@@ -23,5 +23,6 @@
 		<module>formats/tdrive</module>
 		<module>formats/stanag4676/format</module>
 		<module>formats/stanag4676/service</module>
+		<module>cli/scratch</module>
 	</modules>
 </project>
