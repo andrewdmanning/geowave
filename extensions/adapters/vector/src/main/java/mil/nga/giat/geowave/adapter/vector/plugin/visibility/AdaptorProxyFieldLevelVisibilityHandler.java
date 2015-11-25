@@ -1,8 +1,11 @@
 package mil.nga.giat.geowave.adapter.vector.plugin.visibility;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.KryoFeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
+import mil.nga.giat.geowave.core.store.data.visibility.VisibilityManagement;
 
 import org.opengis.feature.simple.SimpleFeature;
 
@@ -24,7 +27,7 @@ public class AdaptorProxyFieldLevelVisibilityHandler implements
 {
 
 	private final String fieldName;
-	private final FeatureDataAdapter adapter;
+	private final DataAdapter adapter;
 	private FieldVisibilityHandler<SimpleFeature, Object> myDeferredHandler = null;
 
 	/**
@@ -36,7 +39,7 @@ public class AdaptorProxyFieldLevelVisibilityHandler implements
 	 */
 	public AdaptorProxyFieldLevelVisibilityHandler(
 			final String fieldName,
-			final FeatureDataAdapter adapter ) {
+			final DataAdapter adapter ) {
 		super();
 		this.fieldName = fieldName;
 		this.adapter = adapter;
@@ -48,11 +51,25 @@ public class AdaptorProxyFieldLevelVisibilityHandler implements
 			ByteArrayId fieldId,
 			Object fieldValue ) {
 
+		FieldVisibilityHandler<SimpleFeature, Object> fieldVisibilityHandler = null;
+		String visibiityAttributeName = null;
+		VisibilityManagement<SimpleFeature> fieldVisibilityManagement = null;
+		if (adapter instanceof FeatureDataAdapter) {
+			fieldVisibilityHandler = ((FeatureDataAdapter) adapter).getFieldVisiblityHandler();
+			visibiityAttributeName = ((FeatureDataAdapter) adapter).getVisibilityAttributeName();
+			fieldVisibilityManagement = ((FeatureDataAdapter) adapter).getFieldVisibilityManagement();
+		}
+		else if (adapter instanceof KryoFeatureDataAdapter) {
+			fieldVisibilityHandler = ((KryoFeatureDataAdapter) adapter).getFieldVisiblityHandler();
+			visibiityAttributeName = ((KryoFeatureDataAdapter) adapter).getVisibilityAttributeName();
+			fieldVisibilityManagement = ((KryoFeatureDataAdapter) adapter).getFieldVisibilityManagement();
+		}
+
 		if (myDeferredHandler == null) {
-			myDeferredHandler = adapter.getFieldVisibilityManagement().createVisibilityHandler(
+			myDeferredHandler = fieldVisibilityManagement.createVisibilityHandler(
 					fieldName,
-					adapter.getFieldVisiblityHandler(),
-					adapter.getVisibilityAttributeName());
+					fieldVisibilityHandler,
+					visibiityAttributeName);
 		}
 		return myDeferredHandler.getVisibility(
 				rowValue,

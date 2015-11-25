@@ -900,4 +900,22 @@ public class AccumuloDataStore implements
 				adapterStore,
 				accumuloOperations);
 	}
+
+	public IndexStore getIndexStore() {
+		return indexStore;
+	}
+
+	public AdapterStore getAdapterStore() {
+		return adapterStore;
+	}
+
+	public DataStatisticsStore getStatisticsStore() {
+		return statisticsStore;
+	}
+
+	public SecondaryIndexDataStore getSecondaryIndexDataStore() {
+		return secondaryIndexDataStore;
+	}
+	
+	
 }

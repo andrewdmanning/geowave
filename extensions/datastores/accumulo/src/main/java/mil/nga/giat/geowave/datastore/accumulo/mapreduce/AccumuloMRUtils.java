@@ -271,6 +271,13 @@ public class AccumuloMRUtils
 							indexConstraints,
 							indexStrategy));
 				}
+				if (ranges.size() == 1) {
+					Range range = ranges.first();
+					if (range.isInfiniteStartKey() || range.isInfiniteStopKey()) {
+						ranges.remove(range);
+						ranges.add(fullrange.clip(range));
+					}
+				}
 			}
 			else {
 
