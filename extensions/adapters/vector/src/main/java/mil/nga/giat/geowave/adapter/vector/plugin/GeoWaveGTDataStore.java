@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GtFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.auth.AuthorizationSPI;
 import mil.nga.giat.geowave.adapter.vector.plugin.lock.LockingManagement;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveAutoCommitTransactionState;
@@ -134,8 +135,11 @@ public class GeoWaveGTDataStore extends
 	}
 
 	protected PrimaryIndex getIndex(
-			final FeatureDataAdapter adapter ) {
-		return getPreferredIndex(adapter);
+			final GtFeatureDataAdapter adapter ) {
+		if (adapter instanceof FeatureDataAdapter) {
+			return getPreferredIndex((FeatureDataAdapter) adapter);
+		}
+		return IndexType.SPATIAL_VECTOR.createDefaultIndex();
 	}
 
 	@Override
@@ -156,17 +160,19 @@ public class GeoWaveGTDataStore extends
 		getPreferredIndex(adapter);
 	}
 
-	private FeatureDataAdapter getAdapter(
+	private GtFeatureDataAdapter getAdapter(
 			final String typeName ) {
-		final FeatureDataAdapter featureAdapter;
+		final GtFeatureDataAdapter featureAdapter;
 		final DataAdapter<?> adapter = adapterStore.getAdapter(new ByteArrayId(
 				StringUtils.stringToBinary(typeName)));
-		if ((adapter == null) || !(adapter instanceof FeatureDataAdapter)) {
+		if ((adapter == null) || !(adapter instanceof GtFeatureDataAdapter)) {
 			return null;
 		}
-		featureAdapter = (FeatureDataAdapter) adapter;
+		featureAdapter = (GtFeatureDataAdapter) adapter;
 		if (featureNameSpaceURI != null) {
-			featureAdapter.setNamespace(featureNameSpaceURI.toString());
+			if (adapter instanceof FeatureDataAdapter) {
+				((FeatureDataAdapter) featureAdapter).setNamespace(featureNameSpaceURI.toString());
+			}
 		}
 		return featureAdapter;
 	}
@@ -178,9 +184,9 @@ public class GeoWaveGTDataStore extends
 		final CloseableIterator<DataAdapter<?>> adapters = adapterStore.getAdapters();
 		while (adapters.hasNext()) {
 			final DataAdapter<?> adapter = adapters.next();
-			if (adapter instanceof FeatureDataAdapter) {
+			if (adapter instanceof GtFeatureDataAdapter) {
 				names.add(new NameImpl(
-						((FeatureDataAdapter) adapter).getType().getTypeName()));
+						((GtFeatureDataAdapter) adapter).getType().getTypeName()));
 			}
 		}
 		adapters.close();

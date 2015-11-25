@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.ingest.AbstractSimpleFeatureIngestPlugin;
 import mil.nga.giat.geowave.adapter.vector.utils.GeometryUtils;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
@@ -26,9 +25,6 @@ import mil.nga.giat.geowave.core.ingest.avro.WholeFile;
 import mil.nga.giat.geowave.core.ingest.hdfs.mapreduce.IngestWithMapper;
 import mil.nga.giat.geowave.core.ingest.hdfs.mapreduce.IngestWithReducer;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
-import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
-import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
-import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 import org.apache.avro.Schema;
@@ -96,6 +92,14 @@ public class GeoLifeIngestPlugin extends
 	}
 
 	@Override
+	protected SimpleFeatureType[] getTypes() {
+		return new SimpleFeatureType[] {
+			SimpleFeatureUserDataConfigurationSet.configureType(geolifePointType),
+			SimpleFeatureUserDataConfigurationSet.configureType(geolifeTrackType)
+		};
+	}
+
+	@Override
 	public String[] getFileExtensionFilters() {
 		return new String[] {
 			"plt"
@@ -117,22 +121,6 @@ public class GeoLifeIngestPlugin extends
 	@Override
 	public PrimaryIndex[] getSupportedIndices() {
 		return supportedIndices;
-	}
-
-	@Override
-	public WritableDataAdapter<SimpleFeature>[] getDataAdapters(
-			final String globalVisibility ) {
-		final FieldVisibilityHandler<SimpleFeature, Object> fieldVisiblityHandler = ((globalVisibility != null) && !globalVisibility.isEmpty()) ? new GlobalVisibilityHandler<SimpleFeature, Object>(
-				globalVisibility) : null;
-		return new WritableDataAdapter[] {
-			new FeatureDataAdapter(
-					SimpleFeatureUserDataConfigurationSet.configureType(geolifePointType),
-					fieldVisiblityHandler),
-			new FeatureDataAdapter(
-					SimpleFeatureUserDataConfigurationSet.configureType(geolifeTrackType),
-					fieldVisiblityHandler)
-
-		};
 	}
 
 	@Override

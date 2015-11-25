@@ -1,10 +1,13 @@
 package mil.nga.giat.geowave.cli.scratch;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import java.io.IOException;
+
 import mil.nga.giat.geowave.core.cli.CLIOperationDriver;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStore;
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloAdapterStore;
 import mil.nga.giat.geowave.datastore.accumulo.split.AccumuloCommandLineOptions;
@@ -16,6 +19,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.opengis.feature.simple.SimpleFeature;
 
 import com.google.common.base.Stopwatch;
 
@@ -37,6 +41,12 @@ abstract public class AbstractGeoWaveQuery implements
 		adapterIdOpt.setRequired(false);
 		allOptions.addOption(adapterIdOpt);
 		applyOptions(allOptions);
+
+		final Option debugOpt = new Option(
+				"debug",
+				false,
+				"Print out additional info for debug purposes");
+		adapterIdOpt.setRequired(false);
 		final BasicParser parser = new BasicParser();
 		final CommandLine commandLine = parser.parse(
 				allOptions,
@@ -48,6 +58,7 @@ abstract public class AbstractGeoWaveQuery implements
 			adapterId = new ByteArrayId(
 					commandLine.getOptionValue("adapterId"));
 		}
+		final boolean debug = commandLine.hasOption("debug");
 
 		DataStore dataStore;
 		AdapterStore adapterStore;
@@ -56,23 +67,30 @@ abstract public class AbstractGeoWaveQuery implements
 					cli.getAccumuloOperations());
 			adapterStore = new AccumuloAdapterStore(
 					cli.getAccumuloOperations());
-			final FeatureDataAdapter adapter;
+
+			final DataAdapter<SimpleFeature> adapter;
 			if (adapterId != null) {
-				adapter = (FeatureDataAdapter) adapterStore.getAdapter(adapterId);
+				adapter = (DataAdapter<SimpleFeature>) adapterStore.getAdapter(adapterId);
 			}
 			else {
-				adapter = (FeatureDataAdapter) adapterStore.getAdapters().next();
+				final CloseableIterator<DataAdapter<?>> it = adapterStore.getAdapters();
+				adapter = (DataAdapter<SimpleFeature>) it.next();
+				it.close();
+			}
+			if (debug && (adapter != null)) {
+				System.out.println(adapter);
 			}
 			stopWatch.start();
 			final long results = runQuery(
 					adapter,
 					adapterId,
-					dataStore);
+					dataStore,
+					debug);
 			stopWatch.stop();
 			System.out.println("Got " + results + " results in " + stopWatch.toString());
 			return true;
 		}
-		catch (AccumuloException | AccumuloSecurityException e) {
+		catch (AccumuloException | AccumuloSecurityException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -86,8 +104,9 @@ abstract public class AbstractGeoWaveQuery implements
 			CommandLine commandLine );
 
 	abstract protected long runQuery(
-			final FeatureDataAdapter adapter,
+			final DataAdapter<SimpleFeature> adapter,
 			final ByteArrayId adapterId,
-			DataStore dataStore );
+			DataStore dataStore,
+			boolean debug );
 
 }

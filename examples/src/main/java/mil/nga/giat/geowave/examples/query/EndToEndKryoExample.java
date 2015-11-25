@@ -43,8 +43,7 @@ import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 
 public class EndToEndKryoExample
 {
-	private static final Logger LOGGER = Logger.getLogger(
-			EndToEndKryoExample.class);
+	private static final Logger LOGGER = Logger.getLogger(EndToEndKryoExample.class);
 	private static File tempAccumuloDir;
 	private static MiniAccumuloCluster accumulo;
 	private static DataStore dataStore;
@@ -58,12 +57,12 @@ public class EndToEndKryoExample
 
 	public static void main(
 			final String[] args )
-					throws AccumuloException,
-					AccumuloSecurityException,
-					IOException,
-					InterruptedException,
-					SchemaException,
-					CQLException {
+			throws AccumuloException,
+			AccumuloSecurityException,
+			IOException,
+			InterruptedException,
+			SchemaException,
+			CQLException {
 
 		setup();
 		ingest();
@@ -114,8 +113,7 @@ public class EndToEndKryoExample
 		builder = new SimpleFeatureBuilder(
 				schema);
 
-		LOGGER.info(
-				"Setup completed.");
+		LOGGER.info("Setup completed.");
 	}
 
 	public static void ingest()
@@ -134,8 +132,7 @@ public class EndToEndKryoExample
 			}
 		}
 
-		LOGGER.info(
-				"Ingest completed.");
+		LOGGER.info("Ingest completed.");
 	}
 
 	public static void executeSpatialOnlyQuery()
@@ -155,14 +152,11 @@ public class EndToEndKryoExample
 				if (currFeature.getFeatureType().getTypeName().equals(
 						TYPE_NAME)) {
 					numMatches++;
-					System.out.println(
-							currFeature.getAttribute(
-									"city"));
+					System.out.println(currFeature.getAttribute("city"));
 				}
 			}
 		}
-		LOGGER.info(
-				"***** NUM MATCHES + " + numMatches); // expect 8
+		LOGGER.info("***** NUM MATCHES + " + numMatches); // expect 8
 	}
 
 	public static void executeSpatialWithFilterQuery()
@@ -182,55 +176,44 @@ public class EndToEndKryoExample
 				if (currFeature.getFeatureType().getTypeName().equals(
 						TYPE_NAME)) {
 					numMatches++;
-					System.out.println(
-							currFeature.getAttribute(
-									"city"));
+					System.out.println(currFeature.getAttribute("city"));
 				}
 			}
 		}
-		LOGGER.info(
-				"***** NUM MATCHES + " + numMatches); // expect 4
+		LOGGER.info("***** NUM MATCHES + " + numMatches); // expect 4
 	}
 
 	public static List<SimpleFeature> loadStateCapitalData()
 			throws FileNotFoundException,
 			IOException {
 		final List<SimpleFeature> features = new ArrayList<>();
-		final String fileName = System.getProperty(
-				"user.dir") + BASE_DIR + FILE;
+		final String fileName = System.getProperty("user.dir") + BASE_DIR + FILE;
 		try (final BufferedReader br = new BufferedReader(
 				new FileReader(
 						fileName))) {
 			for (String line = br.readLine(); line != null; line = br.readLine()) {
-				final String[] vals = line.split(
-						",");
+				final String[] vals = line.split(",");
 				final String state = vals[0];
 				final String city = vals[1];
-				final double lng = Double.parseDouble(
-						vals[2]);
-				final double lat = Double.parseDouble(
-						vals[3]);
+				final double lng = Double.parseDouble(vals[2]);
+				final double lat = Double.parseDouble(vals[3]);
 				@SuppressWarnings("deprecation")
 				final Date since = new Date(
-						Integer.parseInt(
-								vals[4]) - 1900,
+						Integer.parseInt(vals[4]) - 1900,
 						0,
 						1);
-				final double landArea = Double.parseDouble(
-						vals[5]);
-				final int munincipalPop = Integer.parseInt(
-						vals[6]);
+				final double landArea = Double.parseDouble(vals[5]);
+				final int munincipalPop = Integer.parseInt(vals[6]);
 				final String notes = (vals.length > 7) ? vals[7] : null;
-				features.add(
-						buildSimpleFeature(
-								state,
-								city,
-								lng,
-								lat,
-								since,
-								landArea,
-								munincipalPop,
-								notes));
+				features.add(buildSimpleFeature(
+						state,
+						city,
+						lng,
+						lat,
+						since,
+						landArea,
+						munincipalPop,
+						notes));
 			}
 		}
 		return features;
@@ -247,10 +230,9 @@ public class EndToEndKryoExample
 			final String notes ) {
 		builder.set(
 				"location",
-				GeometryUtils.GEOMETRY_FACTORY.createPoint(
-						new Coordinate(
-								lng,
-								lat)));
+				GeometryUtils.GEOMETRY_FACTORY.createPoint(new Coordinate(
+						lng,
+						lat)));
 		builder.set(
 				"state",
 				state);
@@ -269,8 +251,7 @@ public class EndToEndKryoExample
 		builder.set(
 				"notes",
 				notes);
-		return builder.buildFeature(
-				UUID.randomUUID().toString());
+		return builder.buildFeature(UUID.randomUUID().toString());
 	}
 
 	private static void cleanup()
@@ -281,12 +262,10 @@ public class EndToEndKryoExample
 			accumulo.stop();
 		}
 		finally {
-			FileUtils.deleteDirectory(
-					tempAccumuloDir);
+			FileUtils.deleteDirectory(tempAccumuloDir);
 		}
 
-		LOGGER.info(
-				"Cleanup completed.");
+		LOGGER.info("Cleanup completed.");
 	}
 
 }

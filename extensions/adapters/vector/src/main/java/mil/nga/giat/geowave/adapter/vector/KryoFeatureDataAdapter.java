@@ -4,12 +4,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-import org.geotools.data.DataUtilities;
-import org.geotools.feature.SchemaException;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.AdaptorProxyFieldLevelVisibilityHandler;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.JsonDefinitionColumnVisibilityManagement;
 import mil.nga.giat.geowave.adapter.vector.utils.TimeDescriptors;
@@ -32,12 +26,19 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
+import org.apache.log4j.Logger;
+import org.geotools.data.DataUtilities;
+import org.geotools.feature.SchemaException;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+
 // FIXME currently does not re-project (i.e. assumes EPSG:4326)
 // FIXME currently does not support stats
 // FIXME currently does not support secondary indexing
 // FIXME currently does nto support MapReduce
 public class KryoFeatureDataAdapter extends
-		AbstractDataAdapter<SimpleFeature>
+		AbstractDataAdapter<SimpleFeature> implements
+		GtFeatureDataAdapter
 {
 	private final static Logger LOGGER = Logger.getLogger(KryoFeatureDataAdapter.class);
 	private SimpleFeatureType featureType;
@@ -45,7 +46,7 @@ public class KryoFeatureDataAdapter extends
 	private VisibilityManagement<SimpleFeature> fieldVisibilityManagement = new JsonDefinitionColumnVisibilityManagement<SimpleFeature>();
 
 	protected KryoFeatureDataAdapter() {}
-	
+
 	public KryoFeatureDataAdapter(
 			final SimpleFeatureType featureType ) {
 		super(
@@ -138,7 +139,7 @@ public class KryoFeatureDataAdapter extends
 	@SuppressWarnings("unchecked")
 	@Override
 	protected Object defaultTypeDataFromBinary(
-			byte[] bytes ) {
+			final byte[] bytes ) {
 		final ByteBuffer buf = ByteBuffer.wrap(bytes);
 		final byte[] typeNameBytes = new byte[buf.getInt()];
 		final byte[] visibilityManagementClassNameBytes = new byte[buf.getInt()];
@@ -266,10 +267,12 @@ public class KryoFeatureDataAdapter extends
 		return fieldVisibilityManagement;
 	}
 
+	@Override
 	public SimpleFeatureType getType() {
 		return featureType;
 	}
 
+	@Override
 	public synchronized TimeDescriptors getTimeDescriptors() {
 		return inferTimeAttributeDescriptor(featureType);
 	}

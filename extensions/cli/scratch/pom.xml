@@ -4,13 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>mil.nga.giat</groupId>
-		<artifactId>geowave-extension-parent</artifactId>
-		<relativePath>../../</relativePath>
+		<artifactId>geowave-parent</artifactId>
 		<version>0.9.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>geowave-cli-scratch</artifactId>
-	<name>Random GeoWave CLI Tools</name>
-	<description>A scratchpad for geowave cli tools</description>
+	<name>GeoWave Statistics CLI Tool</name>
+	<description>Tool to calculate statistics for GeoWave data</description>
 	<dependencies>
 		<dependency>
 			<groupId>mil.nga.giat</groupId>

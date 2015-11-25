@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.xml.stream.XMLStreamException;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.ingest.AbstractSimpleFeatureIngestPlugin;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
 import mil.nga.giat.geowave.core.geotime.IndexType;
@@ -24,15 +23,13 @@ import mil.nga.giat.geowave.core.ingest.IngestPluginBase;
 import mil.nga.giat.geowave.core.ingest.hdfs.mapreduce.IngestWithMapper;
 import mil.nga.giat.geowave.core.ingest.hdfs.mapreduce.IngestWithReducer;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
-import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
-import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
-import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 import org.apache.avro.Schema;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.log4j.Logger;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.xml.sax.SAXException;
 
 /**
@@ -137,23 +134,12 @@ public class GpxIngestPlugin extends
 	}
 
 	@Override
-	public WritableDataAdapter<SimpleFeature>[] getDataAdapters(
-			final String globalVisibility ) {
-		final FieldVisibilityHandler<SimpleFeature, Object> fieldVisiblityHandler = ((globalVisibility != null) && !globalVisibility.isEmpty()) ? new GlobalVisibilityHandler<SimpleFeature, Object>(
-				globalVisibility) : null;
-		return new WritableDataAdapter[] {
-			new FeatureDataAdapter(
-					SimpleFeatureUserDataConfigurationSet.configureType(GPXConsumer.pointType),
-					fieldVisiblityHandler),
-			new FeatureDataAdapter(
-					SimpleFeatureUserDataConfigurationSet.configureType(GPXConsumer.waypointType),
-					fieldVisiblityHandler),
-			new FeatureDataAdapter(
-					SimpleFeatureUserDataConfigurationSet.configureType(GPXConsumer.trackType),
-					fieldVisiblityHandler),
-			new FeatureDataAdapter(
-					SimpleFeatureUserDataConfigurationSet.configureType(GPXConsumer.routeType),
-					fieldVisiblityHandler)
+	protected SimpleFeatureType[] getTypes() {
+		return new SimpleFeatureType[] {
+			SimpleFeatureUserDataConfigurationSet.configureType(GPXConsumer.pointType),
+			SimpleFeatureUserDataConfigurationSet.configureType(GPXConsumer.waypointType),
+			SimpleFeatureUserDataConfigurationSet.configureType(GPXConsumer.trackType),
+			SimpleFeatureUserDataConfigurationSet.configureType(GPXConsumer.routeType)
 		};
 	}
 

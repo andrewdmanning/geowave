@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.KryoFeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.ingest.GeoWaveData;
@@ -15,8 +17,12 @@ import mil.nga.giat.geowave.core.ingest.local.LocalFileIngestPlugin;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
+import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
+import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterators;
@@ -28,22 +34,71 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 		Persistable
 {
 	protected CQLFilterOptionProvider filterProvider = new CQLFilterOptionProvider();
+	protected KryoSerializationOptionProvider kryoProvider = new KryoSerializationOptionProvider();
 
 	public void setFilterProvider(
 			final CQLFilterOptionProvider filterProvider ) {
 		this.filterProvider = filterProvider;
 	}
 
+	public void setKryoProvider(
+			final KryoSerializationOptionProvider kryoProvider ) {
+		this.kryoProvider = kryoProvider;
+	}
+
 	@Override
 	public byte[] toBinary() {
-		return filterProvider.toBinary();
+		return ArrayUtils.addAll(
+				kryoProvider.toBinary(),
+				filterProvider.toBinary());
 	}
 
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {
+		final byte[] cqlBytes = new byte[bytes.length - 1];
+		System.arraycopy(
+				bytes,
+				1,
+				cqlBytes,
+				0,
+				cqlBytes.length);
+		final byte[] kryoBytes = new byte[] {
+			bytes[0]
+		};
+		kryoProvider = new KryoSerializationOptionProvider();
+		kryoProvider.fromBinary(kryoBytes);
 		filterProvider = new CQLFilterOptionProvider();
 		filterProvider.fromBinary(bytes);
+	}
+
+	protected WritableDataAdapter<SimpleFeature> newAdapter(
+			final SimpleFeatureType type,
+			final FieldVisibilityHandler<SimpleFeature, Object> fieldVisiblityHandler ) {
+		if (kryoProvider.isKryo()) {
+			return new KryoFeatureDataAdapter(
+					type);
+		}
+		return new FeatureDataAdapter(
+				type,
+				fieldVisiblityHandler);
+	}
+
+	abstract protected SimpleFeatureType[] getTypes();
+
+	@Override
+	public WritableDataAdapter<SimpleFeature>[] getDataAdapters(
+			final String globalVisibility ) {
+		final FieldVisibilityHandler<SimpleFeature, Object> fieldVisiblityHandler = ((globalVisibility != null) && !globalVisibility.isEmpty()) ? new GlobalVisibilityHandler<SimpleFeature, Object>(
+				globalVisibility) : null;
+		final SimpleFeatureType[] types = getTypes();
+		final WritableDataAdapter<SimpleFeature>[] retVal = new WritableDataAdapter[types.length];
+		for (int i = 0; i < types.length; i++) {
+			retVal[i] = newAdapter(
+					types[i],
+					fieldVisiblityHandler);
+		}
+		return retVal;
 	}
 
 	@Override

@@ -97,6 +97,7 @@ import org.opengis.referencing.operation.MathTransform;
 @SuppressWarnings("unchecked")
 public class FeatureDataAdapter extends
 		AbstractDataAdapter<SimpleFeature> implements
+		GtFeatureDataAdapter,
 		StatisticalDataAdapter<SimpleFeature>,
 		HadoopDataAdapter<SimpleFeature, FeatureWritable>,
 		SecondaryIndexDataAdapter<SimpleFeature>
@@ -502,6 +503,7 @@ public class FeatureDataAdapter extends
 				reprojectedType);
 	}
 
+	@Override
 	public SimpleFeatureType getType() {
 		return reprojectedType;
 	}

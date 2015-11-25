@@ -2,11 +2,10 @@ package mil.nga.giat.geowave.cli.scratch;
 
 import java.io.IOException;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
-import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
 import org.apache.commons.cli.CommandLine;
@@ -48,17 +47,23 @@ public class ClientSideCQLQuery extends
 
 	@Override
 	protected long runQuery(
-			final FeatureDataAdapter adapter,
+			final DataAdapter<SimpleFeature> adapter,
 			final ByteArrayId adapterId,
-			final DataStore dataStore ) {
+			final DataStore dataStore,
+			final boolean debug ) {
 		long count = 0;
 		try (final CloseableIterator<Object> it = dataStore.query(
 				new QueryOptions(),
 				null)) {
-			final Object o = it.next();
-			if (o instanceof SimpleFeature) {
-				if (filter.evaluate(o)) {
-					count++;
+			while (it.hasNext()) {
+				final Object o = it.next();
+				if (o instanceof SimpleFeature) {
+					if (filter.evaluate(o)) {
+						if (debug) {
+							System.out.println(o);
+						}
+						count++;
+					}
 				}
 			}
 		}

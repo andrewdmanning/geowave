@@ -916,6 +916,5 @@ public class AccumuloDataStore implements
 	public SecondaryIndexDataStore getSecondaryIndexDataStore() {
 		return secondaryIndexDataStore;
 	}
-	
-	
+
 }

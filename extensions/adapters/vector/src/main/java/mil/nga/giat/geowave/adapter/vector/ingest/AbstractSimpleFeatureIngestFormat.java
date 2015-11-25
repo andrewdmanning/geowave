@@ -12,18 +12,21 @@ abstract public class AbstractSimpleFeatureIngestFormat<I> implements
 		IngestFormatPluginProviderSpi<I, SimpleFeature>
 {
 	protected final CQLFilterOptionProvider cqlFilterOptionProvider = new CQLFilterOptionProvider();
+	protected final KryoSerializationOptionProvider kryoOptionProvider = new KryoSerializationOptionProvider();
 	protected AbstractSimpleFeatureIngestPlugin<I> myInstance;
 
 	private synchronized AbstractSimpleFeatureIngestPlugin<I> getInstance() {
 		if (myInstance == null) {
 			myInstance = newPluginInstance();
 			myInstance.setFilterProvider(cqlFilterOptionProvider);
+			myInstance.setKryoProvider(kryoOptionProvider);
 		}
 		return myInstance;
 	}
 
 	abstract protected AbstractSimpleFeatureIngestPlugin<I> newPluginInstance();
 
+	@Override
 	public AvroFormatPlugin<I, SimpleFeature> getAvroFormatPlugin() {
 		return getInstance();
 	}
@@ -40,7 +43,11 @@ abstract public class AbstractSimpleFeatureIngestFormat<I> implements
 
 	@Override
 	public IngestFormatOptionProvider getIngestFormatOptionProvider() {
-		return cqlFilterOptionProvider;
+		return new MultiOptionProvider(
+				new IngestFormatOptionProvider[] {
+					kryoOptionProvider,
+					cqlFilterOptionProvider
+				});
 	}
 
 }

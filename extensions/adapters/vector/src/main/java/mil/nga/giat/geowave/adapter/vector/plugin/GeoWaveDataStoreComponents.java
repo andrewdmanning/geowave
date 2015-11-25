@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GtFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveTransaction;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.TransactionsAllocator;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -18,8 +19,8 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.visibility.UniformVisibilityWriter;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.DataIdQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
@@ -27,7 +28,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 public class GeoWaveDataStoreComponents
 {
-	private final FeatureDataAdapter adapter;
+	private final GtFeatureDataAdapter adapter;
 	private final DataStore dataStore;
 	private final IndexStore indexStore;
 	private final DataStatisticsStore dataStatisticsStore;
@@ -40,7 +41,7 @@ public class GeoWaveDataStoreComponents
 			final DataStore dataStore,
 			final DataStatisticsStore dataStatisticsStore,
 			final IndexStore indexStore,
-			final FeatureDataAdapter adapter,
+			final GtFeatureDataAdapter adapter,
 			final GeoWaveGTDataStore gtStore,
 			final TransactionsAllocator transactionAllocator ) {
 		this.adapter = adapter;
@@ -56,7 +57,7 @@ public class GeoWaveDataStoreComponents
 		return indexStore;
 	}
 
-	public FeatureDataAdapter getAdapter() {
+	public GtFeatureDataAdapter getAdapter() {
 		return adapter;
 	}
 
@@ -76,15 +77,16 @@ public class GeoWaveDataStoreComponents
 	public Map<ByteArrayId, DataStatistics<SimpleFeature>> getDataStatistics(
 			final GeoWaveTransaction transaction ) {
 		final Map<ByteArrayId, DataStatistics<SimpleFeature>> stats = new HashMap<ByteArrayId, DataStatistics<SimpleFeature>>();
-
-		for (final ByteArrayId statsId : adapter.getSupportedStatisticsIds()) {
-			@SuppressWarnings("unused")
-			final DataStatistics<SimpleFeature> put = stats.put(
-					statsId,
-					(DataStatistics<SimpleFeature>) dataStatisticsStore.getDataStatistics(
-							adapter.getAdapterId(),
-							statsId,
-							transaction.composeAuthorizations()));
+		if (adapter instanceof FeatureDataAdapter) {
+			for (final ByteArrayId statsId : ((FeatureDataAdapter) adapter).getSupportedStatisticsIds()) {
+				@SuppressWarnings("unused")
+				final DataStatistics<SimpleFeature> put = stats.put(
+						statsId,
+						(DataStatistics<SimpleFeature>) dataStatisticsStore.getDataStatistics(
+								adapter.getAdapterId(),
+								statsId,
+								transaction.composeAuthorizations()));
+			}
 		}
 		return stats;
 	}

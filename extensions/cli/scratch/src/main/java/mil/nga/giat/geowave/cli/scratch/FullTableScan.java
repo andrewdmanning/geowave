@@ -2,14 +2,15 @@ package mil.nga.giat.geowave.cli.scratch;
 
 import java.io.IOException;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.opengis.feature.simple.SimpleFeature;
 
 public class FullTableScan extends
 		AbstractGeoWaveQuery
@@ -25,17 +26,26 @@ public class FullTableScan extends
 
 	@Override
 	protected long runQuery(
-			final FeatureDataAdapter adapter,
+			final DataAdapter<SimpleFeature> adapter,
 			final ByteArrayId adapterId,
-			final DataStore dataStore ) {
+			final DataStore dataStore,
+			final boolean debug ) {
 		long count = 0;
 		try (final CloseableIterator<Object> it = dataStore.query(
 				new QueryOptions(
 						adapterId,
 						null),
 				null)) {
-			it.next();
-			count++;
+			while (it.hasNext()) {
+				if (debug) {
+					System.out.println(it.next());
+				}
+				else {
+					it.next();
+				}
+				count++;
+			}
+
 		}
 		catch (final IOException e) {
 			e.printStackTrace();

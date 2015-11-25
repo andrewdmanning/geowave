@@ -1,5 +1,6 @@
 package mil.nga.giat.geowave.cli.scratch;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map.Entry;
 
@@ -12,6 +13,7 @@ import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -49,7 +51,7 @@ public class MinimalFullTable implements
 			final AccumuloOperations ops = cli.getAccumuloOperations();
 			long results = 0;
 			final BatchScanner scanner = ops.createBatchScanner(indexId);
-
+			scanner.setRanges(Collections.singleton(new Range()));
 			final Iterator<Entry<Key, Value>> it = scanner.iterator();
 			stopWatch.start();
 			while (it.hasNext()) {
