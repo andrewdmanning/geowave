@@ -17,7 +17,7 @@ public class PersistenceEncoding<T>
 {
 	private final ByteArrayId adapterId;
 	private final ByteArrayId dataId;
-	private final PersistentDataset<T> commonData;
+	protected final PersistentDataset<T> commonData;
 	private final PersistentDataset<byte[]> unknownData;
 	protected final static Logger LOGGER = Logger.getLogger(PersistenceEncoding.class);
 	protected final static double DOUBLE_TOLERANCE = 1E-12d;

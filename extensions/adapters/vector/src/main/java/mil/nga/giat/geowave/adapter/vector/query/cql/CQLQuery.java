@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import mil.nga.giat.geowave.adapter.vector.KryoFeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GtFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.plugin.ExtractGeometryFilterVisitor;
 import mil.nga.giat.geowave.adapter.vector.plugin.ExtractTimeFilterVisitor;
 import mil.nga.giat.geowave.adapter.vector.util.QueryIndexHelper;
@@ -69,13 +69,13 @@ public class CQLQuery implements
 				adapter);
 		final Geometry geometry = ExtractGeometryFilterVisitor.getConstraints(
 				cqlFilter,
-				((KryoFeatureDataAdapter) adapter).getType().getCoordinateReferenceSystem());
+				((GtFeatureDataAdapter) adapter).getType().getCoordinateReferenceSystem());
 		final TemporalConstraintsSet timeConstraintSet = new ExtractTimeFilterVisitor().getConstraints(cqlFilter);
 
 		// determine which time constraints are associated with an indexable
 		// field
 		final TemporalConstraints temporalConstraints = QueryIndexHelper.getTemporalConstraintsForIndex(
-				((KryoFeatureDataAdapter) adapter).getTimeDescriptors(),
+				((GtFeatureDataAdapter) adapter).getTimeDescriptors(),
 				timeConstraintSet);
 		// convert to constraints
 		final Constraints timeConstraints = SpatialTemporalQuery.createConstraints(
@@ -114,12 +114,12 @@ public class CQLQuery implements
 	public List<QueryFilter> createFilters(
 			final CommonIndexModel indexModel ) {
 		final List<QueryFilter> queryFilters;
-		if (baseQuery != null) {
-			queryFilters = baseQuery.createFilters(indexModel);
-		}
-		else {
-			queryFilters = new ArrayList<QueryFilter>();
-		}
+		// if (baseQuery != null) {
+		// queryFilters = baseQuery.createFilters(indexModel);
+		// }
+		// else {
+		queryFilters = new ArrayList<QueryFilter>();
+		// }
 		if (filter != null) {
 			queryFilters.add(filter);
 		}

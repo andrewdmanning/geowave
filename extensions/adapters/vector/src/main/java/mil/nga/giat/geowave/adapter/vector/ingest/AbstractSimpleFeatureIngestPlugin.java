@@ -7,6 +7,7 @@ import java.util.List;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.KryoFeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.WholeFeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.ingest.GeoWaveData;
@@ -77,6 +78,10 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 			final FieldVisibilityHandler<SimpleFeature, Object> fieldVisiblityHandler ) {
 		if (kryoProvider.isKryo()) {
 			return new KryoFeatureDataAdapter(
+					type);
+		}
+		else if (kryoProvider.isWholeFeature()) {
+			return new WholeFeatureDataAdapter(
 					type);
 		}
 		return new FeatureDataAdapter(

@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import mil.nga.giat.geowave.adapter.vector.field.SimpleFeatureSerializationProvider;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.AdaptorProxyFieldLevelVisibilityHandler;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.JsonDefinitionColumnVisibilityManagement;
 import mil.nga.giat.geowave.adapter.vector.utils.TimeDescriptors;
@@ -41,7 +42,7 @@ public class KryoFeatureDataAdapter extends
 		GtFeatureDataAdapter
 {
 	private final static Logger LOGGER = Logger.getLogger(KryoFeatureDataAdapter.class);
-	private SimpleFeatureType featureType;
+	protected SimpleFeatureType featureType;
 	private ByteArrayId adapterId;
 	private VisibilityManagement<SimpleFeature> fieldVisibilityManagement = new JsonDefinitionColumnVisibilityManagement<SimpleFeature>();
 
@@ -62,8 +63,8 @@ public class KryoFeatureDataAdapter extends
 	@Override
 	public FieldReader<Object> getReader(
 			final ByteArrayId fieldId ) {
-		final Class<?> clazz = SimpleFeature.class;
-		return (FieldReader<Object>) FieldUtils.getDefaultReaderForClass(clazz);
+		// final Class<?> clazz = SimpleFeature.class;
+		return (FieldReader) new SimpleFeatureSerializationProvider.SimpleFeatureReader();
 	}
 
 	@SuppressWarnings("unchecked")
