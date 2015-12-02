@@ -16,7 +16,6 @@ import javax.xml.stream.XMLStreamException;
 
 import mil.nga.giat.geowave.adapter.vector.ingest.AbstractSimpleFeatureIngestPlugin;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.ingest.GeoWaveData;
 import mil.nga.giat.geowave.core.ingest.IngestPluginBase;
@@ -54,17 +53,7 @@ public class GpxIngestPlugin extends
 	private static final AtomicLong currentFreeTrackId = new AtomicLong(
 			0);
 
-	private final PrimaryIndex[] supportedIndices;
-
-	public GpxIngestPlugin() {
-		supportedIndices = new PrimaryIndex[] {
-			IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_DAY.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_MONTH.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
-		};
-
-	}
+	public GpxIngestPlugin() {}
 
 	@Override
 	public String[] getFileExtensionFilters() {
@@ -126,11 +115,6 @@ public class GpxIngestPlugin extends
 					e);
 		}
 		return false;
-	}
-
-	@Override
-	public PrimaryIndex[] getSupportedIndices() {
-		return supportedIndices;
 	}
 
 	@Override

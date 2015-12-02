@@ -16,7 +16,6 @@ import java.util.List;
 import mil.nga.giat.geowave.adapter.vector.ingest.AbstractSimpleFeatureIngestPlugin;
 import mil.nga.giat.geowave.adapter.vector.utils.GeometryUtils;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.ingest.GeoWaveData;
@@ -58,8 +57,6 @@ public class GeoLifeIngestPlugin extends
 	private final ByteArrayId pointKey;
 	private final ByteArrayId trackKey;
 
-	private final PrimaryIndex[] supportedIndices;
-
 	private CoordinateReferenceSystem crs;
 
 	public GeoLifeIngestPlugin() {
@@ -74,13 +71,6 @@ public class GeoLifeIngestPlugin extends
 				StringUtils.stringToBinary(GeoLifeUtils.GEOLIFE_TRACK_FEATURE));
 		geolifeTrackBuilder = new SimpleFeatureBuilder(
 				geolifeTrackType);
-
-		supportedIndices = new PrimaryIndex[] {
-			IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_DAY.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_MONTH.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
-		};
 		try {
 			crs = CRS.decode("EPSG:4326");
 		}
@@ -116,11 +106,6 @@ public class GeoLifeIngestPlugin extends
 	public boolean supportsFile(
 			final File file ) {
 		return GeoLifeUtils.validate(file);
-	}
-
-	@Override
-	public PrimaryIndex[] getSupportedIndices() {
-		return supportedIndices;
 	}
 
 	@Override

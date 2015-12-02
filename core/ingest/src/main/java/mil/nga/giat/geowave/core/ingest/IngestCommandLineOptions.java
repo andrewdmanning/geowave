@@ -58,7 +58,7 @@ public class IngestCommandLineOptions
 	}
 
 	public PrimaryIndex getIndex(
-			final PrimaryIndex[] supportedIndices ) {
+			final DataAdapterProvider<?> adapterProvider ) {
 		final IndexCompatibilityVisitor compatibilityVisitor = getSelectedIndexCompatibility(getDimensionalityType());
 		for (final PrimaryIndex i : supportedIndices) {
 			if (compatibilityVisitor.isCompatible(i)) {

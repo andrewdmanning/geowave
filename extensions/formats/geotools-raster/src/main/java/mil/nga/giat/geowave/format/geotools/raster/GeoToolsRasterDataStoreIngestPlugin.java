@@ -36,7 +36,6 @@ public class GeoToolsRasterDataStoreIngestPlugin implements
 		LocalFileIngestPlugin<GridCoverage>
 {
 	private final static Logger LOGGER = Logger.getLogger(GeoToolsRasterDataStoreIngestPlugin.class);
-	private final PrimaryIndex[] supportedIndices;
 	private final RasterOptionProvider optionProvider;
 
 	public GeoToolsRasterDataStoreIngestPlugin() {
@@ -46,9 +45,6 @@ public class GeoToolsRasterDataStoreIngestPlugin implements
 
 	public GeoToolsRasterDataStoreIngestPlugin(
 			final RasterOptionProvider optionProvider ) {
-		supportedIndices = new PrimaryIndex[] {
-			IndexType.SPATIAL_RASTER.createDefaultIndex()
-		};
 		this.optionProvider = optionProvider;
 	}
 
@@ -138,11 +134,6 @@ public class GeoToolsRasterDataStoreIngestPlugin implements
 	public WritableDataAdapter<GridCoverage>[] getDataAdapters(
 			final String globalVisibility ) {
 		return new WritableDataAdapter[] {};
-	}
-
-	@Override
-	public PrimaryIndex[] getSupportedIndices() {
-		return supportedIndices;
 	}
 
 	@Override

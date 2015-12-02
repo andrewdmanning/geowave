@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.ingest.GeoWaveData;
 import mil.nga.giat.geowave.core.ingest.local.LocalFileIngestPlugin;
@@ -36,7 +35,6 @@ public class GeoToolsVectorDataStoreIngestPlugin implements
 {
 	private final static Logger LOGGER = Logger.getLogger(GeoToolsVectorDataStoreIngestPlugin.class);
 
-	private final PrimaryIndex[] supportedIndices;
 	private final RetypingVectorDataPlugin retypingPlugin;
 	private final Filter filter;
 
@@ -54,12 +52,6 @@ public class GeoToolsVectorDataStoreIngestPlugin implements
 		// this constructor can be used directly as an extension point for
 		// retyping the original feature data, if the retyping plugin is null,
 		// the data will be ingested as the original type
-		supportedIndices = new PrimaryIndex[] {
-			IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_DAY.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_MONTH.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
-		};
 		this.retypingPlugin = retypingPlugin;
 		this.filter = filter;
 	}
@@ -148,11 +140,6 @@ public class GeoToolsVectorDataStoreIngestPlugin implements
 				dataStore,
 				retypingPlugin,
 				filter);
-	}
-
-	@Override
-	public PrimaryIndex[] getSupportedIndices() {
-		return supportedIndices;
 	}
 
 	@Override

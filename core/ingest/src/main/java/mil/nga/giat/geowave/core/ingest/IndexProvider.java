@@ -4,16 +4,6 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 public interface IndexProvider
 {
-	/**
-	 * Get an array of indices that are supported by this ingest implementation.
-	 * This should be the full set of possible indices to use for this ingest
-	 * type (for example both spatial and spatial-temporal, or perhaps just
-	 * one).
-	 * 
-	 * @return the array of indices that are supported by this ingest
-	 *         implementation
-	 */
-	public PrimaryIndex[] getSupportedIndices();
 
 	/**
 	 * Get an array of indices that are required by this ingest implementation.

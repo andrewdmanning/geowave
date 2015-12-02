@@ -14,7 +14,6 @@ import java.util.List;
 import mil.nga.giat.geowave.adapter.vector.ingest.AbstractSimpleFeatureIngestPlugin;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.ingest.GeoWaveData;
@@ -47,8 +46,6 @@ public class TdriveIngestPlugin extends
 
 	private final ByteArrayId pointKey;
 
-	private final PrimaryIndex[] supportedIndices;
-
 	public TdriveIngestPlugin() {
 
 		tdrivepointType = TdriveUtils.createTdrivePointDataType();
@@ -57,13 +54,6 @@ public class TdriveIngestPlugin extends
 				StringUtils.stringToBinary(TdriveUtils.TDRIVE_POINT_FEATURE));
 		tdrivepointBuilder = new SimpleFeatureBuilder(
 				tdrivepointType);
-		supportedIndices = new PrimaryIndex[] {
-			IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_DAY.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_MONTH.createDefaultIndex(),
-			IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
-		};
-
 	}
 
 	@Override
@@ -84,11 +74,6 @@ public class TdriveIngestPlugin extends
 	public boolean supportsFile(
 			final File file ) {
 		return TdriveUtils.validate(file);
-	}
-
-	@Override
-	public PrimaryIndex[] getSupportedIndices() {
-		return supportedIndices;
 	}
 
 	@Override
