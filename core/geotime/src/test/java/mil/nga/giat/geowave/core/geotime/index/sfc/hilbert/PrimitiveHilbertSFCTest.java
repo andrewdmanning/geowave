@@ -24,7 +24,7 @@ public class PrimitiveHilbertSFCTest
 {
 	private static final NumericDimensionDefinition[] SPATIAL_DIMENSIONS = new NumericDimensionDefinition[] {
 		new LongitudeDefinition(),
-		new LatitudeDefinition()
+		new LatitudeDefinition(true)
 	};
 
 	@Test
@@ -56,7 +56,6 @@ public class PrimitiveHilbertSFCTest
 			45,
 			45
 		};
-
 		final double[] testValues2 = new double[] {
 			0,
 			0
@@ -134,6 +133,23 @@ public class PrimitiveHilbertSFCTest
 		final NumericRange rangeLatitude4 = new NumericRange(
 				0,
 				Double.MIN_VALUE);
+		final NumericRange rangeLongitude5 = new NumericRange(
+				-180,
+				180);
+
+		final NumericRange rangeLatitude5 = new NumericRange(
+				-90,
+				90);
+		final RangeDecomposition testResult5 = testOperations.decomposeRange(
+				new NumericData[] {
+						rangeLongitude5,
+					rangeLatitude5
+				},
+				compactHilbertCurve,
+				sfcDimensions,
+				totalPrecision,
+				Integer.MAX_VALUE,
+				true);
 		final RangeDecomposition expectedResult1 = expectedResultOperations.decomposeRange(
 				new NumericData[] {
 					rangeLongitude1,

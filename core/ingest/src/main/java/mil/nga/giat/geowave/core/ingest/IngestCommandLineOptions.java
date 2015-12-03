@@ -5,12 +5,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.CompoundIndexStrategy;
-import mil.nga.giat.geowave.core.index.simple.RoundRobinKeyIndexStrategy;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
-import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 import org.apache.commons.cli.CommandLine;
@@ -22,8 +18,7 @@ import org.slf4j.LoggerFactory;
 
 public class IngestCommandLineOptions
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			IngestCommandLineOptions.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(IngestCommandLineOptions.class);
 
 	private static Map<String, IndexCompatibilityVisitor> registeredDimensionalityTypes = null;
 	private static String defaultDimensionalityType;
@@ -62,30 +57,17 @@ public class IngestCommandLineOptions
 	public PrimaryIndex getIndex(
 			final DataAdapterProvider<?> adapterProvider ) {
 		final IndexCompatibilityVisitor compatibilityVisitor = getSelectedIndexCompatibility(getDimensionalityType());
-		final Class <? extends CommonIndexValue>[] supportedIndexTypes = adapterProvider.getDataAdapters(visibility)[0].getSupportedIndexableTypes();
+		final Class<? extends CommonIndexValue>[] supportedIndexTypes = adapterProvider.getSupportedIndexableTypes();
+		if (compatibilityVisitor.isCompatible(supportedIndexTypes)) {
 
-			if (compatibilityVisitor.isCompatible(supportedIndexTypes)) {
-				if (randomPartitions > 1) {
-					return new CustomIdIndex(
-							new CompoundIndexStrategy(
-									new RoundRobinKeyIndexStrategy(
-											randomPartitions),
-									i.getIndexStrategy()),
-							i.getIndexModel(),
-							new ByteArrayId(
-									i.getId().getString() + "_RAND" + randomPartitions));
-				}
-				else {
-					return i;
-				}
-			}
-		}return null;
+		}
+		return null;
 
 	}
 
 	public boolean isSupported(
-			final PrimaryIndex[] supportedIndices ) {
-		return (getIndex(supportedIndices) != null);
+			final DataAdapterProvider<?> adapterProvider ) {
+		return (getIndex(adapterProvider) != null);
 	}
 
 	private static synchronized String getDimensionalityTypeOptionDescription() {
@@ -118,8 +100,7 @@ public class IngestCommandLineOptions
 		if (registeredDimensionalityTypes == null) {
 			initDimensionalityTypeRegistry();
 		}
-		final IndexCompatibilityVisitor compatibilityVisitor = registeredDimensionalityTypes.get(
-				dimensionalityType);
+		final IndexCompatibilityVisitor compatibilityVisitor = registeredDimensionalityTypes.get(dimensionalityType);
 		if (compatibilityVisitor == null) {
 			return new IndexCompatibilityVisitor() {
 
@@ -140,10 +121,8 @@ public class IngestCommandLineOptions
 		int currentDefaultPriority = Integer.MIN_VALUE;
 		while (dimensionalityTypesProviders.hasNext()) {
 			final IngestDimensionalityTypeProviderSpi dimensionalityTypeProvider = dimensionalityTypesProviders.next();
-			if (registeredDimensionalityTypes.containsKey(
-					dimensionalityTypeProvider.getDimensionalityTypeName())) {
-				LOGGER.warn(
-						"Dimensionality type '" + dimensionalityTypeProvider.getDimensionalityTypeName() + "' already registered.  Unable to register type provided by " + dimensionalityTypeProvider.getClass().getName());
+			if (registeredDimensionalityTypes.containsKey(dimensionalityTypeProvider.getDimensionalityTypeName())) {
+				LOGGER.warn("Dimensionality type '" + dimensionalityTypeProvider.getDimensionalityTypeName() + "' already registered.  Unable to register type provided by " + dimensionalityTypeProvider.getClass().getName());
 			}
 			else {
 				registeredDimensionalityTypes.put(
@@ -159,19 +138,16 @@ public class IngestCommandLineOptions
 
 	public static IngestCommandLineOptions parseOptions(
 			final CommandLine commandLine )
-					throws ParseException {
+			throws ParseException {
 		final boolean success = true;
 		boolean clearNamespace = false;
 		int randomPartitions = -1;
-		if (commandLine.hasOption(
-				"c")) {
+		if (commandLine.hasOption("c")) {
 			clearNamespace = true;
 		}
 		String visibility = null;
-		if (commandLine.hasOption(
-				"v")) {
-			visibility = commandLine.getOptionValue(
-					"v");
+		if (commandLine.hasOption("v")) {
+			visibility = commandLine.getOptionValue("v");
 		}
 		final String dimensionalityType = commandLine.getOptionValue(
 				"dim",
@@ -180,11 +156,8 @@ public class IngestCommandLineOptions
 			throw new ParseException(
 					"Required option is missing");
 		}
-		if (commandLine.hasOption(
-				"randompartitions")) {
-			randomPartitions = Integer.parseInt(
-					commandLine.getOptionValue(
-							"randompartitions"));
+		if (commandLine.hasOption("randompartitions")) {
+			randomPartitions = Integer.parseInt(commandLine.getOptionValue("randompartitions"));
 		}
 		return new IngestCommandLineOptions(
 				visibility,
@@ -200,27 +173,23 @@ public class IngestCommandLineOptions
 				"visibility",
 				true,
 				"The visibility of the data ingested (optional; default is 'public')");
-		allOptions.addOption(
-				visibility);
+		allOptions.addOption(visibility);
 
 		final Option dimensionalityType = new Option(
 				"dim",
 				"dimensionality",
 				true,
 				"The preferred dimensionality type to index the data for this ingest operation. " + getDimensionalityTypeOptionDescription());
-		allOptions.addOption(
-				dimensionalityType);
-		allOptions.addOption(
-				new Option(
-						"c",
-						"clear",
-						false,
-						"Clear ALL data stored with the same prefix as this namespace (optional; default is to append data to the namespace if it exists)"));
-		allOptions.addOption(
-				new Option(
-						"randompartitions",
-						"random partitions",
-						true,
-						"Prefix data with this many unique identifiers to enforce random pre-splits for the index"));
+		allOptions.addOption(dimensionalityType);
+		allOptions.addOption(new Option(
+				"c",
+				"clear",
+				false,
+				"Clear ALL data stored with the same prefix as this namespace (optional; default is to append data to the namespace if it exists)"));
+		allOptions.addOption(new Option(
+				"randompartitions",
+				"random partitions",
+				true,
+				"Prefix data with this many unique identifiers to enforce random pre-splits for the index"));
 	}
 }

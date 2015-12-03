@@ -1,7 +1,6 @@
 package mil.nga.giat.geowave.core.store.adapter;
 
 import mil.nga.giat.geowave.core.store.data.DataWriter;
-import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 
 /**
  * This extends the basic DataAdapter interface to be able to ingest data in
@@ -15,5 +14,4 @@ public interface WritableDataAdapter<T> extends
 		DataAdapter<T>,
 		DataWriter<T, Object>
 {
-	public Class<? extends CommonIndexValue>[] getSupportedIndexableTypes();
 }

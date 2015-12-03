@@ -1,11 +1,9 @@
 package mil.nga.giat.geowave.core.geotime.index;
 
-import org.apache.commons.lang3.ArrayUtils;
-
 import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
-import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TemporalBinningStrategy.Unit;
+import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
@@ -15,8 +13,6 @@ public interface NumericIndexStrategyFactory
 {
 	public NumericIndexStrategy createIndexStrategy(
 			DataType dataType );
-
-	public NumericDimensionDefinition[] getFactoryDefinition();
 
 	public static enum DataType {
 		RASTER,
@@ -80,11 +76,6 @@ public interface NumericIndexStrategyFactory
 							SFCType.HILBERT);
 			}
 		}
-
-		@Override
-		public NumericDimensionDefinition[] getFactoryDefinition() {
-			return SPATIAL_DIMENSIONS;
-		}
 	}
 
 	public static class SpatialTemporalFactory implements
@@ -96,7 +87,7 @@ public interface NumericIndexStrategyFactory
 		private final NumericDimensionDefinition[] spatialTemporalDimensions;
 
 		public SpatialTemporalFactory(
-				Unit unit ) {
+				final Unit unit ) {
 			spatialTemporalDimensions = new NumericDimensionDefinition[] {
 				new LongitudeDefinition(),
 				new LatitudeDefinition(
@@ -136,11 +127,6 @@ public interface NumericIndexStrategyFactory
 							},
 							SFCType.HILBERT);
 			}
-		}
-
-		@Override
-		public NumericDimensionDefinition[] getFactoryDefinition() {
-			return spatialTemporalDimensions;
 		}
 	}
 }

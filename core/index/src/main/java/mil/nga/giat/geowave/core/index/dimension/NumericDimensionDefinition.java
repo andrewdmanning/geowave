@@ -84,6 +84,6 @@ public interface NumericDimensionDefinition extends
 	 *         compatible with this one
 	 */
 	public boolean isCompatibleDefinition(
-			NumericDimensionDefinition otherDimensionDefinition );
+			Class<?extends C> otherDimensionDefinition );
 
 }

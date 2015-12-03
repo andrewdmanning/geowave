@@ -7,11 +7,11 @@ import mil.nga.giat.geowave.core.geotime.index.dimension.TemporalBinningStrategy
 import mil.nga.giat.geowave.core.geotime.store.dimension.LatitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LongitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.TimeField;
-import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
+import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
 import mil.nga.giat.geowave.core.store.index.BasicIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 
 public enum DimensionalityType {
 	SPATIAL(
@@ -73,23 +73,24 @@ public enum DimensionalityType {
 	}
 
 	public boolean isCompatible(
-			final PrimaryIndex index ) {
-		if ((index == null) || (index.getIndexStrategy() == null) || (indexStrategyFactory == null)) {
+			final Class<? extends CommonIndexValue>[] indexTypes ) {
+		if ((indexTypes == null) || (indexTypes.length == 0)) {
 			return false;
 		}
-		final NumericDimensionDefinition[] factoryDimensions = indexStrategyFactory.getFactoryDefinition();
-		final NumericDimensionDefinition[] indexDimensions = index.getIndexStrategy().getOrderedDimensionDefinitions();
-		if (indexDimensions.length != factoryDimensions.length) {
-			return false;
-		}
-		for (final NumericDimensionDefinition fd : factoryDimensions) {
-			boolean dimensionFound = false;
-			for (final NumericDimensionDefinition id : indexDimensions) {
-				if (fd.isCompatibleDefinition(id)) {
-					dimensionFound = true;
+		final NumericDimensionField<? extends CommonIndexValue>[] indexModelFields = defaultIndexModel.getDimensions();
+		for (final NumericDimensionField<? extends CommonIndexValue> field : indexModelFields) {
+			boolean fieldFound = false;
+			for (final Class<? extends CommonIndexValue> indexType : indexTypes) {
+
+				final Class<?> type = GenericTypeResolver.resolveTypeArgument(
+						field.getClass(),
+						NumericDimensionField.class);
+				if (type.isAssignableFrom(indexType)) {
+					fieldFound = true;
+					break;
 				}
 			}
-			if (!dimensionFound) {
+			if (!fieldFound) {
 				return false;
 			}
 		}

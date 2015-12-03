@@ -239,8 +239,7 @@ public class PrimitiveHilbertSFCOperations implements
 		// handle the edge differently
 		if (isMin) {
 			return (long) Math.min(
-					Math.floor(normalizedValue * bins),
-					bins - 1);
+					Math.floor(normalizedValue * (bins - 1)));
 
 		}
 		else {

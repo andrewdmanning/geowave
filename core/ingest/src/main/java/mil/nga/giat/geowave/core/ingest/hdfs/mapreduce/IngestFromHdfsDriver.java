@@ -90,7 +90,7 @@ public class IngestFromHdfsDriver extends
 						LOGGER.warn("Plugin provider for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support ingest from HDFS");
 						continue;
 					}
-					if (!ingestOptions.isSupported(ingestFromHdfsPlugin.getSupportedIndices())) {
+					if (!ingestOptions.isSupported(ingestFromHdfsPlugin)) {
 						LOGGER.warn("HDFS file ingest plugin for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support dimensionality '" + ingestOptions.getDimensionalityType() + "'");
 						continue;
 					}
