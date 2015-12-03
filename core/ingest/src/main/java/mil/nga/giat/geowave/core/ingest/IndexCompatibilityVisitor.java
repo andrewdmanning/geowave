@@ -1,5 +1,6 @@
 package mil.nga.giat.geowave.core.ingest;
 
+import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 /**
@@ -16,5 +17,5 @@ public interface IndexCompatibilityVisitor
 	 * @return whether this index is compatible with the visitor
 	 */
 	public boolean isCompatible(
-			PrimaryIndex index );
+			Class<? extends CommonIndexValue>[] indexTypes );
 }
