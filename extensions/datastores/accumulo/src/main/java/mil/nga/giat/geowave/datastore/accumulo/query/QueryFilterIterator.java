@@ -111,7 +111,7 @@ public class QueryFilterIterator extends
 						model,
 						valueBytes,
 						key.getColumnVisibilityData().getBackingArray());
-				for (FieldInfo<Object> fieldInfo : fieldInfos) {
+				for (final FieldInfo<Object> fieldInfo : fieldInfos) {
 					final ByteArrayId fieldId = fieldInfo.getDataValue().getId();
 					final FieldReader<? extends CommonIndexValue> reader = model.getReader(fieldId);
 					if (reader != null) {
