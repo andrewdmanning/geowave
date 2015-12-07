@@ -31,6 +31,7 @@ import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.ScanCallback;
+import mil.nga.giat.geowave.core.store.adapter.AbstractDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -99,7 +100,7 @@ public class AccumuloUtils
 
 	// used to combine attributes with a common visibility attribute into a
 	// single CQ for performance purposes
-	private static final ByteArrayId COMPOSITE_CQ = new ByteArrayId(
+	public static final ByteArrayId COMPOSITE_CQ = new ByteArrayId(
 			StringUtils.stringToBinary("composite"));
 
 	public static Range byteArrayRangeToAccumuloRange(
@@ -309,43 +310,85 @@ public class AccumuloUtils
 			}
 			final CommonIndexModel indexModel = index.getIndexModel();
 			final byte byteValue[] = entry.getValue().get();
-			final List<FieldInfo<Object>> fieldInfos = decomposeFlattenedFields(
-					indexModel,
-					byteValue,
-					entry.getKey().getColumnVisibilityData().getBackingArray());
-			for (final FieldInfo<Object> fieldInfo : fieldInfos) {
-				final FieldReader<? extends CommonIndexValue> indexFieldReader = indexModel.getReader(fieldInfo.getDataValue().getId());
-				if (indexFieldReader != null) {
-					final CommonIndexValue indexValue = indexFieldReader.readField(fieldInfo.getWrittenValue());
-					indexValue.setVisibility(entry.getKey().getColumnVisibilityData().getBackingArray());
-					final PersistentValue<CommonIndexValue> val = new PersistentValue<CommonIndexValue>(
-							fieldInfo.getDataValue().getId(),
-							indexValue);
-					indexData.addValue(val);
-					fieldInfoList.add(DataStoreUtils.getFieldInfo(
-							val,
-							fieldInfo.getWrittenValue(),
-							entry.getKey().getColumnVisibilityData().getBackingArray()));
-				}
-				else {
-					final FieldReader<?> extFieldReader = adapter.getReader(fieldInfo.getDataValue().getId());
-					if (extFieldReader != null) {
-						final Object value = extFieldReader.readField(fieldInfo.getWrittenValue());
-						final PersistentValue<Object> val = new PersistentValue<Object>(
+			final ByteArrayId fieldId = new ByteArrayId(
+					entry.getKey().getColumnQualifierData().getBackingArray());
+			if ((adapter instanceof AbstractDataAdapter<?>) && (fieldId.equals(COMPOSITE_CQ))) {
+				final List<FieldInfo<Object>> fieldInfos = decomposeFlattenedFields(
+						indexModel,
+						byteValue,
+						entry.getKey().getColumnVisibilityData().getBackingArray());
+				for (final FieldInfo<Object> fieldInfo : fieldInfos) {
+					final FieldReader<? extends CommonIndexValue> indexFieldReader = indexModel.getReader(fieldInfo.getDataValue().getId());
+					if (indexFieldReader != null) {
+						final CommonIndexValue indexValue = indexFieldReader.readField(fieldInfo.getWrittenValue());
+						indexValue.setVisibility(entry.getKey().getColumnVisibilityData().getBackingArray());
+						final PersistentValue<CommonIndexValue> val = new PersistentValue<CommonIndexValue>(
 								fieldInfo.getDataValue().getId(),
-								value);
-						extendedData.addValue(val);
+								indexValue);
+						indexData.addValue(val);
 						fieldInfoList.add(DataStoreUtils.getFieldInfo(
 								val,
 								fieldInfo.getWrittenValue(),
 								entry.getKey().getColumnVisibilityData().getBackingArray()));
 					}
 					else {
+						final FieldReader<?> extFieldReader = adapter.getReader(fieldInfo.getDataValue().getId());
+						if (extFieldReader != null) {
+							final Object value = extFieldReader.readField(fieldInfo.getWrittenValue());
+							final PersistentValue<Object> val = new PersistentValue<Object>(
+									fieldInfo.getDataValue().getId(),
+									value);
+							extendedData.addValue(val);
+							fieldInfoList.add(DataStoreUtils.getFieldInfo(
+									val,
+									fieldInfo.getWrittenValue(),
+									entry.getKey().getColumnVisibilityData().getBackingArray()));
+						}
+						else {
+							LOGGER.error("field reader not found for data entry, the value may be ignored");
+							unknownData.addValue(new PersistentValue<byte[]>(
+									fieldInfo.getDataValue().getId(),
+									fieldInfo.getWrittenValue()));
+						}
+					}
+				}
+			}
+			else {
+				final FieldReader<? extends CommonIndexValue> indexFieldReader = indexModel.getReader(fieldId);
+				if (indexFieldReader != null) {
+					final CommonIndexValue indexValue = indexFieldReader.readField(byteValue);
+					indexValue.setVisibility(entry.getKey().getColumnVisibilityData().getBackingArray());
+					final PersistentValue<CommonIndexValue> val = new PersistentValue<CommonIndexValue>(
+							fieldId,
+							indexValue);
+					indexData.addValue(val);
+					fieldInfoList.add(DataStoreUtils.getFieldInfo(
+							val,
+							byteValue,
+							indexValue.getVisibility()));
+				}
+				else {
+					// next check if this field is part of the adapter's
+					// extended data model
+					final FieldReader<?> extFieldReader = adapter.getReader(fieldId);
+					if (extFieldReader == null) {
+						// if it still isn't resolved, log an error, and
+						// continue
 						LOGGER.error("field reader not found for data entry, the value may be ignored");
 						unknownData.addValue(new PersistentValue<byte[]>(
-								fieldInfo.getDataValue().getId(),
-								fieldInfo.getWrittenValue()));
+								fieldId,
+								byteValue));
+						continue;
 					}
+					final Object value = extFieldReader.readField(byteValue);
+					final PersistentValue<Object> val = new PersistentValue<Object>(
+							fieldId,
+							value);
+					extendedData.addValue(val);
+					fieldInfoList.add(DataStoreUtils.getFieldInfo(
+							val,
+							byteValue,
+							entry.getKey().getColumnVisibility().getBytes()));
 				}
 			}
 		}
@@ -401,7 +444,8 @@ public class AccumuloUtils
 		final List<Mutation> mutations = buildMutations(
 				writableAdapter.getAdapterId().getBytes(),
 				ingestInfo,
-				index);
+				index,
+				(writableAdapter instanceof AbstractDataAdapter<?>) ? true : false);
 
 		writer.write(mutations);
 		return ingestInfo;
@@ -479,17 +523,25 @@ public class AccumuloUtils
 		return buildMutations(
 				dataWriter.getAdapterId().getBytes(),
 				ingestInfo,
-				index);
+				index,
+				(dataWriter instanceof AbstractDataAdapter<?>) ? true : false);
 	}
 
 	private static <T> List<Mutation> buildMutations(
 			final byte[] adapterId,
 			final DataStoreEntryInfo ingestInfo,
-			final PrimaryIndex index ) {
+			final PrimaryIndex index,
+			final boolean flattenFields ) {
 		final List<Mutation> mutations = new ArrayList<Mutation>();
-		final List<FieldInfo<?>> fieldInfoList = composeFlattenedFields(
-				ingestInfo.getFieldInfo(),
-				index);
+		List<FieldInfo<?>> fieldInfoList = null;
+		if (flattenFields) {
+			fieldInfoList = composeFlattenedFields(
+					ingestInfo.getFieldInfo(),
+					index);
+		}
+		else {
+			fieldInfoList = ingestInfo.getFieldInfo();
+		}
 		for (final ByteArrayId rowId : ingestInfo.getRowIds()) {
 			final Mutation mutation = new Mutation(
 					new Text(
@@ -524,11 +576,13 @@ public class AccumuloUtils
 			final PrimaryIndex index ) {
 		final List<FieldInfo<?>> retVal = new ArrayList<>();
 		final Map<ByteArrayId, List<FieldInfo<?>>> vizToFieldMap = new HashMap<>();
+		boolean sharedVisibility = false;
 		// organize FieldInfos by unique visibility
 		for (final FieldInfo<?> fieldInfo : originalList) {
 			final ByteArrayId currViz = new ByteArrayId(
 					fieldInfo.getVisibility());
 			if (vizToFieldMap.containsKey(currViz)) {
+				sharedVisibility = true;
 				final List<FieldInfo<?>> listForViz = vizToFieldMap.get(currViz);
 				final FieldReader<CommonIndexValue> fieldReader = index.getIndexModel().getReader(
 						fieldInfo.getDataValue().getId());
@@ -549,6 +603,9 @@ public class AccumuloUtils
 						currViz,
 						listForViz);
 			}
+		}
+		if (!sharedVisibility) {
+			return originalList;
 		}
 		for (final Entry<ByteArrayId, List<FieldInfo<?>>> entry : vizToFieldMap.entrySet()) {
 			final ByteArrayOutputStream baos = new ByteArrayOutputStream();

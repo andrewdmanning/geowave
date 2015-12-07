@@ -105,26 +105,47 @@ public class QueryFilterIterator extends
 			final PersistentDataset<byte[]> unknownData = new PersistentDataset<byte[]>();
 			for (int i = 0; (i < keys.size()) && (i < values.size()); i++) {
 				final Key key = keys.get(i);
-				final byte[] valueBytes = values.get(
-						i).get();
-				final List<FieldInfo<Object>> fieldInfos = AccumuloUtils.decomposeFlattenedFields(
-						model,
-						valueBytes,
-						key.getColumnVisibilityData().getBackingArray());
-				for (final FieldInfo<Object> fieldInfo : fieldInfos) {
-					final ByteArrayId fieldId = fieldInfo.getDataValue().getId();
-					final FieldReader<? extends CommonIndexValue> reader = model.getReader(fieldId);
+				final ByteArrayId colQual = new ByteArrayId(
+						key.getColumnQualifierData().getBackingArray());
+				if (colQual.equals(AccumuloUtils.COMPOSITE_CQ)) {
+					final byte[] valueBytes = values.get(
+							i).get();
+					final List<FieldInfo<Object>> fieldInfos = AccumuloUtils.decomposeFlattenedFields(
+							model,
+							valueBytes,
+							key.getColumnVisibilityData().getBackingArray());
+					for (final FieldInfo<Object> fieldInfo : fieldInfos) {
+						final ByteArrayId fieldId = fieldInfo.getDataValue().getId();
+						final FieldReader<? extends CommonIndexValue> reader = model.getReader(fieldId);
+						if (reader != null) {
+							final CommonIndexValue fieldValue = reader.readField(fieldInfo.getWrittenValue());
+							fieldValue.setVisibility(fieldInfo.getVisibility());
+							commonData.addValue(new PersistentValue<CommonIndexValue>(
+									fieldId,
+									fieldValue));
+						}
+						else {
+							unknownData.addValue(new PersistentValue<byte[]>(
+									fieldId,
+									fieldInfo.getWrittenValue()));
+						}
+					}
+				}
+				else {
+					final FieldReader<? extends CommonIndexValue> reader = model.getReader(colQual);
 					if (reader != null) {
-						final CommonIndexValue fieldValue = reader.readField(fieldInfo.getWrittenValue());
-						fieldValue.setVisibility(fieldInfo.getVisibility());
+						final CommonIndexValue fieldValue = reader.readField(values.get(
+								i).get());
+						fieldValue.setVisibility(key.getColumnVisibilityData().getBackingArray());
 						commonData.addValue(new PersistentValue<CommonIndexValue>(
-								fieldId,
+								colQual,
 								fieldValue));
 					}
 					else {
 						unknownData.addValue(new PersistentValue<byte[]>(
-								fieldId,
-								fieldInfo.getWrittenValue()));
+								colQual,
+								values.get(
+										i).get()));
 					}
 				}
 			}
