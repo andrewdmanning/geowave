@@ -26,7 +26,7 @@ import mil.nga.giat.geowave.adapter.raster.adapter.RasterDataAdapter;
 import mil.nga.giat.geowave.adapter.raster.query.IndexOnlySpatialQuery;
 import mil.nga.giat.geowave.adapter.raster.stats.HistogramStatistics;
 import mil.nga.giat.geowave.adapter.raster.stats.OverviewStatistics;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.statistics.BoundingBoxDataStatistics;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy;
@@ -175,20 +175,20 @@ public class GeoWaveRasterReader extends
 		geowaveAdapterStore = config.getAdapterStore();
 		geowaveStatisticsStore = config.getDataStatisticsStore();
 
-		rasterIndex = IndexType.SPATIAL_RASTER.createDefaultIndex();
+		rasterIndex = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 		crs = GeoWaveGTRasterFormat.DEFAULT_CRS;
 	}
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param source
 	 *            The source object.
 	 * @throws IOException
 	 * @throws AccumuloSecurityException
 	 * @throws AccumuloException
 	 * @throws UnsupportedEncodingException
-	 * 
+	 *
 	 */
 	public GeoWaveRasterReader(
 			final Object source )
@@ -405,7 +405,7 @@ public class GeoWaveRasterReader extends
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * org.opengis.coverage.grid.GridCoverageReader#read(org.opengis.parameter
 	 * .GeneralParameterValue [])
@@ -783,7 +783,7 @@ public class GeoWaveRasterReader extends
 	/**
 	 * transforms (if necessary) the requested envelope into the CRS used by
 	 * this reader.
-	 * 
+	 *
 	 * @throws DataSourceException
 	 */
 	private static void transformRequestEnvelope(

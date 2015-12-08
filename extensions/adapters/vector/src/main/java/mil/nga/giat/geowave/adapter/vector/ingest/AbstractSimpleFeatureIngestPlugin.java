@@ -20,6 +20,7 @@ import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
+import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.opengis.feature.simple.SimpleFeature;
@@ -179,6 +180,11 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 		public void fromBinary(
 				final byte[] bytes ) {
 			parentPlugin.fromBinary(bytes);
+		}
+
+		@Override
+		public Class<? extends CommonIndexValue>[] getSupportedIndexableTypes() {
+			return parentPlugin.getSupportedIndexableTypes();
 		}
 	}
 }

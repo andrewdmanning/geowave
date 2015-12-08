@@ -9,7 +9,6 @@ import java.util.UUID;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
@@ -43,8 +42,6 @@ public class AttributesSubsetQueryIT extends
 	private static SimpleFeatureType simpleFeatureType;
 	private static FeatureDataAdapter dataAdapter;
 	private static DataStore dataStore;
-
-	private static final PrimaryIndex INDEX = IndexType.SPATIAL_VECTOR.createDefaultIndex();
 
 	// constants for attributes of SimpleFeatureType
 	private static final String CITY_ATTRIBUTE = "city";
@@ -92,7 +89,7 @@ public class AttributesSubsetQueryIT extends
 		final CloseableIterator<SimpleFeature> matches = dataStore.query(
 				new QueryOptions(
 						dataAdapter,
-						INDEX),
+						DEFAULT_SPATIAL_INDEX),
 				new SpatialQuery(
 						GeometryUtils.GEOMETRY_FACTORY.toGeometry(new Envelope(
 								GUADALAJARA,
@@ -116,7 +113,7 @@ public class AttributesSubsetQueryIT extends
 				new QueryOptions(
 						attributesSubset,
 						dataAdapter,
-						INDEX,
+						DEFAULT_SPATIAL_INDEX,
 						-1,
 						null,
 						new String[0]),
@@ -146,7 +143,7 @@ public class AttributesSubsetQueryIT extends
 				new QueryOptions(
 						attributesSubset,
 						dataAdapter,
-						INDEX,
+						DEFAULT_SPATIAL_INDEX,
 						-1,
 						null,
 						new String[0]),
@@ -230,7 +227,7 @@ public class AttributesSubsetQueryIT extends
 		LOGGER.info("Ingesting canned data...");
 
 		try (IndexWriter writer = dataStore.createIndexWriter(
-				INDEX,
+				DEFAULT_SPATIAL_INDEX,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
 			for (SimpleFeature sf : buildCityDataSet()) {
 				writer.write(

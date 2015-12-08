@@ -14,15 +14,13 @@ import mil.nga.giat.geowave.analytic.mapreduce.SequenceFileInputFormatConfigurat
 import mil.nga.giat.geowave.analytic.mapreduce.SequenceFileOutputFormatConfiguration;
 import mil.nga.giat.geowave.analytic.param.CentroidParameters;
 import mil.nga.giat.geowave.analytic.param.ClusteringParameters.Clustering;
-import mil.nga.giat.geowave.analytic.param.ClusteringParameters.Clustering;
 import mil.nga.giat.geowave.analytic.param.CommonParameters;
 import mil.nga.giat.geowave.analytic.param.ExtractParameters;
-import mil.nga.giat.geowave.analytic.param.GlobalParameters.Global;
 import mil.nga.giat.geowave.analytic.param.GlobalParameters.Global;
 import mil.nga.giat.geowave.analytic.param.HullParameters;
 import mil.nga.giat.geowave.analytic.param.MapReduceParameters;
 import mil.nga.giat.geowave.analytic.param.ParameterEnum;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -32,22 +30,22 @@ import org.geotools.feature.type.BasicFeatureTypes;
 /**
  * Runs a clustering at multiple levels. Lower levels cluster within each
  * cluster of the higher level.
- * 
+ *
  * Steps:
- * 
+ *
  * @formatter: off
- * 
+ *
  *             (1) Extract and deduplicate items from geowave.
- * 
+ *
  *             (2) Cluster item within their assigned groups. Initially, items
  *             are all part of the same group.
- * 
+ *
  *             (3) Assign to each point the cluster (group id).
- * 
+ *
  *             (4) Repeat steps 2 to 3 for each lower level.
- * 
+ *
  * @formatter: on
- * 
+ *
  */
 public abstract class MultiLevelClusteringJobRunner extends
 		MapReduceJobController implements
@@ -141,11 +139,11 @@ public abstract class MultiLevelClusteringJobRunner extends
 		// TODO: set out index type for extracts?
 		propertyManagement.storeIfEmpty(
 				CentroidParameters.Centroid.INDEX_ID,
-				IndexType.SPATIAL_VECTOR.getDefaultId());
+				new SpatialDimensionalityTypeProvider().createPrimaryIndex().getId().getString());
 
 		propertyManagement.storeIfEmpty(
 				HullParameters.Hull.INDEX_ID,
-				IndexType.SPATIAL_VECTOR.getDefaultId());
+				new SpatialDimensionalityTypeProvider().createPrimaryIndex().getId().getString());
 
 		// first. extract data
 		int status = jobExtractRunner.run(

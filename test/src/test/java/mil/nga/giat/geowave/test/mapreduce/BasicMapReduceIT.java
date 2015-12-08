@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -86,7 +85,7 @@ public class BasicMapReduceIT extends
 			Assert.fail("Index not deleted successfully");
 		}
 		testMapReduceIngest(
-				IndexType.SPATIAL_VECTOR,
+				false,
 				GENERAL_GPX_INPUT_GPX_DIR);
 		final File gpxInputDir = new File(
 				GENERAL_GPX_INPUT_GPX_DIR);
@@ -161,10 +160,10 @@ public class BasicMapReduceIT extends
 		// ingest the data set into multiple indices and then try several query
 		// methods, by adapter and by index
 		testMapReduceIngest(
-				IndexType.SPATIAL_VECTOR,
+				true,
 				OSM_GPX_INPUT_DIR);
 		testMapReduceIngest(
-				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR,
+				false,
 				OSM_GPX_INPUT_DIR);
 		final WritableDataAdapter<SimpleFeature>[] adapters = new GpxIngestPlugin().getDataAdapters(null);
 
@@ -225,8 +224,8 @@ public class BasicMapReduceIT extends
 					adapters[1]
 				},
 				new PrimaryIndex[] {
-					IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-					IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
+					DEFAULT_SPATIAL_INDEX,
+					DEFAULT_SPATIAL_TEMPORAL_INDEX
 				});
 
 		// now try all adapters and the spatial temporal index, the result
@@ -236,7 +235,7 @@ public class BasicMapReduceIT extends
 				null,
 				adapters,
 				new PrimaryIndex[] {
-					IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex()
+					DEFAULT_SPATIAL_TEMPORAL_INDEX
 				});
 
 		// and finally run with nothing set, should be the full data set

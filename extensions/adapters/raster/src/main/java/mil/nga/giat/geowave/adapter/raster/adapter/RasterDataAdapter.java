@@ -2031,12 +2031,4 @@ public class RasterDataAdapter implements
 	public RowTransform<RasterTile<?>> getTransform() {
 		return new RasterTileRowTransform();
 	}
-
-	@Override
-	public Class<? extends CommonIndexValue>[] getSupportedIndexableTypes() {
-		return new Class[] {
-			GeometryWrapper.class
-		};
-	}
-
 }

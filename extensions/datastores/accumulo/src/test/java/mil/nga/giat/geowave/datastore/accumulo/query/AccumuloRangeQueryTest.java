@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Random;
 
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -84,7 +84,7 @@ public class AccumuloRangeQueryTest
 				new BasicAccumuloOperations(
 						mockConnector));
 
-		index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 		adapter = new TestGeometryAdapter();
 
 		try (IndexWriter writer = mockDataStore.createIndexWriter(
@@ -147,7 +147,7 @@ public class AccumuloRangeQueryTest
 	/**
 	 * Verifies equality for interning is still working as expected
 	 * (topologically), as the the largeQuery() test has a dependency on this;
-	 * 
+	 *
 	 * @throws ParseException
 	 */
 	@Test

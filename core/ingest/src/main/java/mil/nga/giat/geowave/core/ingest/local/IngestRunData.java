@@ -26,13 +26,16 @@ public class IngestRunData implements
 	private final Map<ByteArrayId, IndexWriter> indexIdToWriterCache = new HashMap<ByteArrayId, IndexWriter>();
 	private final AdapterStore adapterCache;
 	private final DataStore dataStore;
+	private final String[] args;
 
 	public IngestRunData(
 			final List<WritableDataAdapter<?>> adapters,
-			final DataStore dataStore ) {
+			final DataStore dataStore,
+			final String[] args ) {
 		this.dataStore = dataStore;
 		adapterCache = new MemoryAdapterStore(
 				adapters.toArray(new WritableDataAdapter[adapters.size()]));
+		this.args = args;
 	}
 
 	public WritableDataAdapter<?> getDataAdapter(
@@ -52,6 +55,10 @@ public class IngestRunData implements
 					indexWriter);
 		}
 		return indexWriter;
+	}
+
+	public String[] getArgs() {
+		return args;
 	}
 
 	@Override

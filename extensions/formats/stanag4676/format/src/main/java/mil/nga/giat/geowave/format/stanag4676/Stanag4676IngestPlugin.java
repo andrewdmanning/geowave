@@ -12,6 +12,8 @@ import java.util.Map.Entry;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
+import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
+import mil.nga.giat.geowave.core.geotime.store.dimension.Time;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.ingest.GeoWaveData;
@@ -27,6 +29,7 @@ import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
+import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.NullIndex;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.format.stanag4676.image.ImageChip;
@@ -143,6 +146,14 @@ public class Stanag4676IngestPlugin extends
 
 			trackBuilder = new SimpleFeatureBuilder(
 					trackType);
+		}
+
+		@Override
+		public Class<? extends CommonIndexValue>[] getSupportedIndexableTypes() {
+			return new Class[] {
+				GeometryWrapper.class,
+				Time.class
+			};
 		}
 
 		@Override
@@ -486,6 +497,14 @@ public class Stanag4676IngestPlugin extends
 	@Override
 	public IngestPluginBase<WholeFile, Object> getIngestWithAvroPlugin() {
 		return ingestWithMapper();
+	}
+
+	@Override
+	public Class<? extends CommonIndexValue>[] getSupportedIndexableTypes() {
+		return new Class[] {
+			GeometryWrapper.class,
+			Time.class
+		};
 	}
 
 }

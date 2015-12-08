@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.UUID;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
-import mil.nga.giat.geowave.core.geotime.IndexType;
-import mil.nga.giat.geowave.core.index.PersistenceUtils;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.store.filter.DistributableFilterList;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 
 import org.geotools.data.DataUtilities;
@@ -71,7 +71,10 @@ public class CQLQueryFilterTest
 				null,
 				f,
 				adapter);
-		final List<QueryFilter> filters = cqlQuery.createFilters(IndexType.SPATIAL_VECTOR.getDefaultIndexModel());
+
+		final PrimaryIndex spatialIndex = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
+
+		final List<QueryFilter> filters = cqlQuery.createFilters(spatialIndex.getIndexModel());
 		final List<DistributableQueryFilter> dFilters = new ArrayList<DistributableQueryFilter>();
 		for (final QueryFilter filter : filters) {
 			dFilters.add((DistributableQueryFilter) filter);
@@ -79,13 +82,14 @@ public class CQLQueryFilterTest
 
 		final DistributableFilterList dFilterList = new DistributableFilterList(
 				dFilters);
+
 		assertTrue(dFilterList.accept(
-				IndexType.SPATIAL_VECTOR.getDefaultIndexModel(),
+				spatialIndex.getIndexModel(),
 				DataStoreUtils.getEncodings(
-						IndexType.SPATIAL_VECTOR.createDefaultIndex(),
+						spatialIndex,
 						adapter.encode(
 								createFeature(),
-								IndexType.SPATIAL_VECTOR.getDefaultIndexModel())).get(
+								spatialIndex.getIndexModel())).get(
 						0)));
 	}
 

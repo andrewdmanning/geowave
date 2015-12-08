@@ -18,7 +18,6 @@ import mil.nga.giat.geowave.adapter.raster.resize.RasterTileResizeJobRunner;
 import mil.nga.giat.geowave.analytic.mapreduce.kde.KDECommandLineOptions;
 import mil.nga.giat.geowave.analytic.mapreduce.kde.KDEJobRunner;
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.datastore.accumulo.util.ConnectorPool;
 import mil.nga.giat.geowave.test.GeoWaveTestEnvironment;
@@ -67,7 +66,7 @@ public class KDERasterResizeIT extends
 			throws Exception {
 		accumuloOperations.deleteAll();
 		testLocalIngest(
-				IndexType.SPATIAL_VECTOR,
+				false,
 				KDE_SHAPEFILE_FILE);
 		// use the min level to define the request boundary because it is the
 		// most coarse grain
@@ -171,7 +170,7 @@ public class KDERasterResizeIT extends
 				accumuloUser,
 				accumuloPassword);
 		conn.tableOperations().compact(
-				TEST_COVERAGE_NAMESPACE + "_" + IndexType.SPATIAL_RASTER.createDefaultIndex().getId().getString(),
+				TEST_COVERAGE_NAMESPACE + "_" + DEFAULT_SPATIAL_INDEX.getId().getString(),
 				null,
 				null,
 				true,
@@ -211,7 +210,7 @@ public class KDERasterResizeIT extends
 						"-" + RasterTileResizeCommandLineOptions.OUTPUT_COVERAGE_NAME_KEY,
 						resizeTileSizeCoverageName,
 						"-" + RasterTileResizeCommandLineOptions.INDEX_ID_KEY,
-						IndexType.SPATIAL_RASTER.getDefaultId(),
+						DEFAULT_SPATIAL_INDEX.getId().getString(),
 						"-" + RasterTileResizeCommandLineOptions.TILE_SIZE_KEY,
 						new Integer(
 								(int) Math.pow(
@@ -260,7 +259,7 @@ public class KDERasterResizeIT extends
 		}
 
 		conn.tableOperations().compact(
-				TEST_COVERAGE_NAMESPACE + "_" + IndexType.SPATIAL_RASTER.createDefaultIndex().getId().getString(),
+				TEST_COVERAGE_NAMESPACE + "_" + DEFAULT_SPATIAL_INDEX.getId().getString(),
 				null,
 				null,
 				true,

@@ -24,7 +24,8 @@ public class PrimitiveHilbertSFCTest
 {
 	private static final NumericDimensionDefinition[] SPATIAL_DIMENSIONS = new NumericDimensionDefinition[] {
 		new LongitudeDefinition(),
-		new LatitudeDefinition(true)
+		new LatitudeDefinition(
+				true)
 	};
 
 	@Test
@@ -56,6 +57,7 @@ public class PrimitiveHilbertSFCTest
 			45,
 			45
 		};
+
 		final double[] testValues2 = new double[] {
 			0,
 			0
@@ -133,23 +135,6 @@ public class PrimitiveHilbertSFCTest
 		final NumericRange rangeLatitude4 = new NumericRange(
 				0,
 				Double.MIN_VALUE);
-		final NumericRange rangeLongitude5 = new NumericRange(
-				-180,
-				180);
-
-		final NumericRange rangeLatitude5 = new NumericRange(
-				-90,
-				90);
-		final RangeDecomposition testResult5 = testOperations.decomposeRange(
-				new NumericData[] {
-						rangeLongitude5,
-					rangeLatitude5
-				},
-				compactHilbertCurve,
-				sfcDimensions,
-				totalPrecision,
-				Integer.MAX_VALUE,
-				true);
 		final RangeDecomposition expectedResult1 = expectedResultOperations.decomposeRange(
 				new NumericData[] {
 					rangeLongitude1,
@@ -159,6 +144,7 @@ public class PrimitiveHilbertSFCTest
 				sfcDimensions,
 				totalPrecision,
 				Integer.MAX_VALUE,
+				true,
 				true);
 		final RangeDecomposition testResult1 = testOperations.decomposeRange(
 				new NumericData[] {
@@ -169,6 +155,7 @@ public class PrimitiveHilbertSFCTest
 				sfcDimensions,
 				totalPrecision,
 				Integer.MAX_VALUE,
+				true,
 				true);
 		Assert.assertTrue(expectedResult1.getRanges().length == testResult1.getRanges().length);
 		for (int i = 0; i < expectedResult1.getRanges().length; i++) {
@@ -183,6 +170,7 @@ public class PrimitiveHilbertSFCTest
 				sfcDimensions,
 				totalPrecision,
 				Integer.MAX_VALUE,
+				true,
 				true);
 		final RangeDecomposition testResult2 = testOperations.decomposeRange(
 				new NumericData[] {
@@ -193,6 +181,7 @@ public class PrimitiveHilbertSFCTest
 				sfcDimensions,
 				totalPrecision,
 				Integer.MAX_VALUE,
+				true,
 				true);
 		Assert.assertTrue(expectedResult2.getRanges().length == testResult2.getRanges().length);
 		for (int i = 0; i < expectedResult2.getRanges().length; i++) {
@@ -207,7 +196,8 @@ public class PrimitiveHilbertSFCTest
 				sfcDimensions,
 				totalPrecision,
 				Integer.MAX_VALUE,
-				true);
+				true,
+				false);
 		final RangeDecomposition testResult3 = testOperations.decomposeRange(
 				new NumericData[] {
 					rangeLongitude3,
@@ -217,7 +207,8 @@ public class PrimitiveHilbertSFCTest
 				sfcDimensions,
 				totalPrecision,
 				Integer.MAX_VALUE,
-				true);
+				true,
+				false);
 		Assert.assertTrue(expectedResult3.getRanges().length == testResult3.getRanges().length);
 		for (int i = 0; i < expectedResult3.getRanges().length; i++) {
 			Assert.assertTrue(expectedResult3.getRanges()[i].equals(testResult3.getRanges()[i]));
@@ -231,7 +222,8 @@ public class PrimitiveHilbertSFCTest
 				sfcDimensions,
 				totalPrecision,
 				Integer.MAX_VALUE,
-				true);
+				true,
+				false);
 		final RangeDecomposition testResult4 = testOperations.decomposeRange(
 				new NumericData[] {
 					rangeLongitude4,
@@ -241,7 +233,8 @@ public class PrimitiveHilbertSFCTest
 				sfcDimensions,
 				totalPrecision,
 				Integer.MAX_VALUE,
-				true);
+				true,
+				false);
 		Assert.assertTrue(expectedResult4.getRanges().length == testResult4.getRanges().length);
 		for (int i = 0; i < expectedResult4.getRanges().length; i++) {
 			Assert.assertTrue(expectedResult4.getRanges()[i].equals(testResult4.getRanges()[i]));

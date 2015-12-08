@@ -1,7 +1,6 @@
 package mil.nga.giat.geowave.adapter.vector.utils;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.text.ParseException;
@@ -16,11 +15,13 @@ import mil.nga.giat.geowave.adapter.vector.stats.FeatureTimeRangeStatistics;
 import mil.nga.giat.geowave.adapter.vector.util.FeatureDataUtils;
 import mil.nga.giat.geowave.adapter.vector.util.QueryIndexHelper;
 import mil.nga.giat.geowave.adapter.vector.utils.TimeDescriptors.TimeDescriptorConfiguration;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.query.TemporalConstraints;
 import mil.nga.giat.geowave.core.geotime.store.query.TemporalConstraintsSet;
 import mil.nga.giat.geowave.core.geotime.store.query.TemporalRange;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.query.BasicQuery;
@@ -47,6 +48,8 @@ import com.vividsolutions.jts.geom.PrecisionModel;
 
 public class QueryIndexHelperTest
 {
+	private static final NumericIndexStrategy SPATIAL_INDEX_STRATEGY = new SpatialDimensionalityTypeProvider().createPrimaryIndex().getIndexStrategy();
+	private static final NumericIndexStrategy SPATIAL_TEMPORAL_INDEX_STRATEGY = new SpatialTemporalDimensionalityTypeProvider().createPrimaryIndex().getIndexStrategy();
 	final ByteArrayId dataAdapterId = new ByteArrayId(
 			"123");
 
@@ -363,7 +366,7 @@ public class QueryIndexHelperTest
 										41.25)).getEnvelopeInternal()),
 						constraintsSet));
 
-		final MultiDimensionalNumericData nd = query.getIndexConstraints(IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndexStrategy());
+		final MultiDimensionalNumericData nd = query.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertEquals(
 				stime.getTime(),
 				(long) nd.getDataPerDimension()[2].getMin());
@@ -382,7 +385,7 @@ public class QueryIndexHelperTest
 										41.25)).getEnvelopeInternal()),
 						null));
 
-		final MultiDimensionalNumericData nd1 = query1.getIndexConstraints(IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndexStrategy());
+		final MultiDimensionalNumericData nd1 = query1.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertEquals(
 				statsStart1.getTime(),
 				(long) nd1.getDataPerDimension()[2].getMin());
@@ -431,7 +434,7 @@ public class QueryIndexHelperTest
 						new GeometryFactory().toGeometry(bounds),
 						null));
 
-		final MultiDimensionalNumericData nd = query.getIndexConstraints(IndexType.SPATIAL_VECTOR.createDefaultIndexStrategy());
+		final MultiDimensionalNumericData nd = query.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
 		assertEquals(
 				21.23,
 				nd.getDataPerDimension()[0].getMin(),
@@ -457,7 +460,7 @@ public class QueryIndexHelperTest
 						null,
 						null));
 
-		final MultiDimensionalNumericData nd1 = query1.getIndexConstraints(IndexType.SPATIAL_VECTOR.createDefaultIndexStrategy());
+		final MultiDimensionalNumericData nd1 = query1.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
 		assertEquals(
 				22.25,
 				nd1.getDataPerDimension()[0].getMin(),
@@ -562,7 +565,7 @@ public class QueryIndexHelperTest
 				null,
 				mercFeat);
 
-		Coordinate coord = ((Point) defaultCRSFeat.getDefaultGeometry()).getCoordinate();
+		final Coordinate coord = ((Point) defaultCRSFeat.getDefaultGeometry()).getCoordinate();
 
 		// coordinate should match reprojected feature
 		assertEquals(
@@ -706,7 +709,7 @@ public class QueryIndexHelperTest
 				rangeTimeDescriptors,
 				statsMap,
 				constraintsSet);
-		final MultiDimensionalNumericData nd = constraints.getIndexConstraints(IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndexStrategy());
+		final MultiDimensionalNumericData nd = constraints.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertTrue(nd.isEmpty());
 		/*
 		 * assertEquals( stime.getTime(), (long)
@@ -724,7 +727,7 @@ public class QueryIndexHelperTest
 				rangeTimeDescriptors,
 				statsMap,
 				constraintsSet2);
-		final MultiDimensionalNumericData nd2 = constraints2.getIndexConstraints(IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndexStrategy());
+		final MultiDimensionalNumericData nd2 = constraints2.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertTrue(nd2.isEmpty());
 	}
 

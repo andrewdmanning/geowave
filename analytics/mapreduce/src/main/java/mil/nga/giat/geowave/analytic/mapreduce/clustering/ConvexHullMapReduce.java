@@ -18,7 +18,7 @@ import mil.nga.giat.geowave.analytic.clustering.CentroidManagerGeoWave;
 import mil.nga.giat.geowave.analytic.clustering.ClusteringUtils;
 import mil.nga.giat.geowave.analytic.clustering.NestedGroupCentroidAssignment;
 import mil.nga.giat.geowave.analytic.param.HullParameters;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.mapreduce.GeoWaveWritableInputMapper;
@@ -42,27 +42,27 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 /**
  * Compute the convex hull over all points associated with each centroid. Each
  * hull is sent to output as a simple features.
- * 
+ *
  * Properties:
- * 
+ *
  * @formatter:off
- * 
+ *
  *                "ConvexHullMapReduce.Hull.DataTypeId" - Id of the data type to
  *                store the the polygons as simple features - defaults to
  *                "convex_hull"
- * 
+ *
  *                "ConvexHullMapReduce.Hull.ProjectionClass" - instance of
  *                {@link mil.nga.giat.geowave.analytic.Projection}
- * 
+ *
  *                "ConvexHullMapReduce.Hull.IndexId" - The Index ID used for
  *                output simple features.
- * 
+ *
  *                "ConvexHullMapReduce.Hull.WrapperFactoryClass" ->
  *                {@link AnalyticItemWrapperFactory} to group and level
  *                associated with each entry
- * 
+ *
  * @see mil.nga.giat.geowave.analytic.clustering.NestedGroupCentroidAssignment
- * 
+ *
  * @formatter:on
  */
 public class ConvexHullMapReduce
@@ -317,7 +317,7 @@ public class ConvexHullMapReduce
 			indexId = new ByteArrayId(
 					StringUtils.stringToBinary(config.getString(
 							HullParameters.Hull.INDEX_ID,
-							IndexType.SPATIAL_VECTOR.getDefaultId())));
+							new SpatialDimensionalityTypeProvider().createPrimaryIndex().getId().getString())));
 
 		}
 	}

@@ -2,8 +2,8 @@ package mil.nga.giat.geowave.core.geotime.store.dimension;
 
 import java.nio.ByteBuffer;
 
-import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TemporalBinningStrategy.Unit;
+import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
@@ -19,7 +19,7 @@ import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 /**
  * This field definition can be used for temporal data (either as a time range
  * or a single instant in time).
- * 
+ *
  */
 public class TimeField implements
 		NumericDimensionField<Time>
@@ -202,11 +202,5 @@ public class TimeField implements
 			return false;
 		}
 		return true;
-	}
-
-	@Override
-	public boolean isCompatibleDefinition(
-			final NumericDimensionDefinition otherDimensionDefinition ) {
-		return equals(otherDimensionDefinition);
 	}
 }

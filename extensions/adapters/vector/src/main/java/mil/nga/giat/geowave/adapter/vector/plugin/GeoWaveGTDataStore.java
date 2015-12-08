@@ -18,7 +18,7 @@ import mil.nga.giat.geowave.adapter.vector.plugin.transaction.MemoryTransactions
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.TransactionsAllocator;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.ColumnVisibilityManagement;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.VisibilityManagementHelper;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LatitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LongitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.TimeField;
@@ -139,7 +139,7 @@ public class GeoWaveGTDataStore extends
 		if (adapter instanceof FeatureDataAdapter) {
 			return getPreferredIndex((FeatureDataAdapter) adapter);
 		}
-		return IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		return new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 	}
 
 	@Override
@@ -274,7 +274,7 @@ public class GeoWaveGTDataStore extends
 	/**
 	 * Used to retrieve the TransactionStateDiff for this transaction.
 	 * <p>
-	 * 
+	 *
 	 * @param transaction
 	 * @return GeoWaveTransactionState or null if subclass is handling
 	 *         differences
@@ -346,7 +346,7 @@ public class GeoWaveGTDataStore extends
 			// the current selection. Not using temporal at this point.
 			// temporal index should only be used if explicitly requested.
 			if (currentSelection == null) {
-				currentSelection = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+				currentSelection = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 			}
 		}
 		catch (final IOException ex) {

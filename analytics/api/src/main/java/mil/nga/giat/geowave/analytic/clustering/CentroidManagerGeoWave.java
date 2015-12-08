@@ -28,7 +28,7 @@ import mil.nga.giat.geowave.analytic.param.StoreParameters;
 import mil.nga.giat.geowave.analytic.store.PersistableAdapterStore;
 import mil.nga.giat.geowave.analytic.store.PersistableDataStore;
 import mil.nga.giat.geowave.analytic.store.PersistableIndexStore;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
@@ -37,8 +37,8 @@ import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.query.DataIdQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
@@ -72,45 +72,45 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
 /**
- * 
+ *
  * Manages the population of centroids by group id and batch id.
- * 
+ *
  * Properties:
- * 
+ *
  * @formatter:off
- * 
+ *
  *                "CentroidManagerGeoWave.Centroid.WrapperFactoryClass" -
  *                {@link AnalyticItemWrapperFactory} to extract wrap spatial
  *                objects with Centroid management function
- * 
+ *
  *                "CentroidManagerGeoWave.Centroid.DataTypeId" -> The data type
  *                ID of the centroid simple feature
- * 
+ *
  *                "CentroidManagerGeoWave.Centroid.IndexId" -> The GeoWave index
  *                ID of the centroid simple feature
- * 
+ *
  *                "CentroidManagerGeoWave.Global.BatchId" -> Batch ID for
  *                updates
- * 
+ *
  *                "CentroidManagerGeoWave.Global.Zookeeper" -> Zookeeper URL
- * 
+ *
  *                "CentroidManagerGeoWave.Global.AccumuloInstance" -> Accumulo
  *                Instance Name
- * 
+ *
  *                "CentroidManagerGeoWave.Global.AccumuloUser" -> Accumulo User
  *                name
- * 
+ *
  *                "CentroidManagerGeoWave.Global.AccumuloPassword" -> Accumulo
  *                Password
- * 
+ *
  *                "CentroidManagerGeoWave.Global.AccumuloNamespace" -> Accumulo
  *                Table Namespace
- * 
+ *
  *                "CentroidManagerGeoWave.Common.AccumuloConnectFactory" ->
  *                {@link BasicAccumuloOperationsFactory}
- * 
+ *
  * @formatter:on
- * 
+ *
  * @param <T>
  *            The item type used to represent a centroid.
  */
@@ -241,7 +241,7 @@ public class CentroidManagerGeoWave<T> implements
 
 		final String indexId = scopedJob.getString(
 				CentroidParameters.Centroid.INDEX_ID,
-				IndexType.SPATIAL_VECTOR.getDefaultId());
+				new SpatialDimensionalityTypeProvider().createPrimaryIndex().getId().getString());
 
 		dataStore = ((PersistableDataStore) StoreParameters.StoreParam.DATA_STORE.getHelper().getValue(
 				context,
@@ -264,7 +264,7 @@ public class CentroidManagerGeoWave<T> implements
 	/**
 	 * Creates a new centroid based on the old centroid with new coordinates and
 	 * dimension values
-	 * 
+	 *
 	 * @param feature
 	 * @param coordinate
 	 * @param extraNames
@@ -440,9 +440,11 @@ public class CentroidManagerGeoWave<T> implements
 						adapterId,
 						new ByteArrayId(
 								StringUtils.stringToBinary(dataId))))) {
-			if (it.hasNext()) return centroidFactory.create(it.next());
+			if (it.hasNext()) {
+				return centroidFactory.create(it.next());
+			}
 		}
-		catch (IOException e) {
+		catch (final IOException e) {
 			LOGGER.error(
 					"Failed to fined centroid " + dataId.toString(),
 					e);
@@ -494,7 +496,7 @@ public class CentroidManagerGeoWave<T> implements
 				new CQLQuery(
 						null,
 						finalFilter,
-						(FeatureDataAdapter) adapter));
+						adapter));
 	}
 
 	@SuppressWarnings("unchecked")

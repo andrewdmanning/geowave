@@ -18,7 +18,7 @@ import mil.nga.giat.geowave.analytic.param.ParameterEnum;
 import mil.nga.giat.geowave.analytic.param.StoreParameters.StoreParam;
 import mil.nga.giat.geowave.analytic.store.PersistableAdapterStore;
 import mil.nga.giat.geowave.analytic.store.PersistableIndexStore;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -320,9 +320,10 @@ public abstract class GeoWaveAnalyticJobRunner extends
 		PrimaryIndex index = (PrimaryIndex) indexStore.getIndex(new ByteArrayId(
 				indexId));
 		if (index == null) {
+			final PrimaryIndex defaultSpatialIndex = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 			index = new CustomIdIndex(
-					IndexType.SPATIAL_VECTOR.createDefaultIndexStrategy(),
-					IndexType.SPATIAL_VECTOR.getDefaultIndexModel(),
+					defaultSpatialIndex.getIndexStrategy(),
+					defaultSpatialIndex.getIndexModel(),
 					new ByteArrayId(
 							indexId));
 			indexStore.addIndex(index);

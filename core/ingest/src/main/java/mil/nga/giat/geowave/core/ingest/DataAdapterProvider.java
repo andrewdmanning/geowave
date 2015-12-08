@@ -25,5 +25,11 @@ public interface DataAdapterProvider<T>
 	public WritableDataAdapter<T>[] getDataAdapters(
 			String globalVisibility );
 
+	/**
+	 * return a set of classes that can be indexed by this data adapter
+	 * provider, used for compatibility checking with an index provider
+	 *
+	 * @return the classes that are indexable by this adapter provider
+	 */
 	public Class<? extends CommonIndexValue>[] getSupportedIndexableTypes();
 }

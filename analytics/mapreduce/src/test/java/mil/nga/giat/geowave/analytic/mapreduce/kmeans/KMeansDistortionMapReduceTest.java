@@ -32,11 +32,11 @@ import mil.nga.giat.geowave.analytic.store.PersistableIndexStore;
 import mil.nga.giat.geowave.core.cli.AdapterStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.IndexStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.memory.MemoryAdapterStoreFactory;
 import mil.nga.giat.geowave.core.store.memory.MemoryDataStoreFactory;
@@ -79,7 +79,7 @@ public class KMeansDistortionMapReduceTest
 
 	private static final List<Object> capturedObjects = new ArrayList<Object>();
 
-	final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+	final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 
 	final GeometryFactory factory = new GeometryFactory();
 	final String grp1 = "g1";
@@ -110,7 +110,7 @@ public class KMeansDistortionMapReduceTest
 		final PropertyManagement propManagement = new PropertyManagement();
 		propManagement.store(
 				CentroidParameters.Centroid.INDEX_ID,
-				IndexType.SPATIAL_VECTOR.getDefaultId());
+				new SpatialDimensionalityTypeProvider().createPrimaryIndex().getId().getString());
 		propManagement.store(
 				CentroidParameters.Centroid.DATA_TYPE_ID,
 				ftype.getTypeName());
@@ -203,10 +203,10 @@ public class KMeansDistortionMapReduceTest
 	}
 
 	private void ingest(
-			DataStore dataStore,
-			FeatureDataAdapter adapter,
-			PrimaryIndex index,
-			SimpleFeature feature )
+			final DataStore dataStore,
+			final FeatureDataAdapter adapter,
+			final PrimaryIndex index,
+			final SimpleFeature feature )
 			throws IOException {
 		try (IndexWriter writer = dataStore.createIndexWriter(
 				index,

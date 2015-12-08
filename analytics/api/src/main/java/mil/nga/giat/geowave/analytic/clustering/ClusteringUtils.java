@@ -4,12 +4,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.geotools.feature.type.BasicFeatureTypes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.vividsolutions.jts.geom.Polygon;
-
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.analytic.AnalyticFeature;
 import mil.nga.giat.geowave.analytic.PropertyManagement;
@@ -19,16 +13,21 @@ import mil.nga.giat.geowave.analytic.param.CommonParameters;
 import mil.nga.giat.geowave.analytic.param.StoreParameters;
 import mil.nga.giat.geowave.analytic.store.PersistableAdapterStore;
 import mil.nga.giat.geowave.analytic.store.PersistableIndexStore;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+
+import org.geotools.feature.type.BasicFeatureTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.vividsolutions.jts.geom.Polygon;
 
 public class ClusteringUtils
 {
@@ -36,40 +35,6 @@ public class ClusteringUtils
 	public static final String CLUSTERING_CRS = "EPSG:4326";
 
 	final static Logger LOGGER = LoggerFactory.getLogger(ClusteringUtils.class);
-
-	private static PrimaryIndex createIndex(
-			final String indexId,
-			final IndexStore indexStore )
-			throws Exception {
-
-		final ByteArrayId dbId = new ByteArrayId(
-				indexId);
-		if (!indexStore.indexExists(dbId)) {
-			if (indexId.equals(IndexType.SPATIAL_VECTOR.getDefaultId())) {
-				final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
-				indexStore.addIndex(index);
-				return index;
-			}
-			else if (indexId.equals(IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.getDefaultId())) {
-				final PrimaryIndex index = IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex();
-				indexStore.addIndex(index);
-				return index;
-			}
-			else {
-				final PrimaryIndex index = new CustomIdIndex(
-						IndexType.SPATIAL_VECTOR.createDefaultIndexStrategy(),
-						IndexType.SPATIAL_VECTOR.getDefaultIndexModel(),
-						new ByteArrayId(
-								indexId));
-				indexStore.addIndex(index);
-				return index;
-			}
-		}
-		else {
-			return (PrimaryIndex) indexStore.getIndex(dbId);
-		}
-
-	}
 
 	private static DataAdapter<?> createAdapter(
 			final String sampleDataTypeId,
@@ -127,7 +92,7 @@ public class ClusteringUtils
 		try {
 			it.close();
 		}
-		catch (IOException e) {
+		catch (final IOException e) {
 			LOGGER.warn("Unable to close iterator" + e);
 		}
 		final PrimaryIndex[] result = new PrimaryIndex[indices.size()];
@@ -142,7 +107,7 @@ public class ClusteringUtils
 	protected static List<ByteArrayRange> getGeoWaveRangesForQuery(
 			final Polygon polygon ) {
 
-		final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 		final List<ByteArrayRange> ranges = index.getIndexStrategy().getQueryRanges(
 				new SpatialQuery(
 						polygon).getIndexConstraints(index.getIndexStrategy()));

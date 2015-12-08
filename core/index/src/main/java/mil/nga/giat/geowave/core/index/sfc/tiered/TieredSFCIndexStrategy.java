@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableBiMap.Builder;
 /**
  * This class uses multiple SpaceFillingCurve objects, one per tier, to
  * represent a single cohesive index strategy with multiple precisions
- * 
+ *
  */
 public class TieredSFCIndexStrategy implements
 		HierarchicalNumericIndexStrategy
@@ -51,7 +51,7 @@ public class TieredSFCIndexStrategy implements
 
 	/**
 	 * Constructor used to create a Tiered Index Strategy.
-	 * 
+	 *
 	 * @param baseDefinitions
 	 *            the dimension definitions of the space filling curve
 	 * @param orderedSfcs
@@ -109,8 +109,9 @@ public class TieredSFCIndexStrategy implements
 			maxRangeDecompositionPerBin = (int) Math.ceil((double) maxRanges / (double) binnedQueries.length);
 		}
 		for (final BinnedNumericDataset binnedQuery : binnedQueries) {
-			final RangeDecomposition rangeDecomp = sfc.decomposeQuery(
+			final RangeDecomposition rangeDecomp = sfc.decomposeRange(
 					binnedQuery,
+					true,
 					maxRangeDecompositionPerBin);
 			final byte[] tierAndBinId = ByteArrayUtils.combineArrays(
 					new byte[] {
@@ -136,7 +137,7 @@ public class TieredSFCIndexStrategy implements
 
 	/**
 	 * Returns a list of query ranges for an specified numeric range.
-	 * 
+	 *
 	 * @param indexedRange
 	 *            defines the numeric range for the query
 	 * @return a List of query ranges
@@ -151,7 +152,7 @@ public class TieredSFCIndexStrategy implements
 
 	/**
 	 * Returns a list of id's for insertion.
-	 * 
+	 *
 	 * @param indexedData
 	 *            defines the numeric data to be indexed
 	 * @return a List of insertion ID's
@@ -268,36 +269,56 @@ public class TieredSFCIndexStrategy implements
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(baseDefinitions);
-		result = prime * result + (int) (maxEstimatedDuplicateIds ^ (maxEstimatedDuplicateIds >>> 32));
-		result = prime * result + ((maxEstimatedDuplicateIdsBigInteger == null) ? 0 : maxEstimatedDuplicateIdsBigInteger.hashCode());
-		result = prime * result + ((orderedSfcIndexToTierId == null) ? 0 : orderedSfcIndexToTierId.hashCode());
-		result = prime * result + Arrays.hashCode(orderedSfcs);
+		result = (prime * result) + Arrays.hashCode(baseDefinitions);
+		result = (prime * result) + (int) (maxEstimatedDuplicateIds ^ (maxEstimatedDuplicateIds >>> 32));
+		result = (prime * result) + ((maxEstimatedDuplicateIdsBigInteger == null) ? 0 : maxEstimatedDuplicateIdsBigInteger.hashCode());
+		result = (prime * result) + ((orderedSfcIndexToTierId == null) ? 0 : orderedSfcIndexToTierId.hashCode());
+		result = (prime * result) + Arrays.hashCode(orderedSfcs);
 		return result;
 	}
 
 	@Override
 	public boolean equals(
-			Object obj ) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
-		TieredSFCIndexStrategy other = (TieredSFCIndexStrategy) obj;
+			final Object obj ) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final TieredSFCIndexStrategy other = (TieredSFCIndexStrategy) obj;
 		if (!Arrays.equals(
 				baseDefinitions,
-				other.baseDefinitions)) return false;
-		if (maxEstimatedDuplicateIds != other.maxEstimatedDuplicateIds) return false;
+				other.baseDefinitions)) {
+			return false;
+		}
+		if (maxEstimatedDuplicateIds != other.maxEstimatedDuplicateIds) {
+			return false;
+		}
 		if (maxEstimatedDuplicateIdsBigInteger == null) {
-			if (other.maxEstimatedDuplicateIdsBigInteger != null) return false;
+			if (other.maxEstimatedDuplicateIdsBigInteger != null) {
+				return false;
+			}
 		}
-		else if (!maxEstimatedDuplicateIdsBigInteger.equals(other.maxEstimatedDuplicateIdsBigInteger)) return false;
+		else if (!maxEstimatedDuplicateIdsBigInteger.equals(other.maxEstimatedDuplicateIdsBigInteger)) {
+			return false;
+		}
 		if (orderedSfcIndexToTierId == null) {
-			if (other.orderedSfcIndexToTierId != null) return false;
+			if (other.orderedSfcIndexToTierId != null) {
+				return false;
+			}
 		}
-		else if (!orderedSfcIndexToTierId.equals(other.orderedSfcIndexToTierId)) return false;
+		else if (!orderedSfcIndexToTierId.equals(other.orderedSfcIndexToTierId)) {
+			return false;
+		}
 		if (!Arrays.equals(
 				orderedSfcs,
-				other.orderedSfcs)) return false;
+				other.orderedSfcs)) {
+			return false;
+		}
 		return true;
 	}
 
@@ -379,8 +400,9 @@ public class TieredSFCIndexStrategy implements
 					tierId
 				},
 				index.getBinId());
-		final RangeDecomposition rangeDecomp = sfc.decomposeQuery(
+		final RangeDecomposition rangeDecomp = sfc.decomposeRange(
 				index,
+				false,
 				DEFAULT_MAX_RANGES);
 		// this range does not fit into a single row ID at the lowest
 		// tier, decompose it
@@ -559,7 +581,7 @@ public class TieredSFCIndexStrategy implements
 	}
 
 	public void setMaxEstimatedDuplicateIds(
-			int maxEstimatedDuplicateIds ) {
+			final int maxEstimatedDuplicateIds ) {
 		this.maxEstimatedDuplicateIds = maxEstimatedDuplicateIds;
 		maxEstimatedDuplicateIdsBigInteger = BigInteger.valueOf(maxEstimatedDuplicateIds);
 	}

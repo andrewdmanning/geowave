@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import mil.nga.giat.geowave.adapter.raster.RasterUtils;
 import mil.nga.giat.geowave.analytic.mapreduce.kde.KDEJobRunner;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputFormat;
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputKey;
@@ -130,7 +130,7 @@ public class ComparisonStatsJobRunner extends
 							statsNamespace,
 							ComparisonAccumuloStatsReducer.NUM_BANDS,
 							kdeCommandLineOptions.getTileSize()),
-					IndexType.SPATIAL_RASTER.createDefaultIndex());
+					new SpatialDimensionalityTypeProvider().createPrimaryIndex());
 			return ingester.waitForCompletion(true);
 
 		}

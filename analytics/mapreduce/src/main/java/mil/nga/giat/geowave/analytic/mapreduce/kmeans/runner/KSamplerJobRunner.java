@@ -14,7 +14,7 @@ import mil.nga.giat.geowave.analytic.param.ParameterEnum;
 import mil.nga.giat.geowave.analytic.param.SampleParameters;
 import mil.nga.giat.geowave.analytic.sample.function.RandomSamplingRankFunction;
 import mil.nga.giat.geowave.analytic.sample.function.SamplingRankFunction;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
@@ -28,15 +28,15 @@ import org.apache.hadoop.io.ObjectWritable;
 import org.apache.hadoop.mapreduce.Job;
 
 /**
- * 
+ *
  * Samples 'K' number of data items by evaluating a {@link SamplingRankFunction}
- * 
+ *
  * For KMeans Parallel, the initial step requires seeding the centroids with a
  * single point. In this case, K=1 and the rank function is random. This means
  * the top selected geometry is random. In addition, each subsequent iteration
  * samples based on probability function and K is some provided sample size.
- * 
- * 
+ *
+ *
  */
 public class KSamplerJobRunner extends
 		GeoWaveAnalyticJobRunner implements
@@ -120,7 +120,7 @@ public class KSamplerJobRunner extends
 
 		runTimeProperties.storeIfEmpty(
 				SampleParameters.Sample.INDEX_ID,
-				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.getDefaultId());
+				new SpatialTemporalDimensionalityTypeProvider().createPrimaryIndex().getId());
 		runTimeProperties.setConfig(
 				new ParameterEnum[] {
 					GlobalParameters.Global.BATCH_ID,

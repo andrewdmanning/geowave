@@ -1,7 +1,7 @@
 package mil.nga.giat.geowave.core.geotime.store.query;
 
 import static org.junit.Assert.assertEquals;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryAdapter;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.geotime.store.filter.SpatialQueryFilter.CompareOperation;
@@ -132,7 +132,7 @@ public class SpatialQueryTest
 		};
 
 		int pos = 0;
-		final CommonIndexModel model = IndexType.SPATIAL_VECTOR.getDefaultIndexModel();
+		final CommonIndexModel model = new SpatialDimensionalityTypeProvider().createPrimaryIndex().getIndexModel();
 		for (final IndexedPersistenceEncoding dataItem : data) {
 			for (final QueryFilter filter : queryCopy.createFilters(model)) {
 				assertEquals(

@@ -6,7 +6,7 @@ import java.util.List;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStore;
@@ -35,11 +35,11 @@ public class SimpleIngest
 	public static final String FEATURE_NAME = "GridPoint";
 
 	public static List<SimpleFeature> getGriddedFeatures(
-			SimpleFeatureBuilder pointBuilder,
-			int firstFeatureId ) {
+			final SimpleFeatureBuilder pointBuilder,
+			final int firstFeatureId ) {
 
 		int featureId = firstFeatureId;
-		List<SimpleFeature> feats = new ArrayList<>();
+		final List<SimpleFeature> feats = new ArrayList<>();
 		for (int longitude = -180; longitude <= 180; longitude += 5) {
 			for (int latitude = -90; latitude <= 90; latitude += 5) {
 				pointBuilder.set(
@@ -71,7 +71,7 @@ public class SimpleIngest
 	 * DataStore is essentially the controller that take the accumulo
 	 * information, geowave configuration, and data type, and inserts/queries
 	 * from accumulo
-	 * 
+	 *
 	 * @param instance
 	 *            Accumulo instance configuration
 	 * @return DataStore object for the particular accumulo instance
@@ -98,7 +98,7 @@ public class SimpleIngest
 	/***
 	 * The class tells geowave about the accumulo instance it should connect to,
 	 * as well as what tables it should create/store it's data in
-	 * 
+	 *
 	 * @param zookeepers
 	 *            Zookeepers associated with the accumulo instance, comma
 	 *            separate
@@ -136,7 +136,7 @@ public class SimpleIngest
 	 * The dataadapter interface describes how to serialize a data type. Here we
 	 * are using an implementation that understands how to serialize OGC
 	 * SimpleFeature types.
-	 * 
+	 *
 	 * @param sft
 	 *            simple feature type you want to generate an adapter from
 	 * @return data adapter that handles serialization of the sft simple feature
@@ -154,7 +154,7 @@ public class SimpleIngest
 	 * range of the index (min/max values) -The range type (bounded/unbounded)
 	 * -The number of "levels" (different precisions, needed when the values
 	 * indexed has ranges on any dimension)
-	 * 
+	 *
 	 * @return GeoWave index for a default SPATIAL index
 	 */
 	public static PrimaryIndex createSpatialIndex() {
@@ -165,7 +165,7 @@ public class SimpleIngest
 		// a custom index may provide better
 		// performance is the distribution/characterization of the data is well
 		// known.
-		return IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		return new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 	}
 
 	/***
@@ -174,7 +174,7 @@ public class SimpleIngest
 	 * what our data looks like so the serializer (FeatureDataAdapter for this
 	 * case) can know how to store it. Features/Attributes are also a general
 	 * convention of GIS systems in general.
-	 * 
+	 *
 	 * @return Simple Feature definition for our demo point feature
 	 */
 	public static SimpleFeatureType createPointFeatureType() {

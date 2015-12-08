@@ -12,7 +12,7 @@ import mil.nga.giat.geowave.analytic.AnalyticFeature;
 import mil.nga.giat.geowave.analytic.SimpleFeatureItemWrapperFactory;
 import mil.nga.giat.geowave.analytic.distance.FeatureCentroidDistanceFn;
 import mil.nga.giat.geowave.analytic.kmeans.AssociationNotification;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
@@ -36,10 +36,10 @@ public class NestedGroupCentroidAssignmentTest
 {
 
 	private <T> void ingest(
-			DataStore dataStore,
-			WritableDataAdapter<T> adapter,
-			PrimaryIndex index,
-			T entry )
+			final DataStore dataStore,
+			final WritableDataAdapter<T> adapter,
+			final PrimaryIndex index,
+			final T entry )
 			throws IOException {
 		try (IndexWriter writer = dataStore.createIndexWriter(
 				index,
@@ -85,10 +85,10 @@ public class NestedGroupCentroidAssignmentTest
 				1,
 				0);
 
-		final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 		final FeatureDataAdapter adapter = new FeatureDataAdapter(
 				ftype);
-		String namespace = "test_" + getClass().getName();
+		final String namespace = "test_" + getClass().getName();
 		final StoreFactoryFamilySpi storeFamily = new MemoryStoreFactoryFamily();
 		final DataStore dataStore = storeFamily.getDataStoreFactory().createStore(
 				new HashMap<String, Object>(),

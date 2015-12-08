@@ -87,7 +87,9 @@ public class LocalFileIngestDriver extends
 						e);
 				continue;
 			}
-			final boolean indexSupported = (ingestOptions.getIndex(localFileIngestPlugin.getSupportedIndices()) != null);
+			final boolean indexSupported = (ingestOptions.getIndex(
+					localFileIngestPlugin,
+					args) != null);
 			if (!indexSupported) {
 				LOGGER.warn("Local file ingest plugin for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support dimensionality type '" + ingestOptions.getDimensionalityType() + "'");
 				continue;
@@ -101,7 +103,8 @@ public class LocalFileIngestDriver extends
 		final DataStore dataStore = dataStoreOptions.createStore();
 		try (IngestRunData runData = new IngestRunData(
 				adapters,
-				dataStore)) {
+				dataStore,
+				args)) {
 			processInput(
 					localFileIngestPlugins,
 					runData);

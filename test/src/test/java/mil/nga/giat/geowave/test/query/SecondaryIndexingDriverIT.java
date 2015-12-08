@@ -15,7 +15,6 @@ import mil.nga.giat.geowave.adapter.vector.index.TextSecondaryIndexConfiguration
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfiguration;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -48,7 +47,7 @@ import com.vividsolutions.jts.geom.Coordinate;
  * This class is currently a dirty test harness used to sanity check changes as
  * I go. It will likely be rewritten/replaced by a much more sophisticated
  * integration test for secondary indexing once the capability matures
- * 
+ *
  */
 public class SecondaryIndexingDriverIT extends
 		GeoWaveTestEnvironment
@@ -98,7 +97,7 @@ public class SecondaryIndexingDriverIT extends
 						accumuloOperations),
 				accumuloOperations);
 
-		final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		final PrimaryIndex index = DEFAULT_SPATIAL_INDEX;
 
 		final List<SimpleFeature> features = new ArrayList<>();
 		for (int x = 0; x < NUM_FEATURES; x++) {
@@ -108,7 +107,7 @@ public class SecondaryIndexingDriverIT extends
 		try (IndexWriter writer = dataStore.createIndexWriter(
 				index,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
-			for (SimpleFeature aFeature : features) {
+			for (final SimpleFeature aFeature : features) {
 				writer.write(
 						dataAdapter,
 						aFeature);

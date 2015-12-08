@@ -14,7 +14,7 @@ import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 
 /**
  * A base class for EPSG:4326 latitude/longitude fields that use JTS geometry
- * 
+ *
  */
 abstract public class SpatialField implements
 		NumericDimensionField<GeometryWrapper>
@@ -36,7 +36,7 @@ abstract public class SpatialField implements
 
 	@Override
 	public NumericData getFullRange() {
-		return this.baseDefinition.getFullRange();
+		return baseDefinition.getFullRange();
 	}
 
 	public SpatialField(
@@ -106,12 +106,6 @@ abstract public class SpatialField implements
 	@Override
 	public NumericDimensionDefinition getBaseDefinition() {
 		return baseDefinition;
-	}
-
-	@Override
-	public boolean isCompatibleDefinition(
-			NumericDimensionDefinition otherDimensionDefinition ) {
-		return equals(otherDimensionDefinition);
 	}
 
 	@Override

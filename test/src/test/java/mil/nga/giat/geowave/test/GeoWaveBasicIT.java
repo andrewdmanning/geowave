@@ -16,7 +16,6 @@ import java.util.Map;
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.stats.FeatureBoundingBoxStatistics;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.geotime.store.statistics.BoundingBoxDataStatistics;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -106,13 +105,12 @@ public class GeoWaveBasicIT extends
 		System.getProperties().put(
 				"AccumuloIndexWriter.skipFlush",
 				"true");
-		final PrimaryIndex spatialIndex = IndexType.SPATIAL_VECTOR.createDefaultIndex();
 		// ingest both lines and points
 		testLocalIngest(
-				IndexType.SPATIAL_VECTOR,
+				false,
 				HAIL_SHAPEFILE_FILE);
 		testLocalIngest(
-				IndexType.SPATIAL_VECTOR,
+				false,
 				TORNADO_TRACKS_SHAPEFILE_FILE);
 
 		try {
@@ -125,7 +123,7 @@ public class GeoWaveBasicIT extends
 						new File(
 								TORNADO_TRACKS_EXPECTED_BOX_FILTER_RESULTS_FILE).toURI().toURL()
 					},
-					spatialIndex,
+					DEFAULT_SPATIAL_INDEX,
 					"bounding box constraint only");
 		}
 		catch (final Exception e) {
@@ -151,7 +149,7 @@ public class GeoWaveBasicIT extends
 						new File(
 								TORNADO_TRACKS_EXPECTED_POLYGON_FILTER_RESULTS_FILE).toURI().toURL()
 					},
-					spatialIndex,
+					DEFAULT_SPATIAL_INDEX,
 					"polygon constraint only");
 		}
 		catch (final Exception e) {
@@ -174,7 +172,7 @@ public class GeoWaveBasicIT extends
 						new File(
 								TORNADO_TRACKS_SHAPEFILE_FILE)
 					},
-					spatialIndex);
+					DEFAULT_SPATIAL_INDEX);
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
@@ -192,7 +190,7 @@ public class GeoWaveBasicIT extends
 			testDelete(
 					new File(
 							TEST_POLYGON_FILTER_FILE).toURI().toURL(),
-					IndexType.SPATIAL_VECTOR);
+					DEFAULT_SPATIAL_INDEX);
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
@@ -333,8 +331,10 @@ public class GeoWaveBasicIT extends
 				try (CloseableIterator<DataStatistics<?>> statsIterator = statsStore.getDataStatistics(adapter.getAdapterId())) {
 					int statsCount = 0;
 					while (statsIterator.hasNext()) {
-						DataStatistics<?> nextStats = statsIterator.next();
-						if (nextStats instanceof RowRangeHistogramStatistics) continue;
+						final DataStatistics<?> nextStats = statsIterator.next();
+						if (nextStats instanceof RowRangeHistogramStatistics) {
+							continue;
+						}
 						statsCount++;
 					}
 					Assert.assertEquals(
@@ -403,13 +403,12 @@ public class GeoWaveBasicIT extends
 		System.getProperties().put(
 				"AccumuloIndexWriter.skipFlush",
 				"true");
-		final PrimaryIndex spatialTemporalIndex = IndexType.SPATIAL_VECTOR.createDefaultIndex();
 		// ingest both lines and points
 		testLocalIngest(
-				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR,
+				true,
 				HAIL_SHAPEFILE_FILE);
 		testLocalIngest(
-				IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR,
+				true,
 				TORNADO_TRACKS_SHAPEFILE_FILE);
 		try {
 			testQuery(
@@ -467,7 +466,7 @@ public class GeoWaveBasicIT extends
 						new File(
 								TORNADO_TRACKS_SHAPEFILE_FILE)
 					},
-					spatialTemporalIndex);
+					DEFAULT_SPATIAL_TEMPORAL_INDEX);
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
@@ -485,7 +484,7 @@ public class GeoWaveBasicIT extends
 			testDelete(
 					new File(
 							TEST_POLYGON_TEMPORAL_FILTER_FILE).toURI().toURL(),
-					IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR);
+					DEFAULT_SPATIAL_TEMPORAL_INDEX);
 		}
 		catch (final Exception e) {
 			e.printStackTrace();
@@ -626,7 +625,6 @@ public class GeoWaveBasicIT extends
 				serTestType);
 		final FeatureDataAdapter serAdapter = new FeatureDataAdapter(
 				serTestType);
-		final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
 
 		for (final Map.Entry<Class, Object> arg : args.entrySet()) {
 			serBuilder.set(
@@ -647,7 +645,7 @@ public class GeoWaveBasicIT extends
 
 		final SimpleFeature sf = serBuilder.buildFeature("343");
 		try (IndexWriter writer = geowaveStore.createIndexWriter(
-				index,
+				DEFAULT_SPATIAL_INDEX,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
 			writer.write(
 					serAdapter,
@@ -829,10 +827,10 @@ public class GeoWaveBasicIT extends
 
 	private void testDelete(
 			final URL savedFilterResource,
-			final IndexType indexType )
+			final PrimaryIndex index )
 			throws Exception {
-		LOGGER.info("deleting from " + indexType.toString() + " index");
-		System.out.println("deleting from " + indexType.toString() + " index");
+		LOGGER.info("deleting from " + index.getId() + " index");
+		System.out.println("deleting from " + index.getId() + " index");
 		boolean success = false;
 		final mil.nga.giat.geowave.core.store.DataStore geowaveStore = new AccumuloDataStore(
 				new AccumuloIndexStore(
@@ -845,7 +843,6 @@ public class GeoWaveBasicIT extends
 						accumuloOperations),
 				accumuloOperations);
 		final DistributableQuery query = resourceToQuery(savedFilterResource);
-		final PrimaryIndex index = indexType.createDefaultIndex();
 		final CloseableIterator<?> actualResults;
 
 		actualResults = geowaveStore.query(
@@ -891,7 +888,7 @@ public class GeoWaveBasicIT extends
 	}
 
 	private boolean hasAtLeastOne(
-			CloseableIterator<?> it ) {
+			final CloseableIterator<?> it ) {
 		try {
 			return it.hasNext();
 		}
@@ -899,7 +896,7 @@ public class GeoWaveBasicIT extends
 			try {
 				it.close();
 			}
-			catch (IOException e) {
+			catch (final IOException e) {
 				e.printStackTrace();
 			}
 		}

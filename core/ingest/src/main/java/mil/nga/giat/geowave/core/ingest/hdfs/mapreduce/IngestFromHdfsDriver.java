@@ -90,10 +90,7 @@ public class IngestFromHdfsDriver extends
 						LOGGER.warn("Plugin provider for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support ingest from HDFS");
 						continue;
 					}
-					if (!ingestOptions.isSupported(ingestFromHdfsPlugin)) {
-						LOGGER.warn("HDFS file ingest plugin for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support dimensionality '" + ingestOptions.getDimensionalityType() + "'");
-						continue;
-					}
+					
 				}
 				catch (final UnsupportedOperationException e) {
 					LOGGER.warn(
@@ -131,6 +128,12 @@ public class IngestFromHdfsDriver extends
 
 				AbstractMapReduceIngest jobRunner = null;
 				if (ingestWithReducer != null) {
+					if (!ingestOptions.isSupported(
+							ingestWithReducer,
+							args)) {
+						LOGGER.warn("HDFS file ingest plugin for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support dimensionality '" + ingestOptions.getDimensionalityType() + "'");
+						continue;
+					}
 					jobRunner = new IngestWithReducerJobRunner(
 							dataStoreOptions,
 							ingestOptions,
@@ -141,6 +144,12 @@ public class IngestFromHdfsDriver extends
 
 				}
 				else if (ingestWithMapper != null) {
+					if (!ingestOptions.isSupported(
+							ingestWithMapper,
+							args)) {
+						LOGGER.warn("HDFS file ingest plugin for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support dimensionality '" + ingestOptions.getDimensionalityType() + "'");
+						continue;
+					}
 					jobRunner = new IngestWithMapperJobRunner(
 							dataStoreOptions,
 							ingestOptions,

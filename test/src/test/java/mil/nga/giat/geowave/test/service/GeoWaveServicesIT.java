@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloStoreFactoryFamily;
 import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.format.gpx.GpxUtils;
@@ -175,7 +174,7 @@ public class GeoWaveServicesIT extends
 			if (indices.getJSONObject(
 					i).getString(
 					"name").equals(
-					IndexType.SPATIAL_VECTOR.getDefaultId())) {
+					DEFAULT_SPATIAL_INDEX.getId().getString())) {
 				success = true;
 				break;
 			}

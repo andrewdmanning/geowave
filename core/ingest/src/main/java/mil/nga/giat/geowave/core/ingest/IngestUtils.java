@@ -4,20 +4,20 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.ingest.index.IndexProvider;
 import mil.nga.giat.geowave.core.ingest.local.IngestRunData;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class IngestUtils
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(
-			IngestUtils.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(IngestUtils.class);
 
 	public static <T> void ingest(
 			final T input,
@@ -25,21 +25,19 @@ public class IngestUtils
 			final IngestPluginBase<T, ?> ingestPlugin,
 			final IndexProvider indexProvider,
 			final IngestRunData ingestRunData )
-					throws IOException {
+			throws IOException {
 		final PrimaryIndex primaryIndex = ingestOptions.getIndex(
-				ingestPlugin);
+				ingestPlugin,
+				ingestRunData.getArgs());
 		if (primaryIndex == null) {
-			LOGGER.error(
-					"Could not get index instance, getIndex() returned null;");
+			LOGGER.error("Could not get index instance, getIndex() returned null;");
 			throw new IOException(
 					"Could not get index instance, getIndex() returned null");
 		}
-		final IndexWriter primaryIndexWriter = ingestRunData.getIndexWriter(
-				primaryIndex);
+		final IndexWriter primaryIndexWriter = ingestRunData.getIndexWriter(primaryIndex);
 		final PrimaryIndex idx = primaryIndexWriter.getIndex();
 		if (idx == null) {
-			LOGGER.error(
-					"Could not get index instance, getIndex() returned null;");
+			LOGGER.error("Could not get index instance, getIndex() returned null;");
 			throw new IOException(
 					"Could not get index instance, getIndex() returned null");
 		}
@@ -59,11 +57,9 @@ public class IngestUtils
 				ingestOptions.getVisibility())) {
 			while (geowaveDataIt.hasNext()) {
 				final GeoWaveData<?> geowaveData = (GeoWaveData<?>) geowaveDataIt.next();
-				final WritableDataAdapter adapter = ingestRunData.getDataAdapter(
-						geowaveData);
+				final WritableDataAdapter adapter = ingestRunData.getDataAdapter(geowaveData);
 				if (adapter == null) {
-					LOGGER.warn(
-							"Adapter not found for " + geowaveData.getValue());
+					LOGGER.warn("Adapter not found for " + geowaveData.getValue());
 					continue;
 				}
 				final IndexWriter indexWriter;
@@ -72,15 +68,12 @@ public class IngestUtils
 					indexWriter = primaryIndexWriter;
 				}
 				else {
-					final PrimaryIndex index = requiredIndexMap.get(
-							geowaveData.getIndexId());
+					final PrimaryIndex index = requiredIndexMap.get(geowaveData.getIndexId());
 					if (index == null) {
-						LOGGER.warn(
-								"Index '" + geowaveData.getIndexId().getString() + "' not found for " + geowaveData.getValue());
+						LOGGER.warn("Index '" + geowaveData.getIndexId().getString() + "' not found for " + geowaveData.getValue());
 						continue;
 					}
-					indexWriter = ingestRunData.getIndexWriter(
-							index);
+					indexWriter = ingestRunData.getIndexWriter(index);
 				}
 				indexWriter.write(
 						adapter,

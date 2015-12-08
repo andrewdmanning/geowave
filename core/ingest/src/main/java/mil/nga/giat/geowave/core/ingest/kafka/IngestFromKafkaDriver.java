@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
 /**
  * This class executes the ingestion of intermediate data from a Kafka topic
  * into GeoWave.
- * 
+ *
  */
 public class IngestFromKafkaDriver extends
 		AbstractIngestCommandLineDriver
@@ -67,7 +67,8 @@ public class IngestFromKafkaDriver extends
 		configureAndLaunchPlugins(
 				dataStore,
 				pluginProviders,
-				queue);
+				queue,
+				args);
 
 		int counter = 0;
 		while (queue.size() > 0) {
@@ -112,7 +113,8 @@ public class IngestFromKafkaDriver extends
 	private void configureAndLaunchPlugins(
 			final DataStore dataStore,
 			final List<IngestFormatPluginProviderSpi<?, ?>> pluginProviders,
-			final List<String> queue ) {
+			final List<String> queue,
+			final String[] args ) {
 		try {
 			for (final IngestFormatPluginProviderSpi<?, ?> pluginProvider : pluginProviders) {
 				final List<WritableDataAdapter<?>> adapters = new ArrayList<WritableDataAdapter<?>>();
@@ -130,7 +132,8 @@ public class IngestFromKafkaDriver extends
 					adapters.addAll(Arrays.asList(dataAdapters));
 					final IngestRunData runData = new IngestRunData(
 							adapters,
-							dataStore);
+							dataStore,
+							args);
 
 					launchTopicConsumer(
 							pluginProvider.getIngestFormatName(),

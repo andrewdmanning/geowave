@@ -13,7 +13,7 @@ import mil.nga.giat.geowave.analytic.AnalyticItemWrapper;
 import mil.nga.giat.geowave.analytic.SimpleFeatureItemWrapperFactory;
 import mil.nga.giat.geowave.analytic.clustering.DistortionGroupManagement.DistortionDataAdapter;
 import mil.nga.giat.geowave.analytic.clustering.DistortionGroupManagement.DistortionEntry;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
@@ -39,7 +39,7 @@ public class DistortionGroupManagementTest
 
 	final GeometryFactory factory = new GeometryFactory();
 	final SimpleFeatureType ftype;
-	final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+	final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 
 	final FeatureDataAdapter adapter;
 	final DataStore dataStore;
@@ -47,9 +47,9 @@ public class DistortionGroupManagementTest
 	final IndexStore indexStore;
 
 	private <T> void ingest(
-			WritableDataAdapter<T> adapter,
-			PrimaryIndex index,
-			T entry )
+			final WritableDataAdapter<T> adapter,
+			final PrimaryIndex index,
+			final T entry )
 			throws IOException {
 		try (IndexWriter writer = dataStore.createIndexWriter(
 				index,
@@ -432,7 +432,7 @@ public class DistortionGroupManagementTest
 	@Test
 	public void test()
 			throws IOException {
-		DistortionGroupManagement distortionGroupManagement = new DistortionGroupManagement(
+		final DistortionGroupManagement distortionGroupManagement = new DistortionGroupManagement(
 				dataStore,
 				indexStore,
 				adapterStore);

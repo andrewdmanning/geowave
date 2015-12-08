@@ -20,7 +20,6 @@ import mil.nga.giat.geowave.adapter.vector.index.TextSecondaryIndexConfiguration
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfiguration;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
@@ -117,14 +116,14 @@ public class SecondaryIndexingQueryIT extends
 				new AccumuloSecondaryIndexDataStore(
 						accumuloOperations),
 				accumuloOperations);
-		index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		index = DEFAULT_SPATIAL_INDEX;
 
 		final List<SimpleFeature> features = loadStateCapitalData();
 
 		try (IndexWriter writer = dataStore.createIndexWriter(
 				index,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
-			for (SimpleFeature aFeature : features) {
+			for (final SimpleFeature aFeature : features) {
 				writer.write(
 						dataAdapter,
 						aFeature);

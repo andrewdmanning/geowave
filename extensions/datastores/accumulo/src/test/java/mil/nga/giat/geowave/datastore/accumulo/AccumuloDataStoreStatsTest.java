@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.geotime.store.statistics.BoundingBoxDataStatistics;
@@ -181,7 +181,7 @@ public class AccumuloDataStoreStatsTest
 	private void runtest()
 			throws IOException {
 
-		final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 		final WritableDataAdapter<TestGeometry> adapter = new TestGeometryAdapter();
 
 		final Geometry testGeoFilter = factory.createPolygon(new Coordinate[] {
@@ -316,8 +316,8 @@ public class AccumuloDataStoreStatsTest
 
 							@Override
 							public void entryScanned(
-									DataStoreEntryInfo entryInfo,
-									TestGeometry entry ) {
+									final DataStoreEntryInfo entryInfo,
+									final TestGeometry entry ) {
 								found.getAndSet(true);
 							}
 						},
@@ -436,8 +436,8 @@ public class AccumuloDataStoreStatsTest
 
 							@Override
 							public void entryScanned(
-									DataStoreEntryInfo entryInfo,
-									TestGeometry entry ) {
+									final DataStoreEntryInfo entryInfo,
+									final TestGeometry entry ) {
 								found.getAndSet(true);
 							}
 						},
@@ -503,7 +503,7 @@ public class AccumuloDataStoreStatsTest
 				"bbb");
 		assertNull(countStats);
 
-		RowRangeDataStatistics<?> rowStats = (RowRangeDataStatistics<?>) statsStore.getDataStatistics(
+		final RowRangeDataStatistics<?> rowStats = (RowRangeDataStatistics<?>) statsStore.getDataStatistics(
 				null,
 				RowRangeDataStatistics.getId(index.getId()),
 				"bbb");

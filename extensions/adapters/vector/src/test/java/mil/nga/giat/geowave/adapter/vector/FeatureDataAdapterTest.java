@@ -19,7 +19,7 @@ import mil.nga.giat.geowave.adapter.vector.util.FeatureDataUtils;
 import mil.nga.giat.geowave.adapter.vector.utils.DateUtilities;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfiguration;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.IndexFieldHandler;
@@ -122,7 +122,7 @@ public class FeatureDataAdapterTest
 				});
 		final AdapterPersistenceEncoding persistenceEncoding = dataAdapter.encode(
 				newFeature,
-				IndexType.SPATIAL_VECTOR.getDefaultIndexModel());
+				new SpatialDimensionalityTypeProvider().createPrimaryIndex().getIndexModel());
 
 		GeometryWrapper wrapper = null;
 		for (final PersistentValue<?> pv : persistenceEncoding.getCommonData().getValues()) {
@@ -461,7 +461,7 @@ public class FeatureDataAdapterTest
 				"notes"));
 		secondaryIndexConfigs.add(new TemporalSecondaryIndexConfiguration(
 				"since"));
-		SimpleFeatureUserDataConfigurationSet config = new SimpleFeatureUserDataConfigurationSet(
+		final SimpleFeatureUserDataConfigurationSet config = new SimpleFeatureUserDataConfigurationSet(
 				sfType,
 				secondaryIndexConfigs);
 		;

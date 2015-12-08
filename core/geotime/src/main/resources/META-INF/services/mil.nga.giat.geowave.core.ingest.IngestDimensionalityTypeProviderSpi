@@ -1,5 +1,0 @@
-mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider
-mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider
-mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalByDayDimensionalityTypeProvider
-mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalByMonthDimensionalityTypeProvider
-mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalByYearDimensionalityTypeProvider

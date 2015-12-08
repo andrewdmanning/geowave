@@ -18,7 +18,7 @@ import com.google.uzaygezen.core.MultiDimensionalSpec;
 
 /***
  * Implementation of a Compact Hilbert space filling curve
- * 
+ *
  */
 public class HilbertSFC implements
 		SpaceFillingCurve
@@ -37,7 +37,7 @@ public class HilbertSFC implements
 	/***
 	 * Use the SFCFactory.createSpaceFillingCurve method - don't call this
 	 * constructor directly
-	 * 
+	 *
 	 */
 	public HilbertSFC(
 			final SFCDimensionDefinition[] dimensionDefs ) {
@@ -123,10 +123,11 @@ public class HilbertSFC implements
 	 * {@inheritDoc}
 	 */
 	@Override
-	public RangeDecomposition decomposeQueryFully(
+	public RangeDecomposition decomposeRangeFully(
 			final MultiDimensionalNumericData query ) {
-		return decomposeQuery(
+		return decomposeRange(
 				query,
+				true,
 				-1);
 	}
 
@@ -135,8 +136,9 @@ public class HilbertSFC implements
 	 * {@inheritDoc}
 	 */
 	@Override
-	public RangeDecomposition decomposeQuery(
+	public RangeDecomposition decomposeRange(
 			final MultiDimensionalNumericData query,
+			final boolean overInclusiveOnEdge,
 			int maxFilteredIndexedRanges ) {
 		if (maxFilteredIndexedRanges == -1) {
 			maxFilteredIndexedRanges = Integer.MAX_VALUE;
@@ -147,7 +149,8 @@ public class HilbertSFC implements
 				dimensionDefinitions,
 				totalPrecision,
 				maxFilteredIndexedRanges,
-				REMOVE_VACUUM);
+				REMOVE_VACUUM,
+				overInclusiveOnEdge);
 	}
 
 	protected static byte[] fitExpectedByteCount(

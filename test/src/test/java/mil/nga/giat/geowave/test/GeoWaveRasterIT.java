@@ -17,12 +17,10 @@ import mil.nga.giat.geowave.adapter.raster.adapter.RasterTile;
 import mil.nga.giat.geowave.adapter.raster.adapter.merge.RasterTileMergeStrategy;
 import mil.nga.giat.geowave.adapter.raster.adapter.merge.SimpleAbstractMergeStrategy;
 import mil.nga.giat.geowave.adapter.raster.query.IndexOnlySpatialQuery;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.query.EverythingQuery;
@@ -147,7 +145,7 @@ public class GeoWaveRasterIT extends
 				accumuloUser,
 				accumuloPassword);
 		connector.tableOperations().compact(
-				TEST_NAMESPACE + "_" + IndexType.SPATIAL_RASTER.createDefaultIndex().getId().getString(),
+				TEST_NAMESPACE + "_" + DEFAULT_SPATIAL_INDEX.getId().getString(),
 				null,
 				null,
 				true,
@@ -208,7 +206,7 @@ public class GeoWaveRasterIT extends
 				accumuloUser,
 				accumuloPassword);
 		connector.tableOperations().compact(
-				TEST_NAMESPACE + "_" + IndexType.SPATIAL_RASTER.createDefaultIndex().getId().getString(),
+				TEST_NAMESPACE + "_" + DEFAULT_SPATIAL_INDEX.getId().getString(),
 				null,
 				null,
 				true,
@@ -502,7 +500,7 @@ public class GeoWaveRasterIT extends
 		}
 
 		try (IndexWriter writer = dataStore.createIndexWriter(
-				IndexType.SPATIAL_RASTER.createDefaultIndex(),
+				DEFAULT_SPATIAL_INDEX,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
 			writer.write(
 					adapter,
@@ -548,9 +546,8 @@ public class GeoWaveRasterIT extends
 				basicAdapter,
 				coverageName,
 				mergeStrategy);
-		final PrimaryIndex index = IndexType.SPATIAL_RASTER.createDefaultIndex();
 		try (IndexWriter writer = dataStore.createIndexWriter(
-				index,
+				DEFAULT_SPATIAL_INDEX,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
 			for (int r = 0; r < numRasters; r++) {
 				final WritableRaster raster = RasterUtils.createRasterTypeDouble(

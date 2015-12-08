@@ -10,12 +10,12 @@ import java.util.Map.Entry;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStore;
@@ -51,7 +51,7 @@ public class GeotoolsQueryExample
 	private static MiniAccumuloCluster accumulo;
 	private static DataStore dataStore;
 
-	private static final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+	private static final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 
 	// Points (to be ingested into GeoWave Data Store)
 	private static final Coordinate washingtonMonument = new Coordinate(
@@ -93,7 +93,7 @@ public class GeotoolsQueryExample
 			getPointSimpleFeatureType());
 
 	public static void main(
-			String[] args )
+			final String[] args )
 			throws AccumuloException,
 			AccumuloSecurityException,
 			InterruptedException,
@@ -151,7 +151,7 @@ public class GeotoolsQueryExample
 
 		System.out.println("Building SimpleFeatures from canned data set...");
 
-		for (Entry<String, Coordinate> entry : cannedData.entrySet()) {
+		for (final Entry<String, Coordinate> entry : cannedData.entrySet()) {
 			System.out.println("Added point: " + entry.getKey());
 			points.add(buildSimpleFeature(
 					entry.getKey(),
@@ -163,7 +163,7 @@ public class GeotoolsQueryExample
 		try (IndexWriter indexWriter = dataStore.createIndexWriter(
 				index,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
-			for (SimpleFeature sf : points) {
+			for (final SimpleFeature sf : points) {
 				//
 				indexWriter.write(
 						ADAPTER,
@@ -263,8 +263,8 @@ public class GeotoolsQueryExample
 	}
 
 	private static SimpleFeature buildSimpleFeature(
-			String locationName,
-			Coordinate coordinate ) {
+			final String locationName,
+			final Coordinate coordinate ) {
 
 		final SimpleFeatureBuilder builder = new SimpleFeatureBuilder(
 				getPointSimpleFeatureType());

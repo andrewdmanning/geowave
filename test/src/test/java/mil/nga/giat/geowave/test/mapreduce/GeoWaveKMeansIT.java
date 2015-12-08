@@ -1,6 +1,5 @@
 package mil.nga.giat.geowave.test.mapreduce;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.Map;
 import mil.nga.giat.geowave.analytic.AnalyticItemWrapper;
 import mil.nga.giat.geowave.analytic.GeometryDataSetGenerator;
 import mil.nga.giat.geowave.analytic.PropertyManagement;
-import mil.nga.giat.geowave.analytic.ShapefileTool;
 import mil.nga.giat.geowave.analytic.SimpleFeatureItemWrapperFactory;
 import mil.nga.giat.geowave.analytic.clustering.CentroidManager;
 import mil.nga.giat.geowave.analytic.clustering.CentroidManagerGeoWave;
@@ -33,7 +31,6 @@ import mil.nga.giat.geowave.core.cli.CommandLineResult;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.IndexStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericRange;
 import mil.nga.giat.geowave.core.store.DataStore;
@@ -330,7 +327,7 @@ public class GeoWaveKMeansIT extends
 				adapterStore,
 				new SimpleFeatureItemWrapperFactory(),
 				"centroid",
-				IndexType.SPATIAL_VECTOR.getDefaultId(),
+				DEFAULT_SPATIAL_INDEX.getId().getString(),
 				batchID,
 				level);
 
@@ -340,7 +337,7 @@ public class GeoWaveKMeansIT extends
 				adapterStore,
 				new SimpleFeatureItemWrapperFactory(),
 				"convex_hull",
-				IndexType.SPATIAL_VECTOR.getDefaultId(),
+				DEFAULT_SPATIAL_INDEX.getId().getString(),
 				batchID,
 				level);
 
@@ -357,7 +354,7 @@ public class GeoWaveKMeansIT extends
 				Assert.assertTrue(centroid.getGeometry() != null);
 				Assert.assertTrue(centroid.getBatchID() != null);
 				boolean found = false;
-				List<SimpleFeature> features = new ArrayList<SimpleFeature>();
+				final List<SimpleFeature> features = new ArrayList<SimpleFeature>();
 				for (final AnalyticItemWrapper<SimpleFeature> hull : hulls) {
 					found |= (hull.getName().equals(centroid.getName()));
 					Assert.assertTrue(hull.getGeometry() != null);

@@ -11,12 +11,12 @@ import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveGTDataStore;
 import mil.nga.giat.geowave.adapter.vector.utils.DateUtilities;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.filter.SpatialQueryFilter.CompareOperation;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialTemporalQuery;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStore;
@@ -41,7 +41,7 @@ import com.vividsolutions.jts.geom.Geometry;
 /**
  * This class is intended to provide a self-contained, easy-to-follow example of
  * a few GeoTools queries against GeoWave using Spatial Temporal Data.
- * 
+ *
  * For simplicity, a MiniAccumuloCluster is spun up and a few points from the DC
  * area are ingested (Washington Monument, White House, FedEx Field). Two
  * queries are executed against this data set.
@@ -52,7 +52,7 @@ public class GeoTemporalQueryExample
 	private static MiniAccumuloCluster accumulo;
 	private static AccumuloDataStore dataStore;
 
-	private static final PrimaryIndex index = IndexType.SPATIAL_TEMPORAL_VECTOR_YEAR.createDefaultIndex();
+	private static final PrimaryIndex index = new SpatialTemporalDimensionalityTypeProvider().createPrimaryIndex();
 
 	// Points (to be ingested into GeoWave Data Store)
 	private static final Coordinate washingtonMonument = new Coordinate(
@@ -68,7 +68,7 @@ public class GeoTemporalQueryExample
 	public GeoTemporalQueryExample() {}
 
 	public static void main(
-			String[] args )
+			final String[] args )
 			throws AccumuloException,
 			AccumuloSecurityException,
 			InterruptedException,
@@ -175,7 +175,7 @@ public class GeoTemporalQueryExample
 					DateUtilities.parseISO("2005-05-18T20:45:56Z")));
 
 		}
-		catch (Exception ex) {
+		catch (final Exception ex) {
 			ex.printStackTrace();
 		}
 
@@ -187,7 +187,7 @@ public class GeoTemporalQueryExample
 		try (IndexWriter indexWriter = dataStore.createIndexWriter(
 				index,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
-			for (SimpleFeature sf : points) {
+			for (final SimpleFeature sf : points) {
 				//
 				indexWriter.write(
 						adapter,
@@ -222,7 +222,7 @@ public class GeoTemporalQueryExample
 		// looses accuracy as the distance from the centroid grows and
 		// the centroid moves closer the poles.
 
-		SpatialTemporalQuery query = new SpatialTemporalQuery(
+		final SpatialTemporalQuery query = new SpatialTemporalQuery(
 				DateUtilities.parseISO("2005-05-17T19:32:56Z"),
 				DateUtilities.parseISO("2005-05-17T22:32:56Z"),
 				mil.nga.giat.geowave.adapter.vector.utils.GeometryUtils.buffer(
@@ -287,10 +287,10 @@ public class GeoTemporalQueryExample
 	}
 
 	private static SimpleFeature buildSimpleFeature(
-			String locationName,
-			Coordinate coordinate,
-			Date startTime,
-			Date endTime ) {
+			final String locationName,
+			final Coordinate coordinate,
+			final Date startTime,
+			final Date endTime ) {
 
 		final SimpleFeatureBuilder builder = new SimpleFeatureBuilder(
 				getPointSimpleFeatureType());

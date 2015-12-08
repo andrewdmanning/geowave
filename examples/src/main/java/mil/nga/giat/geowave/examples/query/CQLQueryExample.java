@@ -12,7 +12,7 @@ import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.index.TextSecondaryIndexConfiguration;
 import mil.nga.giat.geowave.adapter.vector.query.cql.CQLQuery;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
@@ -51,7 +51,7 @@ public class CQLQueryExample
 	private static MiniAccumuloCluster accumulo;
 	private static DataStore dataStore;
 
-	private static final PrimaryIndex index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+	private static final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 
 	// Points (to be ingested into GeoWave Data Store)
 	private static final Coordinate washingtonMonument = new Coordinate(
@@ -94,7 +94,7 @@ public class CQLQueryExample
 			getPointSimpleFeatureType());
 
 	public static void main(
-			String[] args )
+			final String[] args )
 			throws AccumuloException,
 			AccumuloSecurityException,
 			InterruptedException,
@@ -171,7 +171,7 @@ public class CQLQueryExample
 
 		System.out.println("Building SimpleFeatures from canned data set...");
 
-		for (Entry<String, Coordinate> entry : cannedData.entrySet()) {
+		for (final Entry<String, Coordinate> entry : cannedData.entrySet()) {
 			System.out.println("Added point: " + entry.getKey());
 			points.add(buildSimpleFeature(
 					entry.getKey(),
@@ -183,7 +183,7 @@ public class CQLQueryExample
 		try (IndexWriter indexWriter = dataStore.createIndexWriter(
 				index,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
-			for (SimpleFeature sf : points) {
+			for (final SimpleFeature sf : points) {
 				//
 				indexWriter.write(
 						ADAPTER,
@@ -223,7 +223,7 @@ public class CQLQueryExample
 				"geometry"));
 
 		// TURN ON SECONDARY INDEXING
-		SimpleFeatureType type = sftBuilder.buildFeatureType();
+		final SimpleFeatureType type = sftBuilder.buildFeatureType();
 		type.getDescriptor(
 				"locationName").getUserData().put(
 				TextSecondaryIndexConfiguration.INDEX_KEY,
@@ -232,8 +232,8 @@ public class CQLQueryExample
 	}
 
 	private static SimpleFeature buildSimpleFeature(
-			String locationName,
-			Coordinate coordinate ) {
+			final String locationName,
+			final Coordinate coordinate ) {
 
 		final SimpleFeatureBuilder builder = new SimpleFeatureBuilder(
 				getPointSimpleFeatureType());
