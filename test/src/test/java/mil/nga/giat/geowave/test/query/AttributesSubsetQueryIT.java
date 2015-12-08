@@ -7,33 +7,29 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.log4j.Logger;
+import org.geotools.data.DataUtilities;
+import org.geotools.feature.SchemaException;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.junit.Assert;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
 import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.IndexWriter;
-import mil.nga.giat.geowave.core.store.ScanCallback;
-import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStore;
 import mil.nga.giat.geowave.test.GeoWaveTestEnvironment;
-
-import org.apache.log4j.Logger;
-import org.geotools.data.DataUtilities;
-import org.geotools.feature.SchemaException;
-import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
 
 public class AttributesSubsetQueryIT extends
 		GeoWaveTestEnvironment
@@ -68,7 +64,7 @@ public class AttributesSubsetQueryIT extends
 			-84.3900,
 			33.7550);
 
-	@BeforeClass
+//	@BeforeClass
 	public static void setupData()
 			throws IOException {
 
@@ -85,7 +81,7 @@ public class AttributesSubsetQueryIT extends
 		ingestSampleData();
 	}
 
-	@Test
+//	@Test
 	public void testResultsContainAllAttributes()
 			throws IOException {
 
@@ -106,7 +102,7 @@ public class AttributesSubsetQueryIT extends
 				ALL_ATTRIBUTES);
 	}
 
-	@Test
+//	@Test
 	public void testResultsContainCityOnly()
 			throws IOException {
 
@@ -134,7 +130,7 @@ public class AttributesSubsetQueryIT extends
 				attributesSubset);
 	}
 
-	@Test
+//	@Test
 	public void testResultsContainCityAndPopulation()
 			throws IOException {
 
