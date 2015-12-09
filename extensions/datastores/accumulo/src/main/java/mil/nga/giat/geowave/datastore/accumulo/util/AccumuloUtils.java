@@ -13,12 +13,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -43,7 +41,6 @@ import mil.nga.giat.geowave.core.store.data.PersistentDataset;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
-import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.filter.FilterList;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
@@ -1327,43 +1324,48 @@ public class AccumuloUtils
 			final Collection<String> fieldIds,
 			final CloseableIterator<DataAdapter<?>> dataAdapters ) {
 
-		final Set<ByteArrayId> uniqueDimensions = new HashSet<>();
-		for (final NumericDimensionField<? extends CommonIndexValue> dimension : index.getIndexModel().getDimensions()) {
-			uniqueDimensions.add(dimension.getFieldId());
-		}
+		// NOTE: the optimization to flatten fields sharing a common visibility
+		// into a single CQ breaks this functionality.
+		// TODO new implementation
 
-		scanner.clearColumns();
-
-		while (dataAdapters.hasNext()) {
-
-			final Text colFam = new Text(
-					dataAdapters.next().getAdapterId().getBytes());
-
-			// dimension fields must be included
-			for (final ByteArrayId dimension : uniqueDimensions) {
-				scanner.fetchColumn(
-						colFam,
-						new Text(
-								dimension.getBytes()));
-			}
-
-			// configure scanner to fetch only the specified fieldIds
-			for (final String fieldId : fieldIds) {
-				scanner.fetchColumn(
-						colFam,
-						new Text(
-								StringUtils.stringToBinary(fieldId)));
-			}
-		}
-
-		try {
-			dataAdapters.close();
-		}
-		catch (final IOException e) {
-			LOGGER.error(
-					"Unable to close iterator",
-					e);
-		}
+		// final Set<ByteArrayId> uniqueDimensions = new HashSet<>();
+		// for (final NumericDimensionField<? extends CommonIndexValue>
+		// dimension : index.getIndexModel().getDimensions()) {
+		// uniqueDimensions.add(dimension.getFieldId());
+		// }
+		//
+		// scanner.clearColumns();
+		//
+		// while (dataAdapters.hasNext()) {
+		//
+		// final Text colFam = new Text(
+		// dataAdapters.next().getAdapterId().getBytes());
+		//
+		// // dimension fields must be included
+		// for (final ByteArrayId dimension : uniqueDimensions) {
+		// scanner.fetchColumn(
+		// colFam,
+		// new Text(
+		// dimension.getBytes()));
+		// }
+		//
+		// // configure scanner to fetch only the specified fieldIds
+		// for (final String fieldId : fieldIds) {
+		// scanner.fetchColumn(
+		// colFam,
+		// new Text(
+		// StringUtils.stringToBinary(fieldId)));
+		// }
+		// }
+		//
+		// try {
+		// dataAdapters.close();
+		// }
+		// catch (final IOException e) {
+		// LOGGER.error(
+		// "Unable to close iterator",
+		// e);
+		// }
 
 	}
 }
