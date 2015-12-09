@@ -73,6 +73,7 @@ public class IngestCommandLineOptions
 			for (final Object opt : options) {
 				commander.addObject(opt);
 			}
+			commander.setAcceptUnknownOptions(true);
 			commander.parse(args);
 			final PrimaryIndex index = dimensionalityType.createPrimaryIndex();
 			return wrapIndexWithOptions(index);
