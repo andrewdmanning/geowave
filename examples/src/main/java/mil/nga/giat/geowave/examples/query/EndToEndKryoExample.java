@@ -2,14 +2,15 @@ package mil.nga.giat.geowave.examples.query;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
+import jline.internal.InputStreamReader;
 import mil.nga.giat.geowave.adapter.vector.KryoFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.query.cql.CQLQuery;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
@@ -189,8 +190,9 @@ public class EndToEndKryoExample
 		final List<SimpleFeature> features = new ArrayList<>();
 		final String fileName = System.getProperty("user.dir") + BASE_DIR + FILE;
 		try (final BufferedReader br = new BufferedReader(
-				new FileReader(
-						fileName))) {
+				new InputStreamReader(
+						new FileInputStream(
+								fileName)))) {
 			for (String line = br.readLine(); line != null; line = br.readLine()) {
 				final String[] vals = line.split(",");
 				final String state = vals[0];

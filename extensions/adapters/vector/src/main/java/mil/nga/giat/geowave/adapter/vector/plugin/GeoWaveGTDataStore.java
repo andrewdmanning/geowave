@@ -274,7 +274,7 @@ public class GeoWaveGTDataStore extends
 	/**
 	 * Used to retrieve the TransactionStateDiff for this transaction.
 	 * <p>
-	 *
+	 * 
 	 * @param transaction
 	 * @return GeoWaveTransactionState or null if subclass is handling
 	 *         differences

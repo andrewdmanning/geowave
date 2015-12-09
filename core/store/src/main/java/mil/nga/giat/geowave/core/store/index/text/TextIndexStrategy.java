@@ -144,7 +144,7 @@ public class TextIndexStrategy implements
 		buffer.put(ngramBytes);
 		return buffer.array();
 	}
-	
+
 	@Override
 	public Set<ByteArrayId> getNaturalSplits() {
 		return null;

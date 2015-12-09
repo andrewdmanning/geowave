@@ -20,7 +20,7 @@ import mil.nga.giat.geowave.core.ingest.index.IndexProvider;
  */
 public interface IngestFromHdfsPlugin<I, O> extends
 		IndexProvider,
-		
+
 		AvroSchemaProvider
 {
 	/**

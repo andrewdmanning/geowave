@@ -30,22 +30,22 @@ import org.geotools.feature.type.BasicFeatureTypes;
 /**
  * Runs a clustering at multiple levels. Lower levels cluster within each
  * cluster of the higher level.
- *
+ * 
  * Steps:
- *
+ * 
  * @formatter: off
- *
+ * 
  *             (1) Extract and deduplicate items from geowave.
- *
+ * 
  *             (2) Cluster item within their assigned groups. Initially, items
  *             are all part of the same group.
- *
+ * 
  *             (3) Assign to each point the cluster (group id).
- *
+ * 
  *             (4) Repeat steps 2 to 3 for each lower level.
- *
+ * 
  * @formatter: on
- *
+ * 
  */
 public abstract class MultiLevelClusteringJobRunner extends
 		MapReduceJobController implements

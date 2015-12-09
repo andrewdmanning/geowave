@@ -28,15 +28,15 @@ import org.apache.hadoop.io.ObjectWritable;
 import org.apache.hadoop.mapreduce.Job;
 
 /**
- *
+ * 
  * Samples 'K' number of data items by evaluating a {@link SamplingRankFunction}
- *
+ * 
  * For KMeans Parallel, the initial step requires seeding the centroids with a
  * single point. In this case, K=1 and the rank function is random. This means
  * the top selected geometry is random. In addition, each subsequent iteration
  * samples based on probability function and K is some provided sample size.
- *
- *
+ * 
+ * 
  */
 public class KSamplerJobRunner extends
 		GeoWaveAnalyticJobRunner implements

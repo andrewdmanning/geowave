@@ -46,7 +46,8 @@ abstract public class AbstractGeoWaveQuery implements
 				"debug",
 				false,
 				"Print out additional info for debug purposes");
-		adapterIdOpt.setRequired(false);
+		debugOpt.setRequired(false);
+		allOptions.addOption(debugOpt);
 		final BasicParser parser = new BasicParser();
 		final CommandLine commandLine = parser.parse(
 				allOptions,

@@ -9,7 +9,7 @@ import mil.nga.giat.geowave.core.index.sfc.data.NumericData;
 /**
  * This field can be used as a EPSG:4326 latitude dimension within GeoWave. It
  * can utilize JTS geometry as the underlying spatial object for this dimension.
- *
+ * 
  */
 public class LatitudeField extends
 		SpatialField

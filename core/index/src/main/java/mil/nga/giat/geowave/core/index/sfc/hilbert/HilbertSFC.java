@@ -18,7 +18,7 @@ import com.google.uzaygezen.core.MultiDimensionalSpec;
 
 /***
  * Implementation of a Compact Hilbert space filling curve
- *
+ * 
  */
 public class HilbertSFC implements
 		SpaceFillingCurve
@@ -37,7 +37,7 @@ public class HilbertSFC implements
 	/***
 	 * Use the SFCFactory.createSpaceFillingCurve method - don't call this
 	 * constructor directly
-	 *
+	 * 
 	 */
 	public HilbertSFC(
 			final SFCDimensionDefinition[] dimensionDefs ) {

@@ -72,45 +72,45 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
 /**
- *
+ * 
  * Manages the population of centroids by group id and batch id.
- *
+ * 
  * Properties:
- *
+ * 
  * @formatter:off
- *
+ * 
  *                "CentroidManagerGeoWave.Centroid.WrapperFactoryClass" -
  *                {@link AnalyticItemWrapperFactory} to extract wrap spatial
  *                objects with Centroid management function
- *
+ * 
  *                "CentroidManagerGeoWave.Centroid.DataTypeId" -> The data type
  *                ID of the centroid simple feature
- *
+ * 
  *                "CentroidManagerGeoWave.Centroid.IndexId" -> The GeoWave index
  *                ID of the centroid simple feature
- *
+ * 
  *                "CentroidManagerGeoWave.Global.BatchId" -> Batch ID for
  *                updates
- *
+ * 
  *                "CentroidManagerGeoWave.Global.Zookeeper" -> Zookeeper URL
- *
+ * 
  *                "CentroidManagerGeoWave.Global.AccumuloInstance" -> Accumulo
  *                Instance Name
- *
+ * 
  *                "CentroidManagerGeoWave.Global.AccumuloUser" -> Accumulo User
  *                name
- *
+ * 
  *                "CentroidManagerGeoWave.Global.AccumuloPassword" -> Accumulo
  *                Password
- *
+ * 
  *                "CentroidManagerGeoWave.Global.AccumuloNamespace" -> Accumulo
  *                Table Namespace
- *
+ * 
  *                "CentroidManagerGeoWave.Common.AccumuloConnectFactory" ->
  *                {@link BasicAccumuloOperationsFactory}
- *
+ * 
  * @formatter:on
- *
+ * 
  * @param <T>
  *            The item type used to represent a centroid.
  */
@@ -264,7 +264,7 @@ public class CentroidManagerGeoWave<T> implements
 	/**
 	 * Creates a new centroid based on the old centroid with new coordinates and
 	 * dimension values
-	 *
+	 * 
 	 * @param feature
 	 * @param coordinate
 	 * @param extraNames

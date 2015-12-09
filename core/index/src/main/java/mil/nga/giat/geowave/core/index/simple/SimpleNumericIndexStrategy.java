@@ -24,7 +24,7 @@ import mil.nga.giat.geowave.core.index.sfc.data.NumericValue;
  * integers). The strategy doesn't use any binning. The ids are simply the byte
  * arrays of the value. This index strategy will not perform well for inserting
  * ranges because there will be too much replication of data.
- *
+ * 
  */
 public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 		NumericIndexStrategy
@@ -49,7 +49,7 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 
 	/**
 	 * Cast a double into the type T
-	 *
+	 * 
 	 * @param value
 	 *            a double value
 	 * @return the value represented as a T
@@ -98,7 +98,7 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 	 * doensn't use binning, it will return the ByteArrayId of every value in
 	 * the range (i.e. if you are storing a range using this index strategy,
 	 * your data will be replicated for every integer value in the range).
-	 *
+	 * 
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -114,7 +114,7 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 	 * doensn't use binning, it will return the ByteArrayId of every value in
 	 * the range (i.e. if you are storing a range using this index strategy,
 	 * your data will be replicated for every integer value in the range).
-	 *
+	 * 
 	 * {@inheritDoc}
 	 */
 	@Override

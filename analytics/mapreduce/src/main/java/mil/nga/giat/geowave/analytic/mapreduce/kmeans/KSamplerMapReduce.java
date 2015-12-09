@@ -41,63 +41,63 @@ import com.vividsolutions.jts.geom.Point;
  * features PER GROUP. Outputs the samples in SimpleFeatures. Sampling is
  * achieved by picking the top ranked input objects. Rank is determined by a
  * sample function implementing {@link SamplingRankFunction}.
- *
+ * 
  * The input features should have a groupID set if they intend to be sampled by
  * group.
- *
+ * 
  * Keys are partitioned by the group ID in an attempt to process each group in a
  * separate reducer.
- *
+ * 
  * Sampled features are written to as a new SimpleFeature to a data store. The
  * SimpleFeature contains attributes:
- *
+ * 
  * @formatter:off
- *
+ * 
  *                name - data id of the sampled point
- *
+ * 
  *                weight - can be anything including the sum of all assigned
  *                feature distances
- *
+ * 
  *                geometry - geometry of the sampled features
- *
+ * 
  *                count - to hold the number of assigned features
- *
+ * 
  *                groupID - the assigned group ID to the input objects
  * @formatter:on
- *
+ * 
  *               Properties:
  * @formatter:off
- *
+ * 
  *                "KSamplerMapReduce.Sample.SampleSize" - number of input
  *                objects to sample. defaults to 1.
- *
+ * 
  *                "KSamplerMapReduce.Sample.DataTypeId" - Id of the data type to
  *                store the k samples - defaults to "centroids"
- *
+ * 
  *                "KSamplerMapReduce.Centroid.ExtractorClass" - extracts a
  *                centroid from an item. This parameter allows customization of
  *                determining one or more representative centroids for a
  *                geometry.
- *
+ * 
  *                "KSamplerMapReduce.Sample.IndexId" - The Index ID used for
  *                output simple features.
- *
+ * 
  *                "KSamplerMapReduce.Sample.SampleRankFunction" - An
  *                implementation of {@link SamplingRankFunction} used to rank
  *                the input object.
- *
+ * 
  *                "KSamplerMapReduce.Centroid.ZoomLevel" - Sets an attribute on
  *                the sampled objects recording a zoom level used in the
  *                sampling process. The interpretation of the attribute is not
  *                specified or assumed.
- *
+ * 
  *                "KSamplerMapReduce.Global.BatchId" ->the id of the batch;
  *                defaults to current time in millis (for range comparisons)
- *
+ * 
  *                "KSamplerMapReduce.Centroid.WrapperFactoryClass" ->
  *                {@link AnalyticItemWrapperFactory} to extract non-geometric
  *                dimensions
- *
+ * 
  * @formatter:on
  */
 public class KSamplerMapReduce

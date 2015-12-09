@@ -41,7 +41,7 @@ import com.vividsolutions.jts.geom.Geometry;
 /**
  * This class is intended to provide a self-contained, easy-to-follow example of
  * a few GeoTools queries against GeoWave using Spatial Temporal Data.
- *
+ * 
  * For simplicity, a MiniAccumuloCluster is spun up and a few points from the DC
  * area are ingested (Washington Monument, White House, FedEx Field). Two
  * queries are executed against this data set.

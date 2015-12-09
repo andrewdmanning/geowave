@@ -8,8 +8,8 @@
 		<version>0.9.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>geowave-cli-scratch</artifactId>
-	<name>GeoWave Statistics CLI Tool</name>
-	<description>Tool to calculate statistics for GeoWave data</description>
+	<name>GeoWave Ad-Hoc CLI Tool</name>
+	<description>Placeholder for ad-hoc tools applied to GeoWave data</description>
 	<dependencies>
 		<dependency>
 			<groupId>mil.nga.giat</groupId>

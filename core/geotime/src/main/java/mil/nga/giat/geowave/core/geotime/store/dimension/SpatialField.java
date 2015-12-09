@@ -14,7 +14,7 @@ import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 
 /**
  * A base class for EPSG:4326 latitude/longitude fields that use JTS geometry
- *
+ * 
  */
 abstract public class SpatialField implements
 		NumericDimensionField<GeometryWrapper>

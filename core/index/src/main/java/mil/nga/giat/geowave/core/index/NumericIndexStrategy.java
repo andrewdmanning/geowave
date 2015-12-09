@@ -40,5 +40,5 @@ public interface NumericIndexStrategy extends
 	 * @return the range of a single insertion ID for each dimension
 	 */
 	public double[] getHighestPrecisionIdRangePerDimension();
-	
+
 }

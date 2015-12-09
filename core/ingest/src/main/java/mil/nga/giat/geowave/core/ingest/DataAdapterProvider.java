@@ -6,7 +6,7 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 /**
  * This interface is applicable for plugins that need to provide writable data
  * adapters for ingest.
- *
+ * 
  * @param <O>
  *            the java type for the data being ingested
  */
@@ -14,7 +14,7 @@ public interface DataAdapterProvider<T>
 {
 	/**
 	 * Get all writable adapters used by this plugin
-	 *
+	 * 
 	 * @param globalVisibility
 	 *            If on the command-line the user specifies a global visibility
 	 *            to write to the visibility column in GeoWave, it is passed
@@ -28,7 +28,7 @@ public interface DataAdapterProvider<T>
 	/**
 	 * return a set of classes that can be indexed by this data adapter
 	 * provider, used for compatibility checking with an index provider
-	 *
+	 * 
 	 * @return the classes that are indexable by this adapter provider
 	 */
 	public Class<? extends CommonIndexValue>[] getSupportedIndexableTypes();

@@ -36,7 +36,7 @@ import org.apache.log4j.Logger;
 /**
  * This class executes the ingestion of intermediate data from a Kafka topic
  * into GeoWave.
- *
+ * 
  */
 public class IngestFromKafkaDriver extends
 		AbstractIngestCommandLineDriver

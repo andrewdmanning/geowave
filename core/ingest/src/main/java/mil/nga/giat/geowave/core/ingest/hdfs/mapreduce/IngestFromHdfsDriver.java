@@ -90,7 +90,7 @@ public class IngestFromHdfsDriver extends
 						LOGGER.warn("Plugin provider for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support ingest from HDFS");
 						continue;
 					}
-					
+
 				}
 				catch (final UnsupportedOperationException e) {
 					LOGGER.warn(

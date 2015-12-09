@@ -6,7 +6,13 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-import org.geotools.feature.FeatureBuilder;
+import mil.nga.giat.geowave.adapter.vector.serialization.kryo.KryoFeatureSerializer;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.data.field.FieldReader;
+import mil.nga.giat.geowave.core.store.data.field.FieldSerializationProviderSpi;
+import mil.nga.giat.geowave.core.store.data.field.FieldUtils;
+import mil.nga.giat.geowave.core.store.data.field.FieldWriter;
+
 import org.geotools.feature.simple.SimpleFeatureImpl;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -14,13 +20,6 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-
-import mil.nga.giat.geowave.adapter.vector.serialization.kryo.KryoFeatureSerializer;
-import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.store.data.field.FieldReader;
-import mil.nga.giat.geowave.core.store.data.field.FieldSerializationProviderSpi;
-import mil.nga.giat.geowave.core.store.data.field.FieldUtils;
-import mil.nga.giat.geowave.core.store.data.field.FieldWriter;
 
 public class SimpleFeatureSerializationProvider implements
 		FieldSerializationProviderSpi<SimpleFeature>
@@ -108,7 +107,7 @@ public class SimpleFeatureSerializationProvider implements
 		SimpleFeatureType type;
 
 		public WholeFeatureReader(
-				SimpleFeatureType type ) {
+				final SimpleFeatureType type ) {
 			super();
 			this.type = type;
 
@@ -123,8 +122,8 @@ public class SimpleFeatureSerializationProvider implements
 			final DataInputStream input = new DataInputStream(
 					new ByteArrayInputStream(
 							fieldData));
-			int attrCnt = type.getAttributeCount();
-			byte[][] retVal = new byte[attrCnt][];
+			final int attrCnt = type.getAttributeCount();
+			final byte[][] retVal = new byte[attrCnt][];
 			try {
 
 				for (int i = 0; i < attrCnt; i++) {
@@ -134,12 +133,15 @@ public class SimpleFeatureSerializationProvider implements
 						retVal[i] = null;
 						continue;
 					}
-					byte[] fieldValue = new byte[byteLength];
-					input.read(fieldValue);
+					final byte[] fieldValue = new byte[byteLength];
+					if (input.read(fieldValue) != byteLength) {
+						throw new IOException(
+								"Inconsistent bytes read from field");
+					}
 					retVal[i] = fieldValue;
 				}
 			}
-			catch (IOException e) {
+			catch (final IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -162,25 +164,25 @@ public class SimpleFeatureSerializationProvider implements
 			if (fieldValue == null) {
 				return new byte[] {};
 			}
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			final DataOutputStream output = new DataOutputStream(
 					baos);
 
 			try {
-				for (Object attr : fieldValue) {
+				for (final Object attr : fieldValue) {
 					if (attr == null) {
 						output.writeInt(-1);
 
 						continue;
 					}
-					FieldWriter writer = FieldUtils.getDefaultWriterForClass(attr.getClass());
-					byte[] binary = writer.writeField(attr);
+					final FieldWriter writer = FieldUtils.getDefaultWriterForClass(attr.getClass());
+					final byte[] binary = writer.writeField(attr);
 					output.writeInt(binary.length);
 					output.write(binary);
 				}
 				output.close();
 			}
-			catch (IOException e) {
+			catch (final IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

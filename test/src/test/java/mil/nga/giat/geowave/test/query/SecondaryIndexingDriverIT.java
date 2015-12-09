@@ -47,7 +47,7 @@ import com.vividsolutions.jts.geom.Coordinate;
  * This class is currently a dirty test harness used to sanity check changes as
  * I go. It will likely be rewritten/replaced by a much more sophisticated
  * integration test for secondary indexing once the capability matures
- *
+ * 
  */
 public class SecondaryIndexingDriverIT extends
 		GeoWaveTestEnvironment

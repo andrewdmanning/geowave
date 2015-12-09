@@ -115,7 +115,7 @@ public interface HilbertSFCOperations
 			int totalPrecision,
 			int maxFilteredIndexedRanges,
 			boolean removeVacuum,
-			boolean overInclusiveOnEdge);
+			boolean overInclusiveOnEdge );
 
 	/**
 	 * Get a quick (minimal complexity calculation) estimate of the total row

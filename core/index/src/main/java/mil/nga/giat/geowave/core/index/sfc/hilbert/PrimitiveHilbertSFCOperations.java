@@ -38,8 +38,8 @@ import com.google.uzaygezen.core.ranges.LongRangeHome;
  * currently used if no single dimension is more than 48 bits of precision, and
  * for query decomposition it is currently used if the total precision is <= 62
  * bits.
- *
- *
+ * 
+ * 
  */
 public class PrimitiveHilbertSFCOperations implements
 		HilbertSFCOperations
@@ -108,7 +108,7 @@ public class PrimitiveHilbertSFCOperations implements
 	 * Converts the incoming values (one per dimension) into a BitVector using
 	 * the Compact Hilbert instance. BitVector is a wrapper to allow values
 	 * longer than 64 bits.
-	 *
+	 * 
 	 * @param values
 	 *            n-dimensional point to transoform to a point on the hilbert
 	 *            SFC
@@ -207,7 +207,7 @@ public class PrimitiveHilbertSFCOperations implements
 	 * Used to normalize the value based on the dimension definition, which
 	 * includes the dimensional bounds and the bits of precision. This ensures
 	 * the maximum amount of fidelity for represented values.
-	 *
+	 * 
 	 * @param boundedDimensionDefinition
 	 *            describes the min, max, and cardinality of a dimension
 	 * @param value
@@ -259,7 +259,7 @@ public class PrimitiveHilbertSFCOperations implements
 	 * Used to normalize the value based on the dimension definition, which
 	 * includes the dimensional bounds and the bits of precision. This ensures
 	 * the maximum amount of fidelity for represented values.
-	 *
+	 * 
 	 * @param boundedDimensionDefinition
 	 *            describes the min, max, and cardinality of a dimension
 	 * @param value
@@ -441,7 +441,7 @@ public class PrimitiveHilbertSFCOperations implements
 	 * decomposition stops when the range is equal or smaller than this value).
 	 * Values is based on the _maximumRangeDecompsed and _minRangeDecompsed
 	 * instance members.
-	 *
+	 * 
 	 * @param minRangeList
 	 *            minimum values for each dimension (ordered)
 	 * @param maxRangeList

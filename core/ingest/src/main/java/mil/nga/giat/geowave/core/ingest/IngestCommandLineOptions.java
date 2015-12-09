@@ -1,5 +1,6 @@
 package mil.nga.giat.geowave.core.ingest;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -147,7 +148,7 @@ public class IngestCommandLineOptions
 
 	/**
 	 * Determine whether an index is compatible with the visitor
-	 *
+	 * 
 	 * @param index
 	 *            an index that an ingest type supports
 	 * @return whether the adapter is compatible with the common index model
@@ -257,8 +258,14 @@ public class IngestCommandLineOptions
 	}
 
 	private static class IndexOptionComparator implements
-			Comparator<IndexOptionProviderSpi>
+			Comparator<IndexOptionProviderSpi>,
+			Serializable
 	{
+
+		/**
+		 *
+		 */
+		private static final long serialVersionUID = 1L;
 
 		@Override
 		public int compare(
