@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -91,7 +92,7 @@ public class BasicAccumuloOperations implements
 	 * This is will create an Accumulo connector based on passed in connection
 	 * information and credentials for convenience convenience. It will also use
 	 * reasonable defaults for unspecified parameters.
-	 * 
+	 *
 	 * @param zookeeperUrl
 	 *            The comma-delimited URLs for all zookeeper servers, this will
 	 *            be directly used to instantiate a ZookeeperInstance
@@ -134,7 +135,7 @@ public class BasicAccumuloOperations implements
 	/**
 	 * This constructor uses reasonable defaults and only requires an Accumulo
 	 * connector
-	 * 
+	 *
 	 * @param connector
 	 *            The connector to use for all operations
 	 */
@@ -148,7 +149,7 @@ public class BasicAccumuloOperations implements
 	/**
 	 * This constructor uses reasonable defaults and requires an Accumulo
 	 * connector and table namespace
-	 * 
+	 *
 	 * @param connector
 	 *            The connector to use for all operations
 	 * @param password
@@ -171,7 +172,7 @@ public class BasicAccumuloOperations implements
 	/**
 	 * This is the full constructor for the operation factory and should be used
 	 * if any of the defaults are insufficient.
-	 * 
+	 *
 	 * @param numThreads
 	 *            The number of threads to use for a batch scanner and batch
 	 *            writer
@@ -246,14 +247,16 @@ public class BasicAccumuloOperations implements
 		return createWriter(
 				tableName,
 				createTable,
-				true);
+				true,
+				null);
 	}
 
 	@Override
 	public Writer createWriter(
 			final String tableName,
 			final boolean createTable,
-			final boolean enableVersioning )
+			final boolean enableVersioning,
+			final Set<ByteArrayId> splits )
 			throws TableNotFoundException {
 		final String qName = getQualifiedTableName(tableName);
 		if (createTable && !connector.tableOperations().exists(
@@ -262,6 +265,16 @@ public class BasicAccumuloOperations implements
 				connector.tableOperations().create(
 						qName,
 						enableVersioning);
+				if ((splits != null) && !splits.isEmpty()) {
+					final SortedSet<Text> partitionKeys = new TreeSet<Text>();
+					for (final ByteArrayId split : splits) {
+						partitionKeys.add(new Text(
+								split.getBytes()));
+					}
+					connector.tableOperations().addSplits(
+							qName,
+							partitionKeys);
+				}
 			}
 			catch (AccumuloException | AccumuloSecurityException | TableExistsException e) {
 				LOGGER.warn(
@@ -290,7 +303,7 @@ public class BasicAccumuloOperations implements
 			try {
 				connector.tableOperations().create(
 						qName,
-						false);
+						true);
 			}
 			catch (AccumuloException | AccumuloSecurityException | TableExistsException e) {
 				LOGGER.warn(
@@ -818,5 +831,37 @@ public class BasicAccumuloOperations implements
 	@Override
 	public Instance getInstance() {
 		return connector.getInstance();
+	}
+
+	@Override
+	public void addSplits(
+			final String tableName,
+			final boolean createTable,
+			final Set<ByteArrayId> splits )
+			throws TableNotFoundException,
+			AccumuloException,
+			AccumuloSecurityException {
+		final String qName = getQualifiedTableName(tableName);
+		if (createTable && !connector.tableOperations().exists(
+				qName)) {
+			try {
+				connector.tableOperations().create(
+						qName,
+						true);
+			}
+			catch (AccumuloException | AccumuloSecurityException | TableExistsException e) {
+				LOGGER.warn(
+						"Unable to create table '" + qName + "'",
+						e);
+			}
+		}
+		final SortedSet<Text> partitionKeys = new TreeSet<Text>();
+		for (final ByteArrayId split : splits) {
+			partitionKeys.add(new Text(
+					split.getBytes()));
+		}
+		connector.tableOperations().addSplits(
+				qName,
+				partitionKeys);
 	}
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -23,7 +24,7 @@ import mil.nga.giat.geowave.core.index.sfc.data.NumericValue;
  * integers). The strategy doesn't use any binning. The ids are simply the byte
  * arrays of the value. This index strategy will not perform well for inserting
  * ranges because there will be too much replication of data.
- * 
+ *
  */
 public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 		NumericIndexStrategy
@@ -48,7 +49,7 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 
 	/**
 	 * Cast a double into the type T
-	 * 
+	 *
 	 * @param value
 	 *            a double value
 	 * @return the value represented as a T
@@ -97,7 +98,7 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 	 * doensn't use binning, it will return the ByteArrayId of every value in
 	 * the range (i.e. if you are storing a range using this index strategy,
 	 * your data will be replicated for every integer value in the range).
-	 * 
+	 *
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -113,7 +114,7 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 	 * doensn't use binning, it will return the ByteArrayId of every value in
 	 * the range (i.e. if you are storing a range using this index strategy,
 	 * your data will be replicated for every integer value in the range).
-	 * 
+	 *
 	 * {@inheritDoc}
 	 */
 	@Override
@@ -172,26 +173,43 @@ public abstract class SimpleNumericIndexStrategy<T extends Number> implements
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(definitions);
-		result = prime * result + ((lexicoder == null) ? 0 : lexicoder.hashCode());
+		result = (prime * result) + Arrays.hashCode(definitions);
+		result = (prime * result) + ((lexicoder == null) ? 0 : lexicoder.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(
-			Object obj ) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
-		SimpleNumericIndexStrategy other = (SimpleNumericIndexStrategy) obj;
+			final Object obj ) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final SimpleNumericIndexStrategy other = (SimpleNumericIndexStrategy) obj;
 		if (!Arrays.equals(
 				definitions,
-				other.definitions)) return false;
-		if (lexicoder == null) {
-			if (other.lexicoder != null) return false;
+				other.definitions)) {
+			return false;
 		}
-		else if (!lexicoder.equals(other.lexicoder)) return false;
+		if (lexicoder == null) {
+			if (other.lexicoder != null) {
+				return false;
+			}
+		}
+		else if (!lexicoder.equals(other.lexicoder)) {
+			return false;
+		}
 		return true;
+	}
+
+	@Override
+	public Set<ByteArrayId> getNaturalSplits() {
+		return null;
 	}
 
 }

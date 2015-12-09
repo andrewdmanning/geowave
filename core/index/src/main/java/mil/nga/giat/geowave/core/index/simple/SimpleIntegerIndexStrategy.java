@@ -7,7 +7,7 @@ import mil.nga.giat.geowave.core.index.lexicoder.Lexicoders;
  * signed integer values. The strategy doesn't use any binning. The ids are
  * simply the byte arrays of the value. This index strategy will not perform
  * well for inserting ranges because there will be too much replication of data.
- * 
+ *
  */
 public class SimpleIntegerIndexStrategy extends
 		SimpleNumericIndexStrategy<Integer>
@@ -32,5 +32,4 @@ public class SimpleIntegerIndexStrategy extends
 			final double value ) {
 		return (int) value;
 	}
-
 }

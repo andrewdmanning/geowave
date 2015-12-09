@@ -3,6 +3,7 @@ package mil.nga.giat.geowave.core.store.index.numeric;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -73,6 +74,11 @@ public class NumericIndexStrategy implements
 	public static final byte[] toIndexByte(
 			final Number number ) {
 		return Lexicoders.DOUBLE.toByteArray(number.doubleValue());
+	}
+
+	@Override
+	public Set<ByteArrayId> getNaturalSplits() {
+		return null;
 	}
 
 }

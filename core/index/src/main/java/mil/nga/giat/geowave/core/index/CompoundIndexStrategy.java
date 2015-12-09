@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.data.BasicNumericDataset;
@@ -78,7 +79,7 @@ public class CompoundIndexStrategy implements
 
 	/**
 	 * Get the number of dimensions of each sub-strategy
-	 * 
+	 *
 	 * @return an array with the number of dimensions for each sub-strategy
 	 */
 	public int[] getNumberOfDimensionsPerIndexStrategy() {
@@ -90,7 +91,7 @@ public class CompoundIndexStrategy implements
 
 	/**
 	 * Get the total number of dimensions from all sub-strategies
-	 * 
+	 *
 	 * @return the number of dimensions
 	 */
 	public int getNumberOfDimensions() {
@@ -99,7 +100,7 @@ public class CompoundIndexStrategy implements
 
 	/**
 	 * Create a compound ByteArrayId
-	 * 
+	 *
 	 * @param id1
 	 *            ByteArrayId for the first sub-strategy
 	 * @param id2
@@ -121,7 +122,7 @@ public class CompoundIndexStrategy implements
 	/**
 	 * Get the ByteArrayId for each sub-strategy from the ByteArrayId for the
 	 * compound index strategy
-	 * 
+	 *
 	 * @param id
 	 *            the compound ByteArrayId
 	 * @return the ByteArrayId for each sub-strategy
@@ -351,32 +352,50 @@ public class CompoundIndexStrategy implements
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + Arrays.hashCode(baseDefinitions);
-		result = prime * result + defaultNumberOfRanges;
-		result = prime * result + ((subStrategy1 == null) ? 0 : subStrategy1.hashCode());
-		result = prime * result + ((subStrategy2 == null) ? 0 : subStrategy2.hashCode());
+		result = (prime * result) + Arrays.hashCode(baseDefinitions);
+		result = (prime * result) + defaultNumberOfRanges;
+		result = (prime * result) + ((subStrategy1 == null) ? 0 : subStrategy1.hashCode());
+		result = (prime * result) + ((subStrategy2 == null) ? 0 : subStrategy2.hashCode());
 		return result;
 	}
 
 	@Override
 	public boolean equals(
-			Object obj ) {
-		if (this == obj) return true;
-		if (obj == null) return false;
-		if (getClass() != obj.getClass()) return false;
-		CompoundIndexStrategy other = (CompoundIndexStrategy) obj;
+			final Object obj ) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (getClass() != obj.getClass()) {
+			return false;
+		}
+		final CompoundIndexStrategy other = (CompoundIndexStrategy) obj;
 		if (!Arrays.equals(
 				baseDefinitions,
-				other.baseDefinitions)) return false;
-		if (defaultNumberOfRanges != other.defaultNumberOfRanges) return false;
+				other.baseDefinitions)) {
+			return false;
+		}
+		if (defaultNumberOfRanges != other.defaultNumberOfRanges) {
+			return false;
+		}
 		if (subStrategy1 == null) {
-			if (other.subStrategy1 != null) return false;
+			if (other.subStrategy1 != null) {
+				return false;
+			}
 		}
-		else if (!subStrategy1.equals(other.subStrategy1)) return false;
+		else if (!subStrategy1.equals(other.subStrategy1)) {
+			return false;
+		}
 		if (subStrategy2 == null) {
-			if (other.subStrategy2 != null) return false;
+			if (other.subStrategy2 != null) {
+				return false;
+			}
 		}
-		else if (!subStrategy2.equals(other.subStrategy2)) return false;
+		else if (!subStrategy2.equals(other.subStrategy2)) {
+			return false;
+		}
 		return true;
 	}
 
@@ -403,6 +422,13 @@ public class CompoundIndexStrategy implements
 				strategy1HighestPrecision.length,
 				strategy2HighestPrecision.length);
 		return highestPrecision;
+	}
+
+	@Override
+	public Set<ByteArrayId> getNaturalSplits() {
+		// because substrategy one is prefixing substrategy2, just use the
+		// splits associated with substrategy1
+		return subStrategy1.getNaturalSplits();
 	}
 
 }

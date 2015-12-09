@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -142,6 +143,11 @@ public class TextIndexStrategy implements
 		buffer.putInt(ngramBytes.length);
 		buffer.put(ngramBytes);
 		return buffer.array();
+	}
+	
+	@Override
+	public Set<ByteArrayId> getNaturalSplits() {
+		return null;
 	}
 
 }

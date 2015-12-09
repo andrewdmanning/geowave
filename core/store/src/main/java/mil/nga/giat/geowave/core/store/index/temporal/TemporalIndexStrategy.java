@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -74,6 +75,11 @@ public class TemporalIndexStrategy implements
 	public static final byte[] toIndexByte(
 			final Date date ) {
 		return Lexicoders.LONG.toByteArray(date.getTime());
+	}
+
+	@Override
+	public Set<ByteArrayId> getNaturalSplits() {
+		return null;
 	}
 
 }

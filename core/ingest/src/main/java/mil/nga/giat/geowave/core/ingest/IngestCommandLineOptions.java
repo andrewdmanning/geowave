@@ -35,17 +35,14 @@ public class IngestCommandLineOptions
 	private final String visibility;
 	private final boolean clearNamespace;
 	private final String dimensionalityType;
-	private final int randomPartitions;
 
 	public IngestCommandLineOptions(
 			final String visibility,
 			final boolean clearNamespace,
-			final String dimensionalityType,
-			final int randomPartitions ) {
+			final String dimensionalityType ) {
 		this.visibility = visibility;
 		this.clearNamespace = clearNamespace;
 		this.dimensionalityType = dimensionalityType;
-		this.randomPartitions = randomPartitions;
 	}
 
 	public String getVisibility() {
@@ -58,10 +55,6 @@ public class IngestCommandLineOptions
 
 	public boolean isClearNamespace() {
 		return clearNamespace;
-	}
-
-	public int getRandomPartitions() {
-		return randomPartitions;
 	}
 
 	public PrimaryIndex getIndex(
@@ -85,7 +78,6 @@ public class IngestCommandLineOptions
 
 		}
 		return null;
-
 	}
 
 	public boolean isSupported(
@@ -221,7 +213,7 @@ public class IngestCommandLineOptions
 			throws ParseException {
 		final boolean success = true;
 		boolean clearNamespace = false;
-		int randomPartitions = -1;
+		final int randomPartitions = -1;
 		if (commandLine.hasOption("c")) {
 			clearNamespace = true;
 		}
@@ -236,14 +228,10 @@ public class IngestCommandLineOptions
 			throw new ParseException(
 					"Required option is missing");
 		}
-		if (commandLine.hasOption("randompartitions")) {
-			randomPartitions = Integer.parseInt(commandLine.getOptionValue("randompartitions"));
-		}
 		return new IngestCommandLineOptions(
 				visibility,
 				clearNamespace,
-				dimensionalityType,
-				randomPartitions);
+				dimensionalityType);
 	}
 
 	public static void applyOptions(
@@ -266,11 +254,6 @@ public class IngestCommandLineOptions
 				"clear",
 				false,
 				"Clear ALL data stored with the same prefix as this namespace (optional; default is to append data to the namespace if it exists)"));
-		allOptions.addOption(new Option(
-				"randompartitions",
-				"random partitions",
-				true,
-				"Prefix data with this many unique identifiers to enforce random pre-splits for the index"));
 	}
 
 	private static class IndexOptionComparator implements

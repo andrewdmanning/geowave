@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.core.index;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
@@ -11,7 +12,7 @@ import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
  * and always returning empty IDs and ranges. It can be used in cases when the
  * data is "indexed" by another means, and not using multi-dimensional numeric
  * data.
- * 
+ *
  */
 public class NullNumericIndexStrategy implements
 		NumericIndexStrategy
@@ -104,6 +105,11 @@ public class NullNumericIndexStrategy implements
 		retVal.add(new ByteArrayId(
 				new byte[] {}));
 		return retVal;
+	}
+
+	@Override
+	public Set<ByteArrayId> getNaturalSplits() {
+		return null;
 	}
 
 }

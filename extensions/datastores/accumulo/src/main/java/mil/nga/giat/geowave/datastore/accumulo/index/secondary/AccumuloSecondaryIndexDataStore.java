@@ -54,7 +54,8 @@ public class AccumuloSecondaryIndexDataStore implements
 	}
 
 	private Writer getWriter(
-			final String secondaryIndexName ) {
+			final SecondaryIndex<?> secondaryIndex ) {
+		final String secondaryIndexName = secondaryIndex.getIndexStrategy().getId();
 		if (writerCache.containsKey(secondaryIndexName)) {
 			return writerCache.get(secondaryIndexName);
 		}
@@ -63,7 +64,8 @@ public class AccumuloSecondaryIndexDataStore implements
 			writer = accumuloOperations.createWriter(
 					TABLE_PREFIX + secondaryIndexName,
 					true,
-					false);
+					false,
+					secondaryIndex.getIndexStrategy().getNaturalSplits());
 			writerCache.put(
 					secondaryIndexName,
 					writer);
@@ -82,7 +84,7 @@ public class AccumuloSecondaryIndexDataStore implements
 			final ByteArrayId primaryIndexId,
 			final ByteArrayId primaryIndexRowId,
 			final List<FieldInfo<?>> indexedAttributes ) {
-		final Writer writer = getWriter(secondaryIndex.getIndexStrategy().getId());
+		final Writer writer = getWriter(secondaryIndex);
 		if (writer != null) {
 			for (final FieldInfo<?> indexedAttribute : indexedAttributes) {
 				@SuppressWarnings("unchecked")
@@ -106,7 +108,7 @@ public class AccumuloSecondaryIndexDataStore implements
 	public void delete(
 			final SecondaryIndex<?> secondaryIndex,
 			final List<FieldInfo<?>> indexedAttributes ) {
-		final Writer writer = getWriter(secondaryIndex.getIndexStrategy().getId());
+		final Writer writer = getWriter(secondaryIndex);
 		if (writer != null) {
 			for (final FieldInfo<?> indexedAttribute : indexedAttributes) {
 				@SuppressWarnings("unchecked")

@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.core.store.adapter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -613,6 +614,12 @@ public class MockComponents
 			return new double[] {
 				Integer.MAX_VALUE
 			};
+		}
+
+		@Override
+		public Set<ByteArrayId> getNaturalSplits() {
+			// TODO Auto-generated method stub
+			return null;
 		}
 
 	}

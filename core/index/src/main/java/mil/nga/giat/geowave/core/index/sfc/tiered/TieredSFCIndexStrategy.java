@@ -5,9 +5,11 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -584,5 +586,18 @@ public class TieredSFCIndexStrategy implements
 			final int maxEstimatedDuplicateIds ) {
 		this.maxEstimatedDuplicateIds = maxEstimatedDuplicateIds;
 		maxEstimatedDuplicateIdsBigInteger = BigInteger.valueOf(maxEstimatedDuplicateIds);
+	}
+
+	@Override
+	public Set<ByteArrayId> getNaturalSplits() {
+		final Set<ByteArrayId> retVal = new HashSet<ByteArrayId>(
+				orderedSfcIndexToTierId.size());
+		for (final Byte tier : orderedSfcIndexToTierId.values()) {
+			retVal.add(new ByteArrayId(
+					new byte[] {
+						tier
+					}));
+		}
+		return retVal;
 	}
 }

@@ -1,5 +1,7 @@
 package mil.nga.giat.geowave.core.index;
 
+import java.util.List;
+
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 
@@ -38,4 +40,5 @@ public interface NumericIndexStrategy extends
 	 * @return the range of a single insertion ID for each dimension
 	 */
 	public double[] getHighestPrecisionIdRangePerDimension();
+	
 }

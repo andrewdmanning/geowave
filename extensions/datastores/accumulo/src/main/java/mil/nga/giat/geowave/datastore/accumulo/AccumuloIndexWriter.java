@@ -30,7 +30,7 @@ import org.apache.log4j.Logger;
  * This class can write many entries for a single index by retaining a single
  * open writer. The first entry that is written will open a writer and it is the
  * responsibility of the caller to close this writer when complete.
- * 
+ *
  */
 public class AccumuloIndexWriter implements
 		IndexWriter
@@ -83,7 +83,7 @@ public class AccumuloIndexWriter implements
 		this.accumuloOptions = accumuloOptions;
 		this.dataStore = dataStore;
 		this.customFieldVisibilityWriter = customFieldVisibilityWriter;
-		this.callbackCache = new DataStoreCallbackManager(
+		callbackCache = new DataStoreCallbackManager(
 				statsStore,
 				secondaryIndexDataStore);
 		initialize();
@@ -117,7 +117,9 @@ public class AccumuloIndexWriter implements
 			try {
 				writer = accumuloOperations.createWriter(
 						StringUtils.stringFromBinary(index.getId().getBytes()),
-						accumuloOptions.isCreateTable());
+						accumuloOptions.isCreateTable(),
+						true,
+						index.getIndexStrategy().getNaturalSplits());
 			}
 			catch (final TableNotFoundException e) {
 				LOGGER.error(
@@ -129,7 +131,9 @@ public class AccumuloIndexWriter implements
 			try {
 				altIdxWriter = accumuloOperations.createWriter(
 						altIdxTableName,
-						accumuloOptions.isCreateTable());
+						accumuloOptions.isCreateTable(),
+						true,
+						index.getIndexStrategy().getNaturalSplits());
 			}
 			catch (final TableNotFoundException e) {
 				LOGGER.error(
@@ -162,7 +166,7 @@ public class AccumuloIndexWriter implements
 		return write(
 				writableAdapter,
 				entry,
-				(VisibilityWriter<T>) this.customFieldVisibilityWriter);
+				(VisibilityWriter<T>) customFieldVisibilityWriter);
 	}
 
 	@Override
@@ -235,7 +239,9 @@ public class AccumuloIndexWriter implements
 			dataStore.store(index);
 
 			ensureOpen();
-			if (writer == null) return Collections.emptyList();
+			if (writer == null) {
+				return Collections.emptyList();
+			}
 			entryInfo = AccumuloUtils.write(
 					writableAdapter,
 					index,
@@ -265,7 +271,7 @@ public class AccumuloIndexWriter implements
 						altIdxWriter);
 			}
 			callbackCache.getIngestCallback(
-					(WritableDataAdapter<T>) writableAdapter,
+					writableAdapter,
 					index).entryIngested(
 					entryInfo,
 					entry);
@@ -280,7 +286,7 @@ public class AccumuloIndexWriter implements
 		try {
 			callbackCache.close();
 		}
-		catch (IOException e) {
+		catch (final IOException e) {
 			LOGGER.error(
 					"Cannot close callbacks",
 					e);

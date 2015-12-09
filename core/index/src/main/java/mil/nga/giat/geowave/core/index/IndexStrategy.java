@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.core.index;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Interface which defines an index strategy.
@@ -74,5 +75,15 @@ public interface IndexStrategy<QueryRangeType extends QueryConstraints, EntryRan
 	 * @return a unique ID associated with the index strategy
 	 */
 	public String getId();
+
+	/***
+	 * Get the set of natural splits for this index strategy. Not all index
+	 * strategies need to have natural splits but in the cases that they exist,
+	 * it can be used downstream to appropriately partition the data according
+	 * to natural split points from the index strategy.
+	 * 
+	 * @return the set of natural splits
+	 */
+	public Set<ByteArrayId> getNaturalSplits();
 
 }
