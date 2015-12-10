@@ -193,9 +193,9 @@ public class AccumuloDataStore implements
 	/*
 	 * Since this general-purpose method crosses multiple adapters, the type of
 	 * result cannot be assumed.
-	 * 
+	 *
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * mil.nga.giat.geowave.core.store.DataStore#query(mil.nga.giat.geowave.
 	 * core.store.query.QueryOptions,
@@ -209,7 +209,7 @@ public class AccumuloDataStore implements
 		// all queries will use the same instance of the dedupe filter for
 		// client side filtering because the filter needs to be applied across
 		// indices
-
+		final QueryOptions sanitizedQueryOptions = (queryOptions == null) ? new QueryOptions() : queryOptions;
 		final Query sanitizedQuery = (query == null) ? new EverythingQuery() : query;
 
 		int indexCount = 0;
@@ -217,21 +217,21 @@ public class AccumuloDataStore implements
 		MemoryAdapterStore tempAdapterStore;
 		try {
 			tempAdapterStore = new MemoryAdapterStore(
-					queryOptions.getAdaptersArray(adapterStore));
+					sanitizedQueryOptions.getAdaptersArray(adapterStore));
 
-			try (CloseableIterator<Index<?, ?>> indexIt = queryOptions.getIndices(indexStore)) {
+			try (CloseableIterator<Index<?, ?>> indexIt = sanitizedQueryOptions.getIndices(indexStore)) {
 				while (indexIt.hasNext()) {
 					final PrimaryIndex index = (PrimaryIndex) indexIt.next();
 					indexCount++;
 					if (sanitizedQuery instanceof RowIdQuery) {
 						final AccumuloRowIdsQuery<Object> q = new AccumuloRowIdsQuery<Object>(
-								queryOptions.getAdapterIds(adapterStore),
+								sanitizedQueryOptions.getAdapterIds(adapterStore),
 								index,
 								((RowIdQuery) sanitizedQuery).getRowIds(),
-								(ScanCallback<Object>) queryOptions.getScanCallback(),
+								(ScanCallback<Object>) sanitizedQueryOptions.getScanCallback(),
 								filter,
-								queryOptions.getFieldIds(),
-								queryOptions.getAuthorizations());
+								sanitizedQueryOptions.getFieldIds(),
+								sanitizedQueryOptions.getAuthorizations());
 
 						results.add(q.query(
 								accumuloOperations,
@@ -241,14 +241,14 @@ public class AccumuloDataStore implements
 					}
 					else if (sanitizedQuery instanceof DataIdQuery) {
 						final DataIdQuery idQuery = (DataIdQuery) sanitizedQuery;
-						results.add(this.getEntries(
+						results.add(getEntries(
 								index,
 								idQuery.getDataIds(),
 								(DataAdapter<Object>) adapterStore.getAdapter(idQuery.getAdapterId()),
 								filter,
-								(ScanCallback<Object>) queryOptions.getScanCallback(),
-								queryOptions.getFieldIds(),
-								queryOptions.getAuthorizations(),
+								(ScanCallback<Object>) sanitizedQueryOptions.getScanCallback(),
+								sanitizedQueryOptions.getFieldIds(),
+								sanitizedQueryOptions.getAuthorizations(),
 								true));
 						continue;
 					}
@@ -257,9 +257,9 @@ public class AccumuloDataStore implements
 						final AccumuloRowPrefixQuery<Object> prefixQuery = new AccumuloRowPrefixQuery<Object>(
 								index,
 								prefixIdQuery.getRowPrefix(),
-								(ScanCallback<Object>) queryOptions.getScanCallback(),
-								queryOptions.getLimit(),
-								queryOptions.getAuthorizations());
+								(ScanCallback<Object>) sanitizedQueryOptions.getScanCallback(),
+								sanitizedQueryOptions.getLimit(),
+								sanitizedQueryOptions.getAuthorizations());
 						results.add(prefixQuery.query(
 								accumuloOperations,
 								tempAdapterStore));
@@ -271,13 +271,13 @@ public class AccumuloDataStore implements
 								index,
 								sanitizedQuery,
 								filter,
-								queryOptions.getScanCallback(),
-								queryOptions.getFieldIds(),
-								queryOptions.getAuthorizations());
+								sanitizedQueryOptions.getScanCallback(),
+								sanitizedQueryOptions.getFieldIds(),
+								sanitizedQueryOptions.getAuthorizations());
 						results.add(accumuloQuery.query(
 								accumuloOperations,
 								tempAdapterStore,
-								queryOptions.getLimit(),
+								sanitizedQueryOptions.getLimit(),
 								true));
 						continue;
 
@@ -285,37 +285,37 @@ public class AccumuloDataStore implements
 
 					AccumuloConstraintsQuery accumuloQuery;
 					try {
-						List<ByteArrayId> adapterIds = queryOptions.getAdapterIds(adapterStore);
+						List<ByteArrayId> adapterIds = sanitizedQueryOptions.getAdapterIds(adapterStore);
 						// only narrow adapter Ids if the set of adapter id's is
 						// resolved
-						try (CloseableIterator<DataAdapter<?>> adapters = queryOptions.getAdapters(getAdapterStore())) {
-							adapterIds = (adapterIds != null && accumuloOptions.persistDataStatistics && adapterIds.size() > 0) ? DataStoreUtils.trimAdapterIdsByIndex(
+						try (CloseableIterator<DataAdapter<?>> adapters = sanitizedQueryOptions.getAdapters(getAdapterStore())) {
+							adapterIds = ((adapterIds != null) && accumuloOptions.persistDataStatistics && (adapterIds.size() > 0)) ? DataStoreUtils.trimAdapterIdsByIndex(
 									statisticsStore,
 									index.getId(),
 									adapters,
-									queryOptions.getAuthorizations()) : adapterIds;
+									sanitizedQueryOptions.getAuthorizations()) : adapterIds;
 						}
 						// the null case should not happen, but the findbugs
 						// seems to like it.
-						if (adapterIds == null || adapterIds.size() > 0) {
+						if ((adapterIds == null) || (adapterIds.size() > 0)) {
 							accumuloQuery = new AccumuloConstraintsQuery(
 									adapterIds,
 									index,
 									sanitizedQuery,
 									filter,
-									queryOptions.getScanCallback(),
-									queryOptions.getFieldIds(),
-									queryOptions.getAuthorizations());
+									sanitizedQueryOptions.getScanCallback(),
+									sanitizedQueryOptions.getFieldIds(),
+									sanitizedQueryOptions.getAuthorizations());
 
 							results.add(accumuloQuery.query(
 									accumuloOperations,
 									tempAdapterStore,
-									queryOptions.getLimit(),
+									sanitizedQueryOptions.getLimit(),
 									true));
 						}
 					}
 					catch (final IOException e) {
-						LOGGER.error("Cannot resolve adapter Ids " + queryOptions.toString());
+						LOGGER.error("Cannot resolve adapter Ids " + sanitizedQueryOptions.toString());
 
 					}
 				}
@@ -328,7 +328,7 @@ public class AccumuloDataStore implements
 					e1);
 		}
 
-		if (queryOptions.isDedupAcrossIndices() && indexCount > 1) {
+		if (sanitizedQueryOptions.isDedupAcrossIndices() && (indexCount > 1)) {
 			filter.setDedupAcrossIndices(true);
 		}
 
@@ -353,7 +353,7 @@ public class AccumuloDataStore implements
 		final Iterator<CloseableIterator<Object>> it;
 
 		public CastIterator(
-				Iterator<CloseableIterator<Object>> it ) {
+				final Iterator<CloseableIterator<Object>> it ) {
 			this.it = it;
 		}
 
@@ -367,6 +367,7 @@ public class AccumuloDataStore implements
 			return (CloseableIterator<T>) it.next();
 		}
 
+		@Override
 		public void remove() {
 			it.remove();
 		}
@@ -452,7 +453,7 @@ public class AccumuloDataStore implements
 				return q.query(
 						accumuloOperations,
 						tempAdapterStore,
-						(limit || rowIds.size() < 2) ? 1 : -1);
+						(limit || (rowIds.size() < 2)) ? 1 : -1);
 			}
 		}
 		else {
@@ -513,7 +514,7 @@ public class AccumuloDataStore implements
 				((Scanner) scanner).setBatchSize(limit);
 			}
 
-			if (fieldIds != null && !fieldIds.isEmpty()) {
+			if ((fieldIds != null) && !fieldIds.isEmpty()) {
 				// configure scanner to fetch only the fieldIds specified
 				AccumuloUtils.handleSubsetOfFieldIds(
 						scanner,
@@ -544,11 +545,11 @@ public class AccumuloDataStore implements
 
 	/*
 	 * Perhaps a use for this optimization with DataIdQuery ?
-	 * 
+	 *
 	 * private List<Entry<Key, Value>> getEntryRowWithRowIds( final String
 	 * tableName, final List<ByteArrayId> rowIds, final ByteArrayId adapterId,
 	 * final String... authorizations ) {
-	 * 
+	 *
 	 * final List<Entry<Key, Value>> resultList = new ArrayList<Entry<Key,
 	 * Value>>(); if ((rowIds == null) || rowIds.isEmpty()) { return resultList;
 	 * } final List<ByteArrayRange> ranges = new ArrayList<ByteArrayRange>();
@@ -558,18 +559,18 @@ public class AccumuloDataStore implements
 	 * ((BatchScanner)
 	 * scanner).setRanges(AccumuloUtils.byteArrayRangesToAccumuloRanges
 	 * (ranges));
-	 * 
+	 *
 	 * final IteratorSetting iteratorSettings = new IteratorSetting(
 	 * QueryFilterIterator.WHOLE_ROW_ITERATOR_PRIORITY,
 	 * QueryFilterIterator.WHOLE_ROW_ITERATOR_NAME, WholeRowIterator.class);
 	 * scanner.addScanIterator(iteratorSettings);
-	 * 
+	 *
 	 * final Iterator<Map.Entry<Key, Value>> iterator = scanner.iterator();
 	 * while (iterator.hasNext()) { resultList.add(iterator.next()); } } catch
 	 * (final TableNotFoundException e) { LOGGER.warn( "Unable to query table '"
 	 * + tableName + "'.  Table does not exist.", e); } finally { if (scanner !=
 	 * null) { scanner.close(); } }
-	 * 
+	 *
 	 * return resultList; }
 	 */
 
@@ -582,7 +583,7 @@ public class AccumuloDataStore implements
 		final List<ByteArrayId> result = new ArrayList<ByteArrayId>();
 		if (accumuloOptions.isUseAltIndex() && accumuloOperations.tableExists(tableName)) {
 			ScannerBase scanner = null;
-			for (ByteArrayId dataId : dataIds) {
+			for (final ByteArrayId dataId : dataIds) {
 				try {
 					scanner = accumuloOperations.createScanner(tableName);
 
@@ -594,7 +595,7 @@ public class AccumuloDataStore implements
 
 					final Iterator<Map.Entry<Key, Value>> iterator = scanner.iterator();
 					int i = 0;
-					while (iterator.hasNext() && (limit < 0 || i < limit)) {
+					while (iterator.hasNext() && ((limit < 0) || (i < limit))) {
 						result.add(new ByteArrayId(
 								iterator.next().getKey().getColumnQualifierData().getBackingArray()));
 						i++;
@@ -726,8 +727,8 @@ public class AccumuloDataStore implements
 											-1);
 								}
 								else if (query instanceof DataIdQuery) {
-									DataIdQuery idQuery = (DataIdQuery) query;
-									dataIt = this.getEntries(
+									final DataIdQuery idQuery = (DataIdQuery) query;
+									dataIt = getEntries(
 											index,
 											idQuery.getDataIds(),
 											(DataAdapter<Object>) adapterStore.getAdapter(idQuery.getAdapterId()),
@@ -768,7 +769,7 @@ public class AccumuloDataStore implements
 								try {
 									dataIt.close();
 								}
-								catch (Exception ex) {
+								catch (final Exception ex) {
 									LOGGER.warn(
 											"Cannot close iterator",
 											ex);

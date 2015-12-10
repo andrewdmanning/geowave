@@ -16,12 +16,12 @@ public class BaseIndexOptions
 	@Parameter(names = {
 		"-numPartitions"
 	}, required = false, description = "The number of partitions.  Default partitions will be 40.")
-	protected int numPartitions = 40;
+	protected int numPartitions = 1;
 
 	@Parameter(names = {
 		"-partitionStrategy"
 	}, required = false, description = "The partition strategy to use.  Default will be random.", converter = PartitionStrategyConverter.class)
-	protected PartitionStrategy partitionStrategy = PartitionStrategy.RANDOM;
+	protected PartitionStrategy partitionStrategy = PartitionStrategy.NONE;
 
 	protected static enum PartitionStrategy {
 		NONE,
