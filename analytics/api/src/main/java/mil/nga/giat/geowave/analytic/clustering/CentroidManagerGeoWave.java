@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.query.cql.CQLQuery;
 import mil.nga.giat.geowave.analytic.AnalyticFeature;
 import mil.nga.giat.geowave.analytic.AnalyticFeature.ClusterFeatureAttribute;
@@ -72,45 +73,45 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.Point;
 
 /**
- * 
+ *
  * Manages the population of centroids by group id and batch id.
- * 
+ *
  * Properties:
- * 
+ *
  * @formatter:off
- * 
+ *
  *                "CentroidManagerGeoWave.Centroid.WrapperFactoryClass" -
  *                {@link AnalyticItemWrapperFactory} to extract wrap spatial
  *                objects with Centroid management function
- * 
+ *
  *                "CentroidManagerGeoWave.Centroid.DataTypeId" -> The data type
  *                ID of the centroid simple feature
- * 
+ *
  *                "CentroidManagerGeoWave.Centroid.IndexId" -> The GeoWave index
  *                ID of the centroid simple feature
- * 
+ *
  *                "CentroidManagerGeoWave.Global.BatchId" -> Batch ID for
  *                updates
- * 
+ *
  *                "CentroidManagerGeoWave.Global.Zookeeper" -> Zookeeper URL
- * 
+ *
  *                "CentroidManagerGeoWave.Global.AccumuloInstance" -> Accumulo
  *                Instance Name
- * 
+ *
  *                "CentroidManagerGeoWave.Global.AccumuloUser" -> Accumulo User
  *                name
- * 
+ *
  *                "CentroidManagerGeoWave.Global.AccumuloPassword" -> Accumulo
  *                Password
- * 
+ *
  *                "CentroidManagerGeoWave.Global.AccumuloNamespace" -> Accumulo
  *                Table Namespace
- * 
+ *
  *                "CentroidManagerGeoWave.Common.AccumuloConnectFactory" ->
  *                {@link BasicAccumuloOperationsFactory}
- * 
+ *
  * @formatter:on
- * 
+ *
  * @param <T>
  *            The item type used to represent a centroid.
  */
@@ -135,7 +136,7 @@ public class CentroidManagerGeoWave<T> implements
 
 	private AnalyticItemWrapperFactory<T> centroidFactory;
 	@SuppressWarnings("rawtypes")
-	private DataAdapter adapter;
+	private GeotoolsFeatureDataAdapter adapter;
 
 	private DataStore dataStore;
 	private IndexStore indexStore;
@@ -160,7 +161,7 @@ public class CentroidManagerGeoWave<T> implements
 		index = (PrimaryIndex) indexStore.getIndex(new ByteArrayId(
 				StringUtils.stringToBinary(indexId)));
 		this.adapterStore = adapterStore;
-		adapter = adapterStore.getAdapter(new ByteArrayId(
+		adapter = (GeotoolsFeatureDataAdapter) adapterStore.getAdapter(new ByteArrayId(
 				StringUtils.stringToBinary(centroidDataTypeId)));
 	}
 
@@ -257,14 +258,14 @@ public class CentroidManagerGeoWave<T> implements
 				context,
 				scope,
 				null)).getCliOptions().createStore();
-		adapter = adapterStore.getAdapter(new ByteArrayId(
+		adapter = (GeotoolsFeatureDataAdapter) adapterStore.getAdapter(new ByteArrayId(
 				StringUtils.stringToBinary(centroidDataTypeId)));
 	}
 
 	/**
 	 * Creates a new centroid based on the old centroid with new coordinates and
 	 * dimension values
-	 * 
+	 *
 	 * @param feature
 	 * @param coordinate
 	 * @param extraNames

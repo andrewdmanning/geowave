@@ -1,9 +1,8 @@
 package mil.nga.giat.geowave.adapter.vector.plugin.visibility;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
-import mil.nga.giat.geowave.adapter.vector.KryoFeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.visibility.VisibilityManagement;
 
@@ -17,9 +16,9 @@ import org.opengis.feature.simple.SimpleFeature;
  * {@link FeatureDataAdapter} occurs prior to the resolution of the
  * {@link VisibilityManagement}. Referencing the {@link FeatureDataAdapter}
  * removes the initialization order constraint.
- * 
- * 
- * 
+ *
+ *
+ *
  * @param <CommonIndexValue>
  */
 public class AdaptorProxyFieldLevelVisibilityHandler implements
@@ -27,19 +26,19 @@ public class AdaptorProxyFieldLevelVisibilityHandler implements
 {
 
 	private final String fieldName;
-	private final DataAdapter adapter;
+	private final GeotoolsFeatureDataAdapter adapter;
 	private FieldVisibilityHandler<SimpleFeature, Object> myDeferredHandler = null;
 
 	/**
 	 * Used when acting with an Index adaptor as a visibility handler. This
-	 * 
+	 *
 	 * @param fieldVisiblityHandler
 	 * @param visibilityAttribute
 	 * @param visibilityManagement
 	 */
 	public AdaptorProxyFieldLevelVisibilityHandler(
 			final String fieldName,
-			final DataAdapter adapter ) {
+			final GeotoolsFeatureDataAdapter adapter ) {
 		super();
 		this.fieldName = fieldName;
 		this.adapter = adapter;
@@ -47,23 +46,13 @@ public class AdaptorProxyFieldLevelVisibilityHandler implements
 
 	@Override
 	public byte[] getVisibility(
-			SimpleFeature rowValue,
-			ByteArrayId fieldId,
-			Object fieldValue ) {
+			final SimpleFeature rowValue,
+			final ByteArrayId fieldId,
+			final Object fieldValue ) {
 
-		FieldVisibilityHandler<SimpleFeature, Object> fieldVisibilityHandler = null;
-		String visibiityAttributeName = null;
-		VisibilityManagement<SimpleFeature> fieldVisibilityManagement = null;
-		if (adapter instanceof FeatureDataAdapter) {
-			fieldVisibilityHandler = ((FeatureDataAdapter) adapter).getFieldVisiblityHandler();
-			visibiityAttributeName = ((FeatureDataAdapter) adapter).getVisibilityAttributeName();
-			fieldVisibilityManagement = ((FeatureDataAdapter) adapter).getFieldVisibilityManagement();
-		}
-		else if (adapter instanceof KryoFeatureDataAdapter) {
-			fieldVisibilityHandler = ((KryoFeatureDataAdapter) adapter).getFieldVisiblityHandler();
-			visibiityAttributeName = ((KryoFeatureDataAdapter) adapter).getVisibilityAttributeName();
-			fieldVisibilityManagement = ((KryoFeatureDataAdapter) adapter).getFieldVisibilityManagement();
-		}
+		final FieldVisibilityHandler<SimpleFeature, Object> fieldVisibilityHandler = adapter.getFieldVisiblityHandler();
+		final String visibiityAttributeName = adapter.getVisibilityAttributeName();
+		final VisibilityManagement<SimpleFeature> fieldVisibilityManagement = adapter.getFieldVisibilityManagement();
 
 		if (myDeferredHandler == null) {
 			myDeferredHandler = fieldVisibilityManagement.createVisibilityHandler(

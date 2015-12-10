@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveDataStoreComponents;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
@@ -20,7 +20,7 @@ public abstract class AbstractTransactionManagement implements
 	protected final GeoWaveDataStoreComponents components;
 
 	public AbstractTransactionManagement(
-			GeoWaveDataStoreComponents components ) {
+			final GeoWaveDataStoreComponents components ) {
 		super();
 		this.components = components;
 	}
@@ -29,23 +29,26 @@ public abstract class AbstractTransactionManagement implements
 	@SuppressWarnings("unchecked")
 	public Map<ByteArrayId, DataStatistics<SimpleFeature>> getDataStatistics() {
 		final Map<ByteArrayId, DataStatistics<SimpleFeature>> stats = new HashMap<ByteArrayId, DataStatistics<SimpleFeature>>();
-		final FeatureDataAdapter adapter = components.getAdapter();
-		ByteArrayId[] ids = adapter.getSupportedStatisticsIds();
-		Set<ByteArrayId> idSet = new HashSet<ByteArrayId>();
-		for (ByteArrayId id : ids)
+		final GeotoolsFeatureDataAdapter adapter = components.getAdapter();
+		final ByteArrayId[] ids = adapter.getSupportedStatisticsIds();
+		final Set<ByteArrayId> idSet = new HashSet<ByteArrayId>();
+		for (final ByteArrayId id : ids) {
 			idSet.add(id);
+		}
 		try (CloseableIterator<DataStatistics<?>> it = components.getStatsStore().getDataStatistics(
 				adapter.getAdapterId(),
 				composeAuthorizations())) {
 			while (it.hasNext()) {
-				DataStatistics<?> stat = (DataStatistics<?>) it.next();
-				if (idSet.contains(stat.getStatisticsId())) stats.put(
-						stat.getStatisticsId(),
-						(DataStatistics<SimpleFeature>) stat);
+				final DataStatistics<?> stat = it.next();
+				if (idSet.contains(stat.getStatisticsId())) {
+					stats.put(
+							stat.getStatisticsId(),
+							(DataStatistics<SimpleFeature>) stat);
+				}
 			}
 
 		}
-		catch (Exception e) {
+		catch (final Exception e) {
 			GeoWaveTransactionManagement.LOGGER.error(
 					"Failed to access statistics from data store",
 					e);

@@ -6,8 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
-import mil.nga.giat.geowave.adapter.vector.KryoFeatureDataAdapter;
-import mil.nga.giat.geowave.adapter.vector.WholeFeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.ingest.GeoWaveData;
@@ -35,24 +33,24 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 		AvroFormatPlugin<I, SimpleFeature>,
 		Persistable
 {
-	protected CQLFilterOptionProvider filterProvider = new CQLFilterOptionProvider();
-	protected KryoSerializationOptionProvider kryoProvider = new KryoSerializationOptionProvider();
+	protected CQLFilterOptionProvider filterOptionProvider = new CQLFilterOptionProvider();
+	protected FeatureSerializationOptionProvider serializationFormatOptionProvider = new FeatureSerializationOptionProvider();
 
 	public void setFilterProvider(
-			final CQLFilterOptionProvider filterProvider ) {
-		this.filterProvider = filterProvider;
+			final CQLFilterOptionProvider filterOptionProvider ) {
+		this.filterOptionProvider = filterOptionProvider;
 	}
 
-	public void setKryoProvider(
-			final KryoSerializationOptionProvider kryoProvider ) {
-		this.kryoProvider = kryoProvider;
+	public void setSerializationFormatProvider(
+			final FeatureSerializationOptionProvider serializationFormatOptionProvider ) {
+		this.serializationFormatOptionProvider = serializationFormatOptionProvider;
 	}
 
 	@Override
 	public byte[] toBinary() {
 		return ArrayUtils.addAll(
-				kryoProvider.toBinary(),
-				filterProvider.toBinary());
+				serializationFormatOptionProvider.toBinary(),
+				filterOptionProvider.toBinary());
 	}
 
 	@Override
@@ -68,23 +66,24 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 		final byte[] kryoBytes = new byte[] {
 			bytes[0]
 		};
-		kryoProvider = new KryoSerializationOptionProvider();
-		kryoProvider.fromBinary(kryoBytes);
-		filterProvider = new CQLFilterOptionProvider();
-		filterProvider.fromBinary(bytes);
+		serializationFormatOptionProvider = new FeatureSerializationOptionProvider();
+		serializationFormatOptionProvider.fromBinary(kryoBytes);
+		filterOptionProvider = new CQLFilterOptionProvider();
+		filterOptionProvider.fromBinary(bytes);
 	}
 
 	protected WritableDataAdapter<SimpleFeature> newAdapter(
 			final SimpleFeatureType type,
 			final FieldVisibilityHandler<SimpleFeature, Object> fieldVisiblityHandler ) {
-		if (kryoProvider.isKryo()) {
-			return new KryoFeatureDataAdapter(
-					type);
-		}
-		else if (kryoProvider.isWholeFeature()) {
-			return new WholeFeatureDataAdapter(
-					type);
-		}
+		// TODO: assign other adapters based on serialization option
+		// if (serializationFormatOptionProvider.isKryo()) {
+		// return new KryoFeatureDataAdapter(
+		// type);
+		// }
+		// else if (serializationFormatOptionProvider.isAvro()) {
+		// return new AvroFeatureDataAdapter(
+		// type);
+		// }
 		return new FeatureDataAdapter(
 				type,
 				fieldVisiblityHandler);
@@ -119,14 +118,14 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 					hdfsObject,
 					primaryIndexId,
 					globalVisibility);
-			if (filterProvider != null) {
+			if (filterOptionProvider != null) {
 				final Iterator<GeoWaveData<SimpleFeature>> it = Iterators.filter(
 						geowaveData,
 						new Predicate<GeoWaveData<SimpleFeature>>() {
 							@Override
 							public boolean apply(
 									final GeoWaveData<SimpleFeature> input ) {
-								return filterProvider.evaluate(input.getValue());
+								return filterOptionProvider.evaluate(input.getValue());
 							}
 						});
 				allData.add(new CloseableIteratorWrapper<GeoWaveData<SimpleFeature>>(

@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
-import mil.nga.giat.geowave.adapter.vector.GtFeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.auth.AuthorizationSPI;
 import mil.nga.giat.geowave.adapter.vector.index.IndexQueryStrategySPI;
 import mil.nga.giat.geowave.adapter.vector.plugin.lock.LockingManagement;
@@ -142,7 +142,7 @@ public class GeoWaveGTDataStore extends
 	}
 
 	protected PrimaryIndex getIndex(
-			final GtFeatureDataAdapter adapter ) {
+			final GeotoolsFeatureDataAdapter adapter ) {
 		if (adapter instanceof FeatureDataAdapter) {
 			return getPreferredIndex((FeatureDataAdapter) adapter);
 		}
@@ -167,15 +167,15 @@ public class GeoWaveGTDataStore extends
 		getPreferredIndex(adapter);
 	}
 
-	private GtFeatureDataAdapter getAdapter(
+	private GeotoolsFeatureDataAdapter getAdapter(
 			final String typeName ) {
-		final GtFeatureDataAdapter featureAdapter;
+		final GeotoolsFeatureDataAdapter featureAdapter;
 		final DataAdapter<?> adapter = adapterStore.getAdapter(new ByteArrayId(
 				StringUtils.stringToBinary(typeName)));
-		if ((adapter == null) || !(adapter instanceof GtFeatureDataAdapter)) {
+		if ((adapter == null) || !(adapter instanceof GeotoolsFeatureDataAdapter)) {
 			return null;
 		}
-		featureAdapter = (GtFeatureDataAdapter) adapter;
+		featureAdapter = (GeotoolsFeatureDataAdapter) adapter;
 		if (featureNameSpaceURI != null) {
 			if (adapter instanceof FeatureDataAdapter) {
 				((FeatureDataAdapter) featureAdapter).setNamespace(featureNameSpaceURI.toString());
@@ -191,9 +191,9 @@ public class GeoWaveGTDataStore extends
 		final CloseableIterator<DataAdapter<?>> adapters = adapterStore.getAdapters();
 		while (adapters.hasNext()) {
 			final DataAdapter<?> adapter = adapters.next();
-			if (adapter instanceof GtFeatureDataAdapter) {
+			if (adapter instanceof GeotoolsFeatureDataAdapter) {
 				names.add(new NameImpl(
-						((GtFeatureDataAdapter) adapter).getType().getTypeName()));
+						((GeotoolsFeatureDataAdapter) adapter).getType().getTypeName()));
 			}
 		}
 		adapters.close();

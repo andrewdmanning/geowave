@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.cli.scratch;
 
 import java.io.IOException;
 
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.core.cli.CLIOperationDriver;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
@@ -19,7 +20,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.opengis.feature.simple.SimpleFeature;
 
 import com.google.common.base.Stopwatch;
 
@@ -69,13 +69,13 @@ abstract public class AbstractGeoWaveQuery implements
 			adapterStore = new AccumuloAdapterStore(
 					cli.getAccumuloOperations());
 
-			final DataAdapter<SimpleFeature> adapter;
+			final GeotoolsFeatureDataAdapter adapter;
 			if (adapterId != null) {
-				adapter = (DataAdapter<SimpleFeature>) adapterStore.getAdapter(adapterId);
+				adapter = (GeotoolsFeatureDataAdapter) adapterStore.getAdapter(adapterId);
 			}
 			else {
 				final CloseableIterator<DataAdapter<?>> it = adapterStore.getAdapters();
-				adapter = (DataAdapter<SimpleFeature>) it.next();
+				adapter = (GeotoolsFeatureDataAdapter) it.next();
 				it.close();
 			}
 			if (debug && (adapter != null)) {
@@ -105,7 +105,7 @@ abstract public class AbstractGeoWaveQuery implements
 			CommandLine commandLine );
 
 	abstract protected long runQuery(
-			final DataAdapter<SimpleFeature> adapter,
+			final GeotoolsFeatureDataAdapter adapter,
 			final ByteArrayId adapterId,
 			DataStore dataStore,
 			boolean debug );

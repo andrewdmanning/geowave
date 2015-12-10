@@ -3,7 +3,7 @@ package mil.nga.giat.geowave.adapter.vector.plugin;
 import java.io.IOException;
 import java.util.Map;
 
-import mil.nga.giat.geowave.adapter.vector.GtFeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveEmptyTransaction;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveTransactionState;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.TransactionsAllocator;
@@ -33,7 +33,7 @@ public class GeoWaveFeatureSource extends
 	public GeoWaveFeatureSource(
 			final ContentEntry entry,
 			final Query query,
-			final GtFeatureDataAdapter adapter,
+			final GeotoolsFeatureDataAdapter adapter,
 			final TransactionsAllocator transactionAllocator ) {
 		super(
 				entry,

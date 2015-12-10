@@ -154,7 +154,7 @@ public class IngestCommandLineOptions
 	 *            an index that an ingest type supports
 	 * @return whether the adapter is compatible with the common index model
 	 */
-	public boolean isCompatible(
+	public static boolean isCompatible(
 			final DataAdapterProvider<?> adapterProvider,
 			final IngestDimensionalityTypeProviderSpi dimensionalityProvider ) {
 		final Class<? extends CommonIndexValue>[] supportedTypes = adapterProvider.getSupportedIndexableTypes();

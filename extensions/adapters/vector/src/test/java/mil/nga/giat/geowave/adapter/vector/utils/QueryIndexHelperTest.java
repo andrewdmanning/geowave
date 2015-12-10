@@ -366,7 +366,7 @@ public class QueryIndexHelperTest
 										41.25)).getEnvelopeInternal()),
 						constraintsSet));
 
-		final MultiDimensionalNumericData nd = query.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
+		final List<MultiDimensionalNumericData> nd = query.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertEquals(
 				stime.getTime(),
 				(long) nd.get(
@@ -387,7 +387,7 @@ public class QueryIndexHelperTest
 										41.25)).getEnvelopeInternal()),
 						null));
 
-		final MultiDimensionalNumericData nd1 = query1.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
+		final List<MultiDimensionalNumericData> nd1 = query1.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertEquals(
 				statsStart1.getTime(),
 				(long) nd1.get(
@@ -438,7 +438,7 @@ public class QueryIndexHelperTest
 						new GeometryFactory().toGeometry(bounds),
 						null));
 
-		final MultiDimensionalNumericData nd = query.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
+		final List<MultiDimensionalNumericData> nd = query.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
 		assertEquals(
 				21.23,
 				nd.get(
@@ -459,42 +459,6 @@ public class QueryIndexHelperTest
 				nd.get(
 						0).getDataPerDimension()[1].getMax(),
 				0.0001);
-
-		final BasicQuery query1 = new BasicQuery(
-				QueryIndexHelper.composeConstraints(
-						geoType,
-						geoTimeDescriptors,
-						statsMap,
-						null,
-						null));
-		final List<MultiDimensionalNumericData> nd1 = query1.getIndexConstraints(IndexType.SPATIAL_VECTOR.createDefaultIndexStrategy());
-
-		final MultiDimensionalNumericData nd1 = query1.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
-		assertEquals(
-				22.25,
-				nd1.getDataPerDimension()[0].getMin(),
-				0.0001);
-		assertEquals(
-				27.25,
-				nd1.getDataPerDimension()[0].getMax(),
-				0.0001);
-		assertEquals(
-				41.25,
-				nd1.getDataPerDimension()[1].getMin(),
-				0.0001);
-		assertEquals(
-				42.25,
-				nd1.getDataPerDimension()[1].getMax(),
-				0.0001);
-
-		/*
-		 * 
-		 * assertEquals( 22.25, nd1.get( 0).getDataPerDimension()[0].getMin(),
-		 * 0.0001); assertEquals( 27.25, nd1.get(
-		 * 0).getDataPerDimension()[0].getMax(), 0.0001); assertEquals( 41.25,
-		 * nd1.get( 0).getDataPerDimension()[1].getMin(), 0.0001); assertEquals(
-		 * 42.25, nd1.get( 0).getDataPerDimension()[1].getMax(), 0.0001);
-		 */
 
 	}
 
@@ -727,7 +691,7 @@ public class QueryIndexHelperTest
 				rangeTimeDescriptors,
 				statsMap,
 				constraintsSet);
-		final MultiDimensionalNumericData nd = constraints.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
+		final List<MultiDimensionalNumericData> nd = constraints.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertTrue(nd.isEmpty());
 
 		final FeatureBoundingBoxStatistics geoStats = new FeatureBoundingBoxStatistics(
@@ -758,7 +722,7 @@ public class QueryIndexHelperTest
 				statsMap,
 				null,
 				constraintsSet);
-		final List<MultiDimensionalNumericData> nd1 = constraints1.getIndexConstraints(IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndexStrategy());
+		final List<MultiDimensionalNumericData> nd1 = constraints1.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertTrue(nd1.isEmpty());
 		/*
 		 * assertEquals( stime.getTime(), (long) nd1.get(
@@ -777,7 +741,7 @@ public class QueryIndexHelperTest
 				rangeTimeDescriptors,
 				statsMap,
 				constraintsSet2);
-		final MultiDimensionalNumericData nd2 = constraints2.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
+		final List<MultiDimensionalNumericData> nd2 = constraints2.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertTrue(nd2.isEmpty());
 	}
 

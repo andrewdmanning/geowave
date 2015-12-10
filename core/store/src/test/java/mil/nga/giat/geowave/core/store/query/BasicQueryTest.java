@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -184,7 +185,7 @@ public class BasicQueryTest
 				expectedResults,
 				query.getIndexConstraints(new ExampleNumericIndexStrategy()));
 
-		List<QueryFilter> filters = query.createFilters(new BasicIndexModel(
+		final List<QueryFilter> filters = query.createFilters(new BasicIndexModel(
 				new NumericDimensionField[] {
 					new ExampleDimensionOne(),
 					new ExampleDimensionTwo()
@@ -208,7 +209,7 @@ public class BasicQueryTest
 						0.5,
 						0.5));
 
-		CommonIndexModel model = null;
+		final CommonIndexModel model = null;
 		assertTrue(filters.get(
 				0).accept(
 				model,
@@ -366,6 +367,11 @@ public class BasicQueryTest
 			return null;
 		}
 
+		@Override
+		public Set<ByteArrayId> getNaturalSplits() {
+			return null;
+		}
+
 	}
 
 	public static class ConstrainedIndexValue extends
@@ -465,12 +471,6 @@ public class BasicQueryTest
 			return new NumericRange(
 					0,
 					10);
-		}
-
-		@Override
-		public boolean isCompatibleDefinition(
-				final NumericDimensionDefinition otherDimensionDefinition ) {
-			return false;
 		}
 
 		@Override

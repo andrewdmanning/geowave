@@ -97,7 +97,7 @@ import org.opengis.referencing.operation.MathTransform;
 @SuppressWarnings("unchecked")
 public class FeatureDataAdapter extends
 		AbstractDataAdapter<SimpleFeature> implements
-		GtFeatureDataAdapter,
+		GeotoolsFeatureDataAdapter,
 		StatisticalDataAdapter<SimpleFeature>,
 		HadoopDataAdapter<SimpleFeature, FeatureWritable>,
 		SecondaryIndexDataAdapter<SimpleFeature>

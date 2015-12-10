@@ -41,7 +41,7 @@ public class CQLQueryTest
 		final CQLQuery query = new CQLQuery(
 				"BBOX(geometry,27.20,41.30,27.30,41.20) and when during 2005-05-19T20:32:56Z/2005-05-19T21:32:56Z",
 				adapter);
-		final MultiDimensionalNumericData constraints = query.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
+		final List<MultiDimensionalNumericData> constraints = query.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertTrue(Arrays.equals(
 				constraints.get(
 						0).getMinValuesPerDimension(),
@@ -66,7 +66,7 @@ public class CQLQueryTest
 		final CQLQuery query = new CQLQuery(
 				"BBOX(geometry,27.20,41.30,27.30,41.20) and when during 2005-05-19T20:32:56Z/2005-05-19T21:32:56Z",
 				adapter);
-		final MultiDimensionalNumericData constraints = query.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
+		final List<MultiDimensionalNumericData> constraints = query.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
 		assertTrue(Arrays.equals(
 				constraints.get(
 						0).getMinValuesPerDimension(),
@@ -89,7 +89,7 @@ public class CQLQueryTest
 		final CQLQuery query = new CQLQuery(
 				"BBOX(geometry,27.20,41.30,27.30,41.20)",
 				adapter);
-		final MultiDimensionalNumericData constraints = query.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
+		final List<MultiDimensionalNumericData> constraints = query.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
 		assertTrue(Arrays.equals(
 				constraints.get(
 						0).getMinValuesPerDimension(),

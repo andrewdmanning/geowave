@@ -2,10 +2,10 @@ package mil.nga.giat.geowave.cli.scratch;
 
 import java.io.IOException;
 
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
-import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
 import org.apache.commons.cli.CommandLine;
@@ -47,7 +47,7 @@ public class ClientSideCQLQuery extends
 
 	@Override
 	protected long runQuery(
-			final DataAdapter<SimpleFeature> adapter,
+			final GeotoolsFeatureDataAdapter adapter,
 			final ByteArrayId adapterId,
 			final DataStore dataStore,
 			final boolean debug ) {

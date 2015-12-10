@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
-import mil.nga.giat.geowave.adapter.vector.GtFeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveTransaction;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.TransactionsAllocator;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -18,6 +18,7 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.visibility.UniformVisibilityWriter;
 import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.BasicQuery.Constraints;
 import mil.nga.giat.geowave.core.store.query.DataIdQuery;
@@ -27,7 +28,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 public class GeoWaveDataStoreComponents
 {
-	private final GtFeatureDataAdapter adapter;
+	private final GeotoolsFeatureDataAdapter adapter;
 	private final DataStore dataStore;
 	private final IndexStore indexStore;
 	private final DataStatisticsStore dataStatisticsStore;
@@ -40,7 +41,7 @@ public class GeoWaveDataStoreComponents
 			final DataStore dataStore,
 			final DataStatisticsStore dataStatisticsStore,
 			final IndexStore indexStore,
-			final GtFeatureDataAdapter adapter,
+			final GeotoolsFeatureDataAdapter adapter,
 			final GeoWaveGTDataStore gtStore,
 			final TransactionsAllocator transactionAllocator ) {
 		this.adapter = adapter;
@@ -56,7 +57,7 @@ public class GeoWaveDataStoreComponents
 		return indexStore;
 	}
 
-	public GtFeatureDataAdapter getAdapter() {
+	public GeotoolsFeatureDataAdapter getAdapter() {
 		return adapter;
 	}
 
