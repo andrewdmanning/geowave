@@ -7,31 +7,16 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
+import org.junit.Test;
+
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.MockComponents;
 
-import org.junit.Test;
-
 public class QueryOptionsTest
 {
-
-	@Test
-	public void testFields() {
-		final QueryOptions ops = new QueryOptions();
-		ops.fromBinary(ops.toBinary());
-
-		ops.setFieldIds(Arrays.asList(
-				"123|",
-				"|abc"));
-		ops.fromBinary(ops.toBinary());
-		assertTrue(ops.getFieldIds().contains(
-				"123|"));
-		assertTrue(ops.getFieldIds().contains(
-				"|abc"));
-	}
 
 	@Test
 	public void testAuthorizations() {

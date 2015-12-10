@@ -5,13 +5,32 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.BatchDeleter;
+import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.client.MutationsRejectedException;
+import org.apache.accumulo.core.client.Scanner;
+import org.apache.accumulo.core.client.ScannerBase;
+import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Range;
+import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.iterators.user.WholeRowIterator;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.log4j.Logger;
+
+import com.google.common.collect.Iterators;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
@@ -56,27 +75,6 @@ import mil.nga.giat.geowave.datastore.accumulo.util.EntryIteratorWrapper;
 import mil.nga.giat.geowave.datastore.accumulo.util.ScannerClosableWrapper;
 import mil.nga.giat.geowave.mapreduce.MapReduceDataStore;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
-
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.BatchDeleter;
-import org.apache.accumulo.core.client.IteratorSetting;
-import org.apache.accumulo.core.client.MutationsRejectedException;
-import org.apache.accumulo.core.client.Scanner;
-import org.apache.accumulo.core.client.ScannerBase;
-import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Range;
-import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.iterators.user.WholeRowIterator;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.log4j.Logger;
-
-import com.google.common.collect.Iterators;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * This is the Accumulo implementation of the data store. It requires an
@@ -229,7 +227,6 @@ public class AccumuloDataStore implements
 								((RowIdQuery) sanitizedQuery).getRowIds(),
 								(ScanCallback<Object>) queryOptions.getScanCallback(),
 								filter,
-								queryOptions.getFieldIds(),
 								queryOptions.getAuthorizations());
 
 						results.add(q.query(
@@ -246,7 +243,6 @@ public class AccumuloDataStore implements
 								(DataAdapter<Object>) adapterStore.getAdapter(idQuery.getAdapterId()),
 								filter,
 								(ScanCallback<Object>) queryOptions.getScanCallback(),
-								queryOptions.getFieldIds(),
 								queryOptions.getAuthorizations(),
 								true));
 						continue;
@@ -271,7 +267,6 @@ public class AccumuloDataStore implements
 								sanitizedQuery,
 								filter,
 								queryOptions.getScanCallback(),
-								queryOptions.getFieldIds(),
 								queryOptions.getAuthorizations());
 						results.add(accumuloQuery.query(
 								accumuloOperations,
@@ -290,7 +285,6 @@ public class AccumuloDataStore implements
 								sanitizedQuery,
 								filter,
 								queryOptions.getScanCallback(),
-								queryOptions.getFieldIds(),
 								queryOptions.getAuthorizations());
 
 						results.add(accumuloQuery.query(
@@ -352,6 +346,7 @@ public class AccumuloDataStore implements
 			return (CloseableIterator<T>) it.next();
 		}
 
+		@Override
 		public void remove() {
 			it.remove();
 		}
@@ -404,7 +399,6 @@ public class AccumuloDataStore implements
 			final DataAdapter<Object> adapter,
 			final DedupeFilter dedupeFilter,
 			final ScanCallback<Object> callback,
-			final Collection<String> fieldIds,
 			final String[] authorizations,
 			final boolean limit )
 			throws IOException {
@@ -431,7 +425,6 @@ public class AccumuloDataStore implements
 						rowIds,
 						callback,
 						dedupeFilter,
-						fieldIds,
 						authorizations);
 
 				return q.query(
@@ -446,7 +439,6 @@ public class AccumuloDataStore implements
 					tempAdapterStore,
 					dataIds,
 					adapter.getAdapterId(),
-					fieldIds,
 					callback,
 					authorizations,
 					limit ? 1 : -1);
@@ -460,7 +452,6 @@ public class AccumuloDataStore implements
 			final AdapterStore adapterStore,
 			final List<ByteArrayId> dataIds,
 			final ByteArrayId adapterId,
-			final Collection<String> fieldIds,
 			final ScanCallback<Object> scanCallback,
 			final String[] authorizations,
 			final int limit ) {
@@ -496,15 +487,6 @@ public class AccumuloDataStore implements
 
 			if (limit > 0) {
 				((Scanner) scanner).setBatchSize(limit);
-			}
-
-			if (fieldIds != null && !fieldIds.isEmpty()) {
-				// configure scanner to fetch only the fieldIds specified
-				AccumuloUtils.handleSubsetOfFieldIds(
-						scanner,
-						index,
-						fieldIds,
-						adapterStore.getAdapters());
 			}
 
 			return new CloseableIteratorWrapper<Object>(
@@ -702,7 +684,6 @@ public class AccumuloDataStore implements
 											((RowIdQuery) query).getRowIds(),
 											callback,
 											null,
-											queryOptions.getFieldIds(),
 											queryOptions.getAuthorizations());
 
 									dataIt = q.query(
@@ -718,7 +699,6 @@ public class AccumuloDataStore implements
 											(DataAdapter<Object>) adapterStore.getAdapter(idQuery.getAdapterId()),
 											null,
 											callback,
-											queryOptions.getFieldIds(),
 											queryOptions.getAuthorizations(),
 											false);
 								}
@@ -740,7 +720,6 @@ public class AccumuloDataStore implements
 											query,
 											null,
 											callback,
-											null,
 											queryOptions.getAuthorizations()).query(
 											accumuloOperations,
 											adapterStore,

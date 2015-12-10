@@ -8,7 +8,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -241,7 +240,6 @@ public class GeoWaveFeatureReader implements
 				final mil.nga.giat.geowave.core.store.query.Query query ) {
 			return components.getDataStore().query(
 					new QueryOptions(
-							Collections.EMPTY_LIST,
 							components.getAdapter(),
 							index,
 							limit,
@@ -369,7 +367,6 @@ public class GeoWaveFeatureReader implements
 				final mil.nga.giat.geowave.core.store.query.Query query ) {
 			return components.getDataStore().query(
 					new QueryOptions(
-							Collections.EMPTY_LIST,
 							components.getAdapter(),
 							index,
 							limit,
@@ -445,7 +442,6 @@ public class GeoWaveFeatureReader implements
 
 			return components.getDataStore().query(
 					new QueryOptions(
-							Collections.EMPTY_LIST,
 							components.getAdapter(),
 							components.getCurrentIndex(),
 							limit,

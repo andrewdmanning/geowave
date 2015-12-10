@@ -9,8 +9,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -20,6 +18,24 @@ import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeSet;
+
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.BatchScanner;
+import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.client.ScannerBase;
+import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Mutation;
+import org.apache.accumulo.core.data.Range;
+import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
+import org.apache.accumulo.core.iterators.user.WholeRowIterator;
+import org.apache.accumulo.core.security.ColumnVisibility;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.hadoop.io.Text;
+import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -63,24 +79,6 @@ import mil.nga.giat.geowave.datastore.accumulo.metadata.AbstractAccumuloPersiste
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloAdapterStore;
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloIndexStore;
 import mil.nga.giat.geowave.datastore.accumulo.query.AccumuloConstraintsQuery;
-
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.BatchScanner;
-import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.IteratorSetting;
-import org.apache.accumulo.core.client.ScannerBase;
-import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Mutation;
-import org.apache.accumulo.core.data.Range;
-import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
-import org.apache.accumulo.core.iterators.user.WholeRowIterator;
-import org.apache.accumulo.core.security.ColumnVisibility;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.hadoop.io.Text;
-import org.apache.log4j.Logger;
 
 /**
  * A set of convenience methods for common operations on Accumulo within
@@ -1108,7 +1106,6 @@ public class AccumuloUtils
 					null,
 					null,
 					null,
-					Collections.<String> emptyList(),
 					new String[0]);
 			final CloseableIterator<?> iterator = accumuloQuery.query(
 					operations,
@@ -1154,7 +1151,6 @@ public class AccumuloUtils
 					null,
 					null,
 					null,
-					Collections.<String> emptyList(),
 					new String[0]);
 			final CloseableIterator<?> iterator = accumuloQuery.query(
 					operations,
@@ -1317,55 +1313,5 @@ public class AccumuloUtils
 		@Override
 		public void remove() {}
 	}
-
-	public static void handleSubsetOfFieldIds(
-			final ScannerBase scanner,
-			final PrimaryIndex index,
-			final Collection<String> fieldIds,
-			final CloseableIterator<DataAdapter<?>> dataAdapters ) {
-
-		// NOTE: the optimization to flatten fields sharing a common visibility
-		// into a single CQ breaks this functionality.
-		// TODO new implementation
-
-		// final Set<ByteArrayId> uniqueDimensions = new HashSet<>();
-		// for (final NumericDimensionField<? extends CommonIndexValue>
-		// dimension : index.getIndexModel().getDimensions()) {
-		// uniqueDimensions.add(dimension.getFieldId());
-		// }
-		//
-		// scanner.clearColumns();
-		//
-		// while (dataAdapters.hasNext()) {
-		//
-		// final Text colFam = new Text(
-		// dataAdapters.next().getAdapterId().getBytes());
-		//
-		// // dimension fields must be included
-		// for (final ByteArrayId dimension : uniqueDimensions) {
-		// scanner.fetchColumn(
-		// colFam,
-		// new Text(
-		// dimension.getBytes()));
-		// }
-		//
-		// // configure scanner to fetch only the specified fieldIds
-		// for (final String fieldId : fieldIds) {
-		// scanner.fetchColumn(
-		// colFam,
-		// new Text(
-		// StringUtils.stringToBinary(fieldId)));
-		// }
-		// }
-		//
-		// try {
-		// dataAdapters.close();
-		// }
-		// catch (final IOException e) {
-		// LOGGER.error(
-		// "Unable to close iterator",
-		// e);
-		// }
-
-	}
+	
 }
