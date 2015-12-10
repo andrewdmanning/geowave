@@ -13,6 +13,7 @@ import mil.nga.giat.geowave.test.mapreduce.GeoWaveKMeansIT;
 import mil.nga.giat.geowave.test.mapreduce.GeoWaveNNIT;
 import mil.nga.giat.geowave.test.mapreduce.KDERasterResizeIT;
 import mil.nga.giat.geowave.test.mapreduce.MapReduceTestEnvironment;
+import mil.nga.giat.geowave.test.query.AttributesSubsetQueryIT;
 import mil.nga.giat.geowave.test.query.SecondaryIndexingDriverIT;
 import mil.nga.giat.geowave.test.query.SecondaryIndexingQueryIT;
 import mil.nga.giat.geowave.test.service.GeoServerIT;
@@ -32,17 +33,7 @@ import mil.nga.giat.geowave.test.service.ServicesTestEnvironment;
 	GeoServerIT.class,
 	GeoWaveServicesIT.class,
 	GeoWaveIngestGeoserverIT.class,
-	// ///////////////////////////////////////////
-	// KNOWN ISSUE:
-	// Accumulo optimization to flatten FieldInfos
-	// that share a common visibility attribute
-	// into a single FieldInfo (CQ) breaks exiting
-	// attributes subset implementation, which
-	// works by configuring the scanner to scan
-	// certain columns.
-	// ///////////////////////////////////////////
-	// AttributesSubsetQueryIT.class,
-	// ///////////////////////////////////////////
+	AttributesSubsetQueryIT.class,
 	SecondaryIndexingDriverIT.class,
 	SecondaryIndexingQueryIT.class,
 	DBScanIT.class

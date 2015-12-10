@@ -12,6 +12,8 @@ import org.geotools.data.DataUtilities;
 import org.geotools.feature.SchemaException;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
@@ -19,6 +21,7 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.util.FeatureTranslatingIterator;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
 import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
@@ -34,7 +37,8 @@ import mil.nga.giat.geowave.test.GeoWaveTestEnvironment;
 public class AttributesSubsetQueryIT extends
 		GeoWaveTestEnvironment
 {
-	private static final Logger LOGGER = Logger.getLogger(AttributesSubsetQueryIT.class);
+	private static final Logger LOGGER = Logger.getLogger(
+			AttributesSubsetQueryIT.class);
 
 	private static SimpleFeatureType simpleFeatureType;
 	private static FeatureDataAdapter dataAdapter;
@@ -64,7 +68,7 @@ public class AttributesSubsetQueryIT extends
 			-84.3900,
 			33.7550);
 
-//	@BeforeClass
+	@BeforeClass
 	public static void setupData()
 			throws IOException {
 
@@ -81,7 +85,7 @@ public class AttributesSubsetQueryIT extends
 		ingestSampleData();
 	}
 
-//	@Test
+	@Test
 	public void testResultsContainAllAttributes()
 			throws IOException {
 
@@ -90,9 +94,10 @@ public class AttributesSubsetQueryIT extends
 						dataAdapter,
 						INDEX),
 				new SpatialQuery(
-						GeometryUtils.GEOMETRY_FACTORY.toGeometry(new Envelope(
-								GUADALAJARA,
-								ATLANTA))));
+						GeometryUtils.GEOMETRY_FACTORY.toGeometry(
+								new Envelope(
+										GUADALAJARA,
+										ATLANTA))));
 
 		// query expects to match 3 cities from Texas, which should each contain
 		// non-null values for each SimpleFeature attribute
@@ -102,24 +107,25 @@ public class AttributesSubsetQueryIT extends
 				ALL_ATTRIBUTES);
 	}
 
-//	@Test
+	@Test
 	public void testResultsContainCityOnly()
 			throws IOException {
 
-		final List<String> attributesSubset = Arrays.asList(CITY_ATTRIBUTE);
+		final List<String> attributesSubset = Arrays.asList(
+				CITY_ATTRIBUTE);
 
 		final CloseableIterator<SimpleFeature> results = dataStore.query(
 				new QueryOptions(
-						attributesSubset,
 						dataAdapter,
 						INDEX,
 						-1,
 						null,
 						new String[0]),
 				new SpatialQuery(
-						GeometryUtils.GEOMETRY_FACTORY.toGeometry(new Envelope(
-								GUADALAJARA,
-								ATLANTA))));
+						GeometryUtils.GEOMETRY_FACTORY.toGeometry(
+								new Envelope(
+										GUADALAJARA,
+										ATLANTA))));
 
 		// query expects to match 3 cities from Texas, which should each contain
 		// non-null values for a subset of attributes (city) and nulls for the
@@ -130,7 +136,7 @@ public class AttributesSubsetQueryIT extends
 				attributesSubset);
 	}
 
-//	@Test
+	@Test
 	public void testResultsContainCityAndPopulation()
 			throws IOException {
 
@@ -140,16 +146,16 @@ public class AttributesSubsetQueryIT extends
 
 		final CloseableIterator<SimpleFeature> results = dataStore.query(
 				new QueryOptions(
-						attributesSubset,
 						dataAdapter,
 						INDEX,
 						-1,
 						null,
 						new String[0]),
 				new SpatialQuery(
-						GeometryUtils.GEOMETRY_FACTORY.toGeometry(new Envelope(
-								GUADALAJARA,
-								ATLANTA))));
+						GeometryUtils.GEOMETRY_FACTORY.toGeometry(
+								new Envelope(
+										GUADALAJARA,
+										ATLANTA))));
 
 		// query expects to match 3 cities from Texas, which should each contain
 		// non-null values for a subset of attributes (city, population) and
@@ -164,24 +170,28 @@ public class AttributesSubsetQueryIT extends
 			final CloseableIterator<SimpleFeature> results,
 			final int numExpectedResults,
 			final Collection<String> attributesExpected )
-			throws IOException {
+					throws IOException {
 
 		int numResults = 0;
 		SimpleFeature currentFeature;
 		Object currentAttributeValue;
+		final CloseableIterator<SimpleFeature> translatedResults = new FeatureTranslatingIterator(
+				simpleFeatureType,
+				attributesExpected,
+				results);
 
-		while (results.hasNext()) {
+		while (translatedResults.hasNext()) {
 
-			currentFeature = results.next();
+			currentFeature = translatedResults.next();
 			numResults++;
 
-			for (String currentAttribute : ALL_ATTRIBUTES) {
+			for (final String currentAttribute : ALL_ATTRIBUTES) {
 
-				currentAttributeValue = currentFeature.getAttribute(currentAttribute);
+				currentAttributeValue = currentFeature.getAttribute(
+						currentAttribute);
 
-				if (attributesExpected.contains(currentAttribute) || currentAttribute.equals(GEOMETRY_ATTRIBUTE)) {
-					// geometry will always be included since indexed by spatial
-					// dimensionality
+				if (attributesExpected.contains(
+						currentAttribute)) {
 					Assert.assertNotNull(
 							"Expected non-null " + currentAttribute + " value!",
 							currentAttributeValue);
@@ -194,7 +204,7 @@ public class AttributesSubsetQueryIT extends
 			}
 		}
 
-		results.close();
+		translatedResults.close();
 
 		Assert.assertEquals(
 				"Unexpected number of query results",
@@ -211,7 +221,7 @@ public class AttributesSubsetQueryIT extends
 					"testCityData",
 					CITY_ATTRIBUTE + ":String," + STATE_ATTRIBUTE + ":String," + POPULATION_ATTRIBUTE + ":Double," + LAND_AREA_ATTRIBUTE + ":Double," + GEOMETRY_ATTRIBUTE + ":Geometry");
 		}
-		catch (SchemaException e) {
+		catch (final SchemaException e) {
 			LOGGER.error(
 					"Unable to create SimpleFeatureType",
 					e);
@@ -223,19 +233,21 @@ public class AttributesSubsetQueryIT extends
 	private static void ingestSampleData()
 			throws IOException {
 
-		LOGGER.info("Ingesting canned data...");
+		LOGGER.info(
+				"Ingesting canned data...");
 
 		try (IndexWriter writer = dataStore.createIndexWriter(
 				INDEX,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
-			for (SimpleFeature sf : buildCityDataSet()) {
+			for (final SimpleFeature sf : buildCityDataSet()) {
 				writer.write(
 						dataAdapter,
 						sf);
 			}
 
 		}
-		LOGGER.info("Ingest complete.");
+		LOGGER.info(
+				"Ingest complete.");
 	}
 
 	private static List<SimpleFeature> buildCityDataSet() {
@@ -243,96 +255,106 @@ public class AttributesSubsetQueryIT extends
 		final List<SimpleFeature> points = new ArrayList<>();
 
 		// http://en.wikipedia.org/wiki/List_of_United_States_cities_by_population
-		points.add(buildSimpleFeature(
-				"New York",
-				"New York",
-				8405837,
-				302.6,
-				new Coordinate(
-						-73.9385,
-						40.6643)));
-		points.add(buildSimpleFeature(
-				"Los Angeles",
-				"California",
-				3884307,
-				468.7,
-				new Coordinate(
-						-118.4108,
-						34.0194)));
-		points.add(buildSimpleFeature(
-				"Chicago",
-				"Illinois",
-				2718782,
-				227.6,
-				new Coordinate(
-						-87.6818,
-						41.8376)));
-		points.add(buildSimpleFeature(
-				"Houston",
-				"Texas",
-				2195914,
-				599.6,
-				new Coordinate(
-						-95.3863,
-						29.7805)));
-		points.add(buildSimpleFeature(
-				"Philadelphia",
-				"Pennsylvania",
-				1553165,
-				134.1,
-				new Coordinate(
-						-75.1333,
-						40.0094)));
-		points.add(buildSimpleFeature(
-				"Phoenix",
-				"Arizona",
-				1513367,
-				516.7,
-				new Coordinate(
-						-112.088,
-						33.5722)));
-		points.add(buildSimpleFeature(
-				"San Antonio",
-				"Texas",
-				1409019,
-				460.9,
-				new Coordinate(
-						-98.5251,
-						29.4724)));
-		points.add(buildSimpleFeature(
-				"San Diego",
-				"California",
-				1355896,
-				325.2,
-				new Coordinate(
-						-117.135,
-						32.8153)));
-		points.add(buildSimpleFeature(
-				"Dallas",
-				"Texas",
-				1257676,
-				340.5,
-				new Coordinate(
-						-96.7967,
-						32.7757)));
-		points.add(buildSimpleFeature(
-				"San Jose",
-				"California",
-				998537,
-				176.5,
-				new Coordinate(
-						-121.8193,
-						37.2969)));
+		points.add(
+				buildSimpleFeature(
+						"New York",
+						"New York",
+						8405837,
+						302.6,
+						new Coordinate(
+								-73.9385,
+								40.6643)));
+		points.add(
+				buildSimpleFeature(
+						"Los Angeles",
+						"California",
+						3884307,
+						468.7,
+						new Coordinate(
+								-118.4108,
+								34.0194)));
+		points.add(
+				buildSimpleFeature(
+						"Chicago",
+						"Illinois",
+						2718782,
+						227.6,
+						new Coordinate(
+								-87.6818,
+								41.8376)));
+		points.add(
+				buildSimpleFeature(
+						"Houston",
+						"Texas",
+						2195914,
+						599.6,
+						new Coordinate(
+								-95.3863,
+								29.7805)));
+		points.add(
+				buildSimpleFeature(
+						"Philadelphia",
+						"Pennsylvania",
+						1553165,
+						134.1,
+						new Coordinate(
+								-75.1333,
+								40.0094)));
+		points.add(
+				buildSimpleFeature(
+						"Phoenix",
+						"Arizona",
+						1513367,
+						516.7,
+						new Coordinate(
+								-112.088,
+								33.5722)));
+		points.add(
+				buildSimpleFeature(
+						"San Antonio",
+						"Texas",
+						1409019,
+						460.9,
+						new Coordinate(
+								-98.5251,
+								29.4724)));
+		points.add(
+				buildSimpleFeature(
+						"San Diego",
+						"California",
+						1355896,
+						325.2,
+						new Coordinate(
+								-117.135,
+								32.8153)));
+		points.add(
+				buildSimpleFeature(
+						"Dallas",
+						"Texas",
+						1257676,
+						340.5,
+						new Coordinate(
+								-96.7967,
+								32.7757)));
+		points.add(
+				buildSimpleFeature(
+						"San Jose",
+						"California",
+						998537,
+						176.5,
+						new Coordinate(
+								-121.8193,
+								37.2969)));
 
 		return points;
 	}
 
 	private static SimpleFeature buildSimpleFeature(
-			String city,
-			String state,
-			double population,
-			double landArea,
-			Coordinate coordinate ) {
+			final String city,
+			final String state,
+			final double population,
+			final double landArea,
+			final Coordinate coordinate ) {
 
 		final SimpleFeatureBuilder builder = new SimpleFeatureBuilder(
 				simpleFeatureType);
@@ -351,9 +373,11 @@ public class AttributesSubsetQueryIT extends
 				landArea);
 		builder.set(
 				GEOMETRY_ATTRIBUTE,
-				GeometryUtils.GEOMETRY_FACTORY.createPoint(coordinate));
+				GeometryUtils.GEOMETRY_FACTORY.createPoint(
+						coordinate));
 
-		return builder.buildFeature(UUID.randomUUID().toString());
+		return builder.buildFeature(
+				UUID.randomUUID().toString());
 	}
 
 }
