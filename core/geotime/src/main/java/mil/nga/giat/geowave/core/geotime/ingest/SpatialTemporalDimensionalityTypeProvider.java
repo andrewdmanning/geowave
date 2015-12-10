@@ -9,6 +9,7 @@ import mil.nga.giat.geowave.core.geotime.store.dimension.LatitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LongitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.Time;
 import mil.nga.giat.geowave.core.geotime.store.dimension.TimeField;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
 import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexFactory;
@@ -16,6 +17,7 @@ import mil.nga.giat.geowave.core.ingest.index.IngestDimensionalityTypeProviderSp
 import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.index.BasicIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
+import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +30,8 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 		IngestDimensionalityTypeProviderSpi
 {
 	private final SpatialTemporalOptions options = new SpatialTemporalOptions();
+	private static final ByteArrayId DEFAULT_SPATIAL_TEMPORAL_ID = new ByteArrayId(
+			"SPATIAL_TEMPORAL_IDX");
 
 	@Override
 	public String getDimensionalityTypeName() {
@@ -53,6 +57,13 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 
 	@Override
 	public PrimaryIndex createPrimaryIndex() {
+		return internalCreatePrimaryIndex(options);
+	}
+
+	private static PrimaryIndex internalCreatePrimaryIndex(
+			final SpatialTemporalOptions options ) {
+		// TODO should we use different default IDs for all the different
+		// options, for now lets just use one
 		final NumericDimensionField[] fields = new NumericDimensionField[] {
 			new LongitudeField(),
 			new LatitudeField(
@@ -68,7 +79,7 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 					options.periodicity)
 		};
 		if (options.pointOnly) {
-			return new PrimaryIndex(
+			return new CustomIdIndex(
 					TieredSFCIndexFactory.createDefinedPrecisionTieredStrategy(
 							dimensions,
 							new int[][] {
@@ -85,10 +96,11 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 							},
 							SFCType.HILBERT),
 					new BasicIndexModel(
-							fields));
+							fields),
+					DEFAULT_SPATIAL_TEMPORAL_ID);
 		}
 		else {
-			return new PrimaryIndex(
+			return new CustomIdIndex(
 					TieredSFCIndexFactory.createEqualIntervalPrecisionTieredStrategy(
 							dimensions,
 							new int[] {
@@ -98,7 +110,8 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 							},
 							SFCType.HILBERT),
 					new BasicIndexModel(
-							fields));
+							fields),
+					DEFAULT_SPATIAL_TEMPORAL_ID);
 		}
 	}
 
@@ -208,4 +221,42 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 		}
 	}
 
+	public static class SpatialTemporalIndexBuilder
+	{
+		private final SpatialTemporalOptions options;
+
+		public SpatialTemporalIndexBuilder() {
+			options = new SpatialTemporalOptions();
+		}
+
+		private SpatialTemporalIndexBuilder(
+				final SpatialTemporalOptions options ) {
+			this.options = options;
+		}
+
+		public SpatialTemporalIndexBuilder setPointOnly(
+				final boolean pointOnly ) {
+			options.pointOnly = pointOnly;
+			return new SpatialTemporalIndexBuilder(
+					options);
+		}
+
+		public SpatialTemporalIndexBuilder setBias(
+				final Bias bias ) {
+			options.bias = bias;
+			return new SpatialTemporalIndexBuilder(
+					options);
+		}
+
+		public SpatialTemporalIndexBuilder setPeriodicity(
+				final Unit periodicity ) {
+			options.periodicity = periodicity;
+			return new SpatialTemporalIndexBuilder(
+					options);
+		}
+
+		public PrimaryIndex createIndex() {
+			return internalCreatePrimaryIndex(options);
+		}
+	}
 }

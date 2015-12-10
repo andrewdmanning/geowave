@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.GeoWaveMain;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider.SpatialIndexBuilder;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialTemporalQuery;
@@ -77,6 +78,8 @@ abstract public class GeoWaveTestEnvironment
 										// isn't on same drive as project
 
 	protected static final PrimaryIndex DEFAULT_SPATIAL_INDEX = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
+	protected static final PrimaryIndex DEFAULT_ALLTIER_SPATIAL_INDEX = new SpatialIndexBuilder().setAllTiers(
+			true).createIndex();
 
 	protected static final PrimaryIndex DEFAULT_SPATIAL_TEMPORAL_INDEX = new SpatialTemporalDimensionalityTypeProvider().createPrimaryIndex();
 
@@ -483,7 +486,7 @@ abstract public class GeoWaveTestEnvironment
 	/**
 	 * Unzips the contents of a zip file to a target output directory, deleting
 	 * anything that existed beforehand
-	 * 
+	 *
 	 * @param zipInput
 	 *            input zip file
 	 * @param outputFolder

@@ -170,7 +170,7 @@ public class KDERasterResizeIT extends
 				accumuloUser,
 				accumuloPassword);
 		conn.tableOperations().compact(
-				TEST_COVERAGE_NAMESPACE + "_" + DEFAULT_SPATIAL_INDEX.getId().getString(),
+				TEST_COVERAGE_NAMESPACE + "_" + DEFAULT_ALLTIER_SPATIAL_INDEX.getId().getString(),
 				null,
 				null,
 				true,
@@ -210,7 +210,7 @@ public class KDERasterResizeIT extends
 						"-" + RasterTileResizeCommandLineOptions.OUTPUT_COVERAGE_NAME_KEY,
 						resizeTileSizeCoverageName,
 						"-" + RasterTileResizeCommandLineOptions.INDEX_ID_KEY,
-						DEFAULT_SPATIAL_INDEX.getId().getString(),
+						DEFAULT_ALLTIER_SPATIAL_INDEX.getId().getString(),
 						"-" + RasterTileResizeCommandLineOptions.TILE_SIZE_KEY,
 						new Integer(
 								(int) Math.pow(
@@ -259,7 +259,7 @@ public class KDERasterResizeIT extends
 		}
 
 		conn.tableOperations().compact(
-				TEST_COVERAGE_NAMESPACE + "_" + DEFAULT_SPATIAL_INDEX.getId().getString(),
+				TEST_COVERAGE_NAMESPACE + "_" + DEFAULT_ALLTIER_SPATIAL_INDEX.getId().getString(),
 				null,
 				null,
 				true,

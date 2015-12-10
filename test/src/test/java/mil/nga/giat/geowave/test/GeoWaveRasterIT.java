@@ -145,7 +145,7 @@ public class GeoWaveRasterIT extends
 				accumuloUser,
 				accumuloPassword);
 		connector.tableOperations().compact(
-				TEST_NAMESPACE + "_" + DEFAULT_SPATIAL_INDEX.getId().getString(),
+				TEST_NAMESPACE + "_" + DEFAULT_ALLTIER_SPATIAL_INDEX.getId().getString(),
 				null,
 				null,
 				true,
@@ -206,7 +206,7 @@ public class GeoWaveRasterIT extends
 				accumuloUser,
 				accumuloPassword);
 		connector.tableOperations().compact(
-				TEST_NAMESPACE + "_" + DEFAULT_SPATIAL_INDEX.getId().getString(),
+				TEST_NAMESPACE + "_" + DEFAULT_ALLTIER_SPATIAL_INDEX.getId().getString(),
 				null,
 				null,
 				true,
@@ -500,7 +500,7 @@ public class GeoWaveRasterIT extends
 		}
 
 		try (IndexWriter writer = dataStore.createIndexWriter(
-				DEFAULT_SPATIAL_INDEX,
+				DEFAULT_ALLTIER_SPATIAL_INDEX,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
 			writer.write(
 					adapter,
@@ -547,7 +547,7 @@ public class GeoWaveRasterIT extends
 				coverageName,
 				mergeStrategy);
 		try (IndexWriter writer = dataStore.createIndexWriter(
-				DEFAULT_SPATIAL_INDEX,
+				DEFAULT_ALLTIER_SPATIAL_INDEX,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
 			for (int r = 0; r < numRasters; r++) {
 				final WritableRaster raster = RasterUtils.createRasterTypeDouble(

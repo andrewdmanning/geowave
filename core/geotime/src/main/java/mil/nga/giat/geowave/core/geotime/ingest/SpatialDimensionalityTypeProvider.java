@@ -5,6 +5,7 @@ import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LatitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LongitudeField;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
 import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexFactory;
@@ -12,6 +13,7 @@ import mil.nga.giat.geowave.core.ingest.index.IngestDimensionalityTypeProviderSp
 import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.index.BasicIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
+import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 import com.beust.jcommander.Parameter;
@@ -20,6 +22,7 @@ public class SpatialDimensionalityTypeProvider implements
 		IngestDimensionalityTypeProviderSpi
 {
 	private final SpatialOptions options = new SpatialOptions();
+	private static final String DEFAULT_SPATIAL_ID = "SPATIAL_IDX";
 	private static final int LONGITUDE_BITS = 31;
 	private static final int LATITUDE_BITS = 31;
 	public static final int[] DEFINED_BITS_OF_PRECISION = new int[] {
@@ -82,26 +85,35 @@ public class SpatialDimensionalityTypeProvider implements
 
 	@Override
 	public PrimaryIndex createPrimaryIndex() {
+		return internalCreatePrimaryIndex(options);
+	}
+
+	private static PrimaryIndex internalCreatePrimaryIndex(
+			final SpatialOptions options ) {
 		// TODO when we have stats to determine which tiers are filled, we can
 		// use the full incremental tiering
-		// return new PrimaryIndex(
-		// TieredSFCIndexFactory.createFullIncrementalTieredStrategy(
-		// SPATIAL_DIMENSIONS,
-		// new int[] {
-		// LONGITUDE_BITS,
-		// LATITUDE_BITS
-		// },
-		// SFCType.HILBERT),
-		// new BasicIndexModel(
-		// new NumericDimensionField[] {
-		// new LongitudeField(),
-		// new LatitudeField(
-		// true)
-		// }));
+		if (!options.pointOnly && options.allTiers) {
+			return new CustomIdIndex(
+					TieredSFCIndexFactory.createFullIncrementalTieredStrategy(
+							SPATIAL_DIMENSIONS,
+							new int[] {
+								LONGITUDE_BITS,
+								LATITUDE_BITS
+							},
+							SFCType.HILBERT),
+					new BasicIndexModel(
+							new NumericDimensionField[] {
+								new LongitudeField(),
+								new LatitudeField(
+										true)
+							}),
+					new ByteArrayId(
+							DEFAULT_SPATIAL_ID + "_ALLTIERS"));
+		}
 
 		// but for now use predefined tiers to limit the query decomposition in
 		// cases where we are unlikely to use certain tiers
-		return new PrimaryIndex(
+		return new CustomIdIndex(
 				TieredSFCIndexFactory.createDefinedPrecisionTieredStrategy(
 						SPATIAL_DIMENSIONS,
 						options.pointOnly ? new int[][] {
@@ -113,7 +125,9 @@ public class SpatialDimensionalityTypeProvider implements
 						},
 						SFCType.HILBERT),
 				new BasicIndexModel(
-						SPATIAL_FIELDS));
+						SPATIAL_FIELDS),
+				new ByteArrayId(
+						options.pointOnly ? DEFAULT_SPATIAL_ID + "_POINTONLY" : DEFAULT_SPATIAL_ID));
 	}
 
 	private static class SpatialOptions
@@ -122,6 +136,10 @@ public class SpatialDimensionalityTypeProvider implements
 			"pointOnly"
 		}, required = false, description = "The index will only be good at handling pointsand will not be optimized for handling lines/polys.  The default behavior is to handle any geometry.")
 		protected boolean pointOnly = false;
+		@Parameter(names = {
+			"allTiers"
+		}, required = false, description = "The index will represent all tiers.  Typically for vector data we only need a subset of the tiers to minimize query decomposition, but for raster data typically all tiers is better.")
+		protected boolean allTiers = false;
 	}
 
 	@Override
@@ -129,6 +147,39 @@ public class SpatialDimensionalityTypeProvider implements
 		return new Class[] {
 			GeometryWrapper.class
 		};
+	}
+
+	public static class SpatialIndexBuilder
+	{
+		private final SpatialOptions options;
+
+		public SpatialIndexBuilder() {
+			options = new SpatialOptions();
+		}
+
+		private SpatialIndexBuilder(
+				final SpatialOptions options ) {
+			this.options = options;
+		}
+
+		public SpatialIndexBuilder setPointOnly(
+				final boolean pointOnly ) {
+			options.pointOnly = pointOnly;
+			return new SpatialIndexBuilder(
+					options);
+		}
+
+		public SpatialIndexBuilder setAllTiers(
+				final boolean allTiers ) {
+			options.allTiers = allTiers;
+
+			return new SpatialIndexBuilder(
+					options);
+		}
+
+		public PrimaryIndex createIndex() {
+			return internalCreatePrimaryIndex(options);
+		}
 	}
 
 }
