@@ -112,12 +112,10 @@ public class CQLQuery implements
 	public List<QueryFilter> createFilters(
 			final CommonIndexModel indexModel ) {
 		List<QueryFilter> queryFilters;
-		// if (baseQuery != null) {
-		// queryFilters = baseQuery.createFilters(indexModel);
-		// }
-		// else {
+		// note, this assumes the CQL filter covers the baseQuery which *should*
+		// be a safe assumption, otherwise we need to add the
+		// baseQuery.createFilters to the list of query filters
 		queryFilters = new ArrayList<QueryFilter>();
-		// }
 		if (filter != null) {
 			queryFilters = new ArrayList<QueryFilter>(
 					queryFilters);
