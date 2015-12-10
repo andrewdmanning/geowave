@@ -1,8 +1,11 @@
 package mil.nga.giat.geowave.core.geotime.ingest;
 
+import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
+import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LatitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LongitudeField;
+import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
 import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexFactory;
 import mil.nga.giat.geowave.core.ingest.index.IngestDimensionalityTypeProviderSpi;
@@ -40,7 +43,14 @@ public class SpatialDimensionalityTypeProvider implements
 		0,
 		31
 	};
-	protected static final NumericDimensionField[] SPATIAL_DIMENSIONS = new NumericDimensionField[] {
+	protected static final NumericDimensionDefinition[] SPATIAL_DIMENSIONS = new NumericDimensionDefinition[] {
+		new LongitudeDefinition(),
+		new LatitudeDefinition(
+				true)
+	// just use the same range for latitude to make square sfc values in
+	// decimal degrees (EPSG:4326)
+	};
+	protected static final NumericDimensionField[] SPATIAL_FIELDS = new NumericDimensionField[] {
 		new LongitudeField(),
 		new LatitudeField(
 				true)
@@ -103,11 +113,7 @@ public class SpatialDimensionalityTypeProvider implements
 						},
 						SFCType.HILBERT),
 				new BasicIndexModel(
-						new NumericDimensionField[] {
-							new LongitudeField(),
-							new LatitudeField(
-									true)
-						}));
+						SPATIAL_FIELDS));
 	}
 
 	private static class SpatialOptions

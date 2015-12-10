@@ -1,11 +1,15 @@
 package mil.nga.giat.geowave.core.geotime.ingest;
 
+import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
+import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TemporalBinningStrategy.Unit;
+import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LatitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LongitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.Time;
 import mil.nga.giat.geowave.core.geotime.store.dimension.TimeField;
+import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
 import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexFactory;
 import mil.nga.giat.geowave.core.ingest.index.IngestDimensionalityTypeProviderSpi;
@@ -49,11 +53,18 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 
 	@Override
 	public PrimaryIndex createPrimaryIndex() {
-		final NumericDimensionField[] dimensions = new NumericDimensionField[] {
+		final NumericDimensionField[] fields = new NumericDimensionField[] {
 			new LongitudeField(),
 			new LatitudeField(
 					true),
 			new TimeField(
+					options.periodicity)
+		};
+		final NumericDimensionDefinition[] dimensions = new NumericDimensionDefinition[] {
+			new LongitudeDefinition(),
+			new LatitudeDefinition(
+					true),
+			new TimeDefinition(
 					options.periodicity)
 		};
 		if (options.pointOnly) {
@@ -74,7 +85,7 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 							},
 							SFCType.HILBERT),
 					new BasicIndexModel(
-							dimensions));
+							fields));
 		}
 		else {
 			return new PrimaryIndex(
@@ -87,7 +98,7 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 							},
 							SFCType.HILBERT),
 					new BasicIndexModel(
-							dimensions));
+							fields));
 		}
 	}
 
