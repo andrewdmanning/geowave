@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.GtFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.auth.AuthorizationSPI;
+import mil.nga.giat.geowave.adapter.vector.index.IndexQueryStrategySPI;
 import mil.nga.giat.geowave.adapter.vector.plugin.lock.LockingManagement;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveAutoCommitTransactionState;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveTransactionManagementState;
@@ -83,6 +84,7 @@ public class GeoWaveGTDataStore extends
 
 	private final ColumnVisibilityManagement<SimpleFeature> visibilityManagement = VisibilityManagementHelper.loadVisibilityManagement();
 	private final AuthorizationSPI authorizationSPI;
+	private final IndexQueryStrategySPI indexQueryStrategy;
 	private final URI featureNameSpaceURI;
 	private int transactionBufferSize = 10000;
 	private final TransactionsAllocator transactionsAllocator;
@@ -97,6 +99,7 @@ public class GeoWaveGTDataStore extends
 				config.getAuthorizationURL());
 		init(config);
 		featureNameSpaceURI = config.getFeatureNamespace();
+		indexQueryStrategy = config.getIndexQueryStrategy();
 		transactionBufferSize = config.getTransactionBufferSize();
 		transactionsAllocator = new MemoryTransactionsAllocator();
 
@@ -116,6 +119,10 @@ public class GeoWaveGTDataStore extends
 
 	public FeatureListenerManager getListenerManager() {
 		return listenerManager;
+	}
+
+	public IndexQueryStrategySPI getIndexQueryStrategy() {
+		return indexQueryStrategy;
 	}
 
 	public DataStore getDataStore() {

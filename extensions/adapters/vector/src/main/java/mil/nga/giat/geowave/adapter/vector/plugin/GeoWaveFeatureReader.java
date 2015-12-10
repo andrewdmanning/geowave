@@ -23,8 +23,6 @@ import mil.nga.giat.geowave.adapter.vector.query.cql.CQLQuery;
 import mil.nga.giat.geowave.adapter.vector.render.DistributableRenderer;
 import mil.nga.giat.geowave.adapter.vector.stats.FeatureStatistic;
 import mil.nga.giat.geowave.adapter.vector.util.QueryIndexHelper;
-import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
-import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.geotime.store.query.TemporalConstraintsSet;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -143,64 +141,39 @@ public class GeoWaveFeatureReader implements
 			final QueryIssuer issuer ) {
 
 		final List<CloseableIterator<SimpleFeature>> results = new ArrayList<CloseableIterator<SimpleFeature>>();
-		final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap = components.getDataStatistics(transaction);
+		final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap = transaction.getDataStatistics();
 
-		try (CloseableIterator<Index<?, ?>> indexIt = getComponents().getIndexStore().getIndices()) {
-			while (indexIt.hasNext()) {
-				final PrimaryIndex index = (PrimaryIndex) indexIt.next();
+		final Constraints timeConstraints = QueryIndexHelper.composeTimeBoundedConstraints(
+				components.getAdapter().getType(),
+				components.getAdapter().getTimeDescriptors(),
+				statsMap,
+				timeBounds);
 				if (!hasAtLeastSpatial(index)) {
 					continue;
 				}
 
-				final Constraints timeConstraints = QueryIndexHelper.composeTimeBoundedConstraints(
-						components.getAdapter().getType(),
-						components.getAdapter().getTimeDescriptors(),
-						statsMap,
-						timeBounds);
+		final Constraints geoConstraints = QueryIndexHelper.composeGeometricConstraints(
+				getFeatureType(),
+				transaction.getDataStatistics(),
+				jtsBounds);
 
-				/*
-				 * Inspect for SPATIAL_TEMPORAL type index. Most queries issued
-				 * from GeoServer, where time is an 'enabled' dimension, provide
-				 * time constraints. Often they only an upper bound. The
-				 * statistics were used to clip the bounds prior to this point.
-				 * However, the range may be still too wide. Ideally, spatial
-				 * temporal indexing should not be used in these cases.
-				 * Eventually all this logic should be replaced by a
-				 * QueryPlanner that takes the full set of constraints and has
-				 * in-depth knowledge of each indices capabilities.
-				 */
-				if ((jtsBounds == null) || (hasTime(index) && timeConstraints.isEmpty())) {
-					// full table scan
-					results.add(issuer.query(
-							index,
-							null));
-				}
-				else {
+		/**
+		 * NOTE: query to an index that requires a constraint and the constraint
+		 * is missing equates to a full table scan. @see BasicQuery
+		 */
 
-					final Constraints geoConstraints = QueryIndexHelper.composeGeometricConstraints(
-							components.getAdapter().getType(),
-							statsMap,
-							jtsBounds);
+		try (CloseableIterator<Index<?, ?>> indexIt = getComponents().getIndices(
+				timeConstraints,
+				geoConstraints)) {
+			while (indexIt.hasNext()) {
+				final PrimaryIndex index = (PrimaryIndex) indexIt.next();
+				results.add(issuer.query(
+						index,
+						composeQuery(
+								jtsBounds,
+								geoConstraints,
+								timeConstraints)));
 
-					if (!timeConstraints.isEmpty() && timeConstraints.isSupported(index)) {
-
-						results.add(issuer.query(
-								index,
-								composeQuery(
-										jtsBounds,
-										geoConstraints,
-										timeConstraints)));
-					}
-					else {
-						// just geo
-						results.add(issuer.query(
-								index,
-								composeQuery(
-										jtsBounds,
-										geoConstraints,
-										null)));
-					}
-				}
 			}
 		}
 		catch (final IOException e) {
@@ -534,7 +507,7 @@ public class GeoWaveFeatureReader implements
 	protected List<DataStatistics<SimpleFeature>> getStatsFor(
 			final String name ) {
 		final List<DataStatistics<SimpleFeature>> stats = new LinkedList<DataStatistics<SimpleFeature>>();
-		final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap = components.getDataStatistics(transaction);
+		final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap = transaction.getDataStatistics();
 		for (final Map.Entry<ByteArrayId, DataStatistics<SimpleFeature>> stat : statsMap.entrySet()) {
 			if ((stat.getValue() instanceof FeatureStatistic) && ((FeatureStatistic) stat.getValue()).getFieldName().endsWith(
 					name)) {
@@ -547,7 +520,7 @@ public class GeoWaveFeatureReader implements
 	protected TemporalConstraintsSet clipIndexedTemporalConstraints(
 			final TemporalConstraintsSet constraintsSet ) {
 		return QueryIndexHelper.clipIndexedTemporalConstraints(
-				components.getDataStatistics(transaction),
+				transaction.getDataStatistics(),
 				components.getAdapter().getTimeDescriptors(),
 				constraintsSet);
 	}
@@ -557,7 +530,7 @@ public class GeoWaveFeatureReader implements
 		return QueryIndexHelper.clipIndexedBBOXConstraints(
 				getFeatureType(),
 				bbox,
-				components.getDataStatistics(transaction));
+				transaction.getDataStatistics());
 	}
 
 	private BasicQuery composeQuery(
@@ -565,24 +538,15 @@ public class GeoWaveFeatureReader implements
 			final Constraints geoConstraints,
 			final Constraints temporalConstraints ) {
 
-		if ((geoConstraints == null) && (temporalConstraints != null)) {
-			final Constraints statBasedGeoConstraints = QueryIndexHelper.getBBOXIndexConstraints(
-					getFeatureType(),
-					components.getDataStatistics(transaction));
+		if (jtsBounds == null) {
 			return new BasicQuery(
-					statBasedGeoConstraints.merge(temporalConstraints));
+					geoConstraints.merge(temporalConstraints));
 		}
-		else if ((jtsBounds != null) && (temporalConstraints == null)) {
-			return new SpatialQuery(
-					geoConstraints,
-					jtsBounds);
-		}
-		else if ((jtsBounds != null) && (temporalConstraints != null)) {
+		else {
 			return new SpatialQuery(
 					geoConstraints.merge(temporalConstraints),
 					jtsBounds);
 		}
-		return null;
 	}
 
 	public Object convertToType(

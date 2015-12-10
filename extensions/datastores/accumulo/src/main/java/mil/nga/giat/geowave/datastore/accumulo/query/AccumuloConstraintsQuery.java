@@ -30,7 +30,7 @@ public class AccumuloConstraintsQuery extends
 		AccumuloFilteredIndexQuery
 {
 	private static final int MAX_RANGE_DECOMPOSITION = 5000;
-	protected final MultiDimensionalNumericData constraints;
+	protected final List<MultiDimensionalNumericData> constraints;
 	protected final List<DistributableQueryFilter> distributableFilters;
 	protected boolean queryFiltersEnabled;
 
@@ -58,9 +58,56 @@ public class AccumuloConstraintsQuery extends
 	}
 
 	public AccumuloConstraintsQuery(
+			final PrimaryIndex index,
+			final List<MultiDimensionalNumericData> constraints,
+			final List<QueryFilter> queryFilters ) {
+		this(
+				null,
+				index,
+				constraints,
+				queryFilters,
+				new String[0]);
+	}
+
+	public AccumuloConstraintsQuery(
 			final List<ByteArrayId> adapterIds,
 			final PrimaryIndex index,
-			final MultiDimensionalNumericData constraints,
+			final List<MultiDimensionalNumericData> constraints,
+			final List<QueryFilter> queryFilters ) {
+		this(
+				adapterIds,
+				index,
+				constraints,
+				queryFilters,
+				(DedupeFilter) null,
+				(ScanCallback<?>) null,
+				(Collection<String>) null,
+				new String[0]);
+
+	}
+
+	public AccumuloConstraintsQuery(
+			final List<ByteArrayId> adapterIds,
+			final PrimaryIndex index,
+			final List<MultiDimensionalNumericData> constraints,
+			final List<QueryFilter> queryFilters,
+			final String[] authorizations ) {
+		this(
+				adapterIds,
+				index,
+				constraints,
+				queryFilters,
+				(DedupeFilter) null,
+				(ScanCallback<?>) null,
+				(Collection<String>) null,
+				authorizations);
+
+	}
+
+	public AccumuloConstraintsQuery(
+			final List<ByteArrayId> adapterIds,
+			final PrimaryIndex index,
+			final List<MultiDimensionalNumericData> constraints,
 			final List<QueryFilter> queryFilters,
 			final DedupeFilter clientDedupeFilter,
 			final ScanCallback<?> scanCallback,

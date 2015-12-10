@@ -61,28 +61,21 @@ public class SecondaryIndexQueryFilterIterator extends
 				final Value value = rowIterator.getTopValue();
 				final String cq = StringUtils.stringFromBinary(key.getColumnQualifierData().getBackingArray());
 				if (!cq.equals(primaryIndexId)) {
-					for (final DistributableQueryFilter filter : filters.getFilters()) {
-						final IndexedPersistenceEncoding<ByteArrayId> persistenceEncoding = new IndexedPersistenceEncoding<ByteArrayId>(
-								null, // not needed
-								null, // not needed
-								null, // not needed
-								0, // not needed
-								new PersistentDataset<ByteArrayId>(
-										new PersistentValue<ByteArrayId>(
-												new ByteArrayId(
-														key.getColumnQualifierData().getBackingArray()),
-												new ByteArrayId(
-														value.get()))),
-								null);
-						if (filter.accept(
-								null,
-								persistenceEncoding)) {
-							// return true if any filter passes
-							return true;
-						}
-					}
-					// no filters passed
-					return false;
+					final IndexedPersistenceEncoding<ByteArrayId> persistenceEncoding = new IndexedPersistenceEncoding<ByteArrayId>(
+							null, // not needed
+							null, // not needed
+							null, // not needed
+							0, // not needed
+							new PersistentDataset<ByteArrayId>(
+									new PersistentValue<ByteArrayId>(
+											new ByteArrayId(
+													key.getColumnQualifierData().getBackingArray()),
+											new ByteArrayId(
+													value.get()))),
+							null);
+					if (filters.accept(
+							null,
+							persistenceEncoding)) return true;
 				}
 				rowIterator.next();
 			}

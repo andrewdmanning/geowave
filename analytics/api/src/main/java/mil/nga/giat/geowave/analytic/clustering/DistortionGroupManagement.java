@@ -142,9 +142,9 @@ public class DistortionGroupManagement
 		}
 
 		@Override
-		public MultiDimensionalNumericData getIndexConstraints(
+		public List<MultiDimensionalNumericData> getIndexConstraints(
 				NumericIndexStrategy indexStrategy ) {
-			return new BasicNumericDataset();
+			return Collections.emptyList();
 		}
 
 	}

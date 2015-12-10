@@ -243,6 +243,7 @@ public class GeoWaveServicesIT extends
 				null,
 				null,
 				null,
+				null,
 				TEST_WORKSPACE));
 
 		// verify that the datastore was published

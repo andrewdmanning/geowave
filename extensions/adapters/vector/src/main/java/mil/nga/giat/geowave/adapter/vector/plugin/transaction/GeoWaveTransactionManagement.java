@@ -12,7 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveDataStoreComponents;
 import mil.nga.giat.geowave.adapter.vector.plugin.lock.LockingManagement;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.log4j.Logger;
@@ -36,21 +38,23 @@ import com.google.common.collect.Multimap;
  * @source $URL$
  */
 
-public class GeoWaveTransactionManagement implements
+public class GeoWaveTransactionManagement extends
+		AbstractTransactionManagement implements
 		GeoWaveTransaction
 {
 
-	private static final Logger LOGGER = Logger.getLogger(GeoWaveTransactionManagement.class);
+	protected static final Logger LOGGER = Logger.getLogger(GeoWaveTransactionManagement.class);
 
 	/** Map of modified features; by feature id */
 	private final Map<String, ModifiedFeature> modifiedFeatures = new ConcurrentHashMap<String, ModifiedFeature>();
 	private final Map<String, SimpleFeature> addedFeatures = new ConcurrentHashMap<String, SimpleFeature>();
 	private final Multimap<String, SimpleFeature> removedFeatures = LinkedListMultimap.create();
 
+	private Map<ByteArrayId, DataStatistics<SimpleFeature>> statsCache = null;
+
 	/** List of added feature ids; values stored in added above */
 	private final Set<String> addedFidList = new HashSet<String>();
 
-	private final GeoWaveDataStoreComponents components;
 	private int maxAdditionBufferSize = 10000;
 
 	private final LockingManagement lockingManager;
@@ -95,8 +99,9 @@ public class GeoWaveTransactionManagement implements
 			final LockingManagement lockingManager,
 			final String txID )
 			throws IOException {
+		super(
+				components);
 		this.maxAdditionBufferSize = maxAdditionBufferSize;
-		this.components = components;
 		mutex = this;
 		this.typeName = typeName;
 		this.transaction = transaction;
@@ -279,6 +284,7 @@ public class GeoWaveTransactionManagement implements
 
 	public void rollback()
 			throws IOException {
+		statsCache = null;
 		for (final String fid : addedFidList) {
 			components.remove(
 					fid,
@@ -379,6 +385,8 @@ public class GeoWaveTransactionManagement implements
 					true);
 		}
 
+		statsCache = null;
+
 	}
 
 	private Iterator<Pair<SimpleFeature, SimpleFeature>> getUpdates() {
@@ -417,6 +425,14 @@ public class GeoWaveTransactionManagement implements
 			@Override
 			public void remove() {}
 		};
+	}
+
+	@Override
+	public Map<ByteArrayId, DataStatistics<SimpleFeature>> getDataStatistics() {
+		if (statsCache == null) {
+			statsCache = super.getDataStatistics();
+		}
+		return statsCache;
 	}
 
 	@Override

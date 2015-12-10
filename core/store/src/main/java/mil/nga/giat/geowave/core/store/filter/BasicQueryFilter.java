@@ -158,7 +158,7 @@ public class BasicQueryFilter implements
 
 	@Override
 	public byte[] toBinary() {
-		int byteBufferLength = 4;
+		int byteBufferLength = 8;
 		final int dimensions = Math.min(
 				constraints.getDimensionCount(),
 				dimensionFields.length);
@@ -180,6 +180,7 @@ public class BasicQueryFilter implements
 			lengthDimensionAndQueryBinaries.add(buf.array());
 		}
 		final ByteBuffer buf = ByteBuffer.allocate(byteBufferLength);
+		buf.putInt(this.compareOp.ordinal());
 		buf.putInt(dimensions);
 		for (final byte[] binary : lengthDimensionAndQueryBinaries) {
 			buf.put(binary);
@@ -191,6 +192,7 @@ public class BasicQueryFilter implements
 	public void fromBinary(
 			final byte[] bytes ) {
 		final ByteBuffer buf = ByteBuffer.wrap(bytes);
+		this.compareOp = BasicQueryCompareOperation.values()[buf.getInt()];
 		final int numDimensions = buf.getInt();
 		dimensionFields = new NumericDimensionField<?>[numDimensions];
 		final NumericData[] data = new NumericData[numDimensions];

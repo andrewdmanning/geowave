@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -14,6 +15,8 @@ import mil.nga.giat.geowave.core.geotime.GeometryUtils;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.filter.SpatialQueryFilter.CompareOperation;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialTemporalQuery;
+import mil.nga.giat.geowave.core.geotime.store.query.TemporalConstraints;
+import mil.nga.giat.geowave.core.geotime.store.query.TemporalRange;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -174,6 +177,12 @@ public class GeoTemporalQueryExample
 					DateUtilities.parseISO("2005-05-18T19:32:56Z"),
 					DateUtilities.parseISO("2005-05-18T20:45:56Z")));
 
+			points.add(buildSimpleFeature(
+					"White House 3",
+					whiteHouse,
+					DateUtilities.parseISO("2005-05-19T19:32:56Z"),
+					DateUtilities.parseISO("2005-05-19T20:45:56Z")));
+
 		}
 		catch (final Exception ex) {
 			ex.printStackTrace();
@@ -234,7 +243,7 @@ public class GeoTemporalQueryExample
 						13700).getKey(),
 				CompareOperation.CONTAINS);
 
-		System.out.println("Executing query, expecting to match ALL points...");
+		System.out.println("Executing query, expecting to match three points...");
 
 		final CloseableIterator<SimpleFeature> iterator = dataStore.query(
 				new QueryOptions(
@@ -246,6 +255,40 @@ public class GeoTemporalQueryExample
 		}
 
 		iterator.close();
+
+		TemporalConstraints tempotalIndexConstraints = new TemporalConstraints(
+				Arrays.asList(
+						new TemporalRange(
+								DateUtilities.parseISO("2005-05-17T19:32:56Z"),
+								DateUtilities.parseISO("2005-05-17T22:32:56Z")),
+						new TemporalRange(
+								DateUtilities.parseISO("2005-05-19T19:32:56Z"),
+								DateUtilities.parseISO("2005-05-19T22:32:56Z"))),
+				"ignored"); // the name is not used in this case
+
+		SpatialTemporalQuery query2 = new SpatialTemporalQuery(
+				tempotalIndexConstraints,
+				mil.nga.giat.geowave.adapter.vector.utils.GeometryUtils.buffer(
+						GeoWaveGTDataStore.DEFAULT_CRS,
+						GeometryUtils.GEOMETRY_FACTORY.createPoint(new Coordinate(
+								-77.03521,
+								38.8895)),
+						"meter",
+						13700).getKey(),
+				CompareOperation.CONTAINS);
+
+		System.out.println("Executing query # 2 with multiple time ranges, expecting to match four points...");
+
+		final CloseableIterator<SimpleFeature> iterator2 = dataStore.query(
+				new QueryOptions(
+						index),
+				query2);
+
+		while (iterator2.hasNext()) {
+			System.out.println("Query match: " + iterator2.next().getID());
+		}
+
+		iterator2.close();
 	}
 
 	private static void cleanup()

@@ -8,7 +8,8 @@ import java.util.Arrays;
  * operations use the values of the bytes rather than explicit object identity
  */
 public class ByteArrayId implements
-		java.io.Serializable
+		java.io.Serializable,
+		Comparable<ByteArrayId>
 {
 	private final byte[] id;
 
@@ -89,5 +90,20 @@ public class ByteArrayId implements
 					id);
 		}
 		return result;
+	}
+
+	@Override
+	public int compareTo(
+			ByteArrayId o ) {
+
+		for (int i = 0, j = 0; i < id.length && j < o.id.length; i++, j++) {
+			int a = (id[i] & 0xff);
+			int b = (o.id[j] & 0xff);
+			if (a != b) {
+				return a - b;
+			}
+		}
+		return id.length - o.id.length;
+
 	}
 }

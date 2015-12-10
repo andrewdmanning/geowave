@@ -129,7 +129,7 @@ public class MemoryDataStore implements
 				final VisibilityWriter<T> fieldVisibilityWriter ) {
 
 			adapterStore.addAdapter(writableAdapter);
-			final IngestCallback<T> callback = (IngestCallback<T>) callbackCache.getIngestCallback(
+			final IngestCallback<T> callback = callbackCache.getIngestCallback(
 					writableAdapter,
 					index);
 			final List<ByteArrayId> ids = new ArrayList<ByteArrayId>();
@@ -257,21 +257,27 @@ public class MemoryDataStore implements
 				final PrimaryIndex index = (PrimaryIndex) indexIt.next();
 				indexCount++;
 
-				final TreeSet<EntryRow> set = (TreeSet<EntryRow>) getRowsForIndex(index.getId());
+				final TreeSet<EntryRow> set = getRowsForIndex(index.getId());
 				final Iterator<EntryRow> rowIt = ((query == null) || query.isSupported(index)) ? ((TreeSet<EntryRow>) set.clone()).iterator() : Collections.<EntryRow> emptyIterator();
 				final List<QueryFilter> filters = (query == null) ? new ArrayList<QueryFilter>() : new ArrayList<QueryFilter>(
 						query.createFilters(index.getIndexModel()));
 				filters.add(new QueryFilter() {
 					@Override
 					public boolean accept(
-							CommonIndexModel indexModel,
-							IndexedPersistenceEncoding persistenceEncoding ) {
-						try {
-							for (ByteArrayId id : queryOptions.getAdapterIds(getAdapterStore())) {
-								if (id.equals(persistenceEncoding.getAdapterId())) return true;
+							final CommonIndexModel indexModel,
+							final IndexedPersistenceEncoding persistenceEncoding ) {
+						try (CloseableIterator<DataAdapter<?>> adapters = queryOptions.getAdapters(getAdapterStore())) {
+							for (final ByteArrayId id : DataStoreUtils.trimAdapterIdsByIndex(
+									statsStore,
+									index.getId(),
+									adapters,
+									queryOptions.getAuthorizations())) {
+								if (id.equals(persistenceEncoding.getAdapterId())) {
+									return true;
+								}
 							}
 						}
-						catch (IOException e) {
+						catch (final IOException e) {
 							LOGGER.error(
 									"Cannot resolve adapter IDs",
 									e);
@@ -288,7 +294,7 @@ public class MemoryDataStore implements
 					private boolean getNext() {
 						while ((nextRow == null) && rowIt.hasNext()) {
 							final EntryRow row = rowIt.next();
-							DataAdapter<?> adapter = adapterStore.getAdapter(new ByteArrayId(
+							final DataAdapter<?> adapter = adapterStore.getAdapter(new ByteArrayId(
 									row.getTableRowId().getAdapterId()));
 							encoding = DataStoreUtils.getEncoding(
 									index.getIndexModel(),
@@ -323,12 +329,14 @@ public class MemoryDataStore implements
 					public T next() {
 						currentRow = nextRow;
 						if (isDelete) {
-							DataAdapter<T> adapter = (DataAdapter<T>) adapterStore.getAdapter(encoding.getAdapterId());
-							if (adapter instanceof WritableDataAdapter) callbackCache.getDeleteCallback(
-									(WritableDataAdapter<T>) adapter,
-									index).entryDeleted(
-									currentRow.getInfo(),
-									(T) currentRow.entry);
+							final DataAdapter<T> adapter = (DataAdapter<T>) adapterStore.getAdapter(encoding.getAdapterId());
+							if (adapter instanceof WritableDataAdapter) {
+								callbackCache.getDeleteCallback(
+										(WritableDataAdapter<T>) adapter,
+										index).entryDeleted(
+										currentRow.getInfo(),
+										(T) currentRow.entry);
+							}
 						}
 						((ScanCallback<T>) queryOptions.getScanCallback()).entryScanned(
 								currentRow.getInfo(),
@@ -339,18 +347,22 @@ public class MemoryDataStore implements
 
 					@Override
 					public void remove() {
-						if (currentRow != null) set.remove(currentRow);
+						if (currentRow != null) {
+							set.remove(currentRow);
+						}
 					}
 
 					@Override
 					public void close()
 							throws IOException {
-						ScanCallback<?> callback = queryOptions.getScanCallback();
-						if (callback != null && callback instanceof Closeable) ((Closeable) callback).close();
+						final ScanCallback<?> callback = queryOptions.getScanCallback();
+						if ((callback != null) && (callback instanceof Closeable)) {
+							((Closeable) callback).close();
+						}
 					}
 				});
 			}
-			filter.setDedupAcrossIndices(queryOptions.isDedupAcrossIndices() && indexCount > 0);
+			filter.setDedupAcrossIndices(queryOptions.isDedupAcrossIndices() && (indexCount > 0));
 			return new CloseableIteratorWrapper<T>(
 					new Closeable() {
 						@Override
@@ -364,7 +376,7 @@ public class MemoryDataStore implements
 					Iterators.concat(results.iterator()),
 					queryOptions.getLimit());
 		}
-		catch (IOException e) {
+		catch (final IOException e) {
 			LOGGER.error(
 					"Cannot process query [" + (query == null ? "all" : query.toString()) + "]",
 					e);

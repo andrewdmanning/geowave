@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.core.store.query;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -41,9 +42,9 @@ public class PrefixIdQuery implements
 	}
 
 	@Override
-	public MultiDimensionalNumericData getIndexConstraints(
-			NumericIndexStrategy indexStrategy ) {
-		return null;
+	public List<MultiDimensionalNumericData> getIndexConstraints(
+			final NumericIndexStrategy indexStrategy ) {
+		return Collections.emptyList();
 	}
 
 }

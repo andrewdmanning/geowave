@@ -2,12 +2,17 @@ package mil.nga.giat.geowave.adapter.vector.plugin;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
 
 import mil.nga.giat.geowave.adapter.vector.BaseDataStoreTest;
+import mil.nga.giat.geowave.adapter.vector.stats.FeatureHyperLogLogStatistics;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 
 import org.geotools.data.DataStore;
 import org.geotools.data.DataUtilities;
@@ -128,6 +133,15 @@ public class WFSTransactionTest extends
 		reader.close();
 		transaction2.commit();
 		transaction2.close();
+
+		// stats check
+		final Transaction transaction3 = new DefaultTransaction();
+		reader = ((GeoWaveFeatureSource) ((GeoWaveGTDataStore) dataStore).getFeatureSource(
+				"geostuff",
+				transaction3)).getReaderInternal(query);
+		Map<ByteArrayId, DataStatistics<SimpleFeature>> transStats = ((GeoWaveFeatureReader) reader).getTransaction().getDataStatistics();
+		assertNotNull(transStats.get(FeatureHyperLogLogStatistics.composeId("pid")));
+		transaction3.close();
 
 	}
 

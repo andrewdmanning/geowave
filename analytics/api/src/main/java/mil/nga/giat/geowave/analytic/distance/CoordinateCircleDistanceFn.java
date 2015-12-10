@@ -49,8 +49,8 @@ public class CoordinateCircleDistanceFn implements
 					e);
 		}
 		catch (final java.lang.AssertionError ae) {
-			// weird error with orthodromic distance..when distance is too
-			// close, it fails the tolerance test
+			// weird error with orthodromic distance..when distance is too close
+			// (0.05 meter), it fails the tolerance test
 
 			final GeodeticCalculator calc = new GeodeticCalculator(
 					getCRS());
@@ -59,14 +59,13 @@ public class CoordinateCircleDistanceFn implements
 					c1.y);
 			calc.setDestinationGeographicPoint(
 					c2.x,
-					c1.y);
+					c2.y);
 			return ((DefaultEllipsoid) calc.getEllipsoid()).orthodromicDistance(
 					calc.getStartingGeographicPoint().getX(),
 					calc.getStartingGeographicPoint().getY(),
 					calc.getDestinationGeographicPoint().getX(),
 					calc.getDestinationGeographicPoint().getY());
 		}
-
 	}
 
 	protected CoordinateReferenceSystem getCRS() {

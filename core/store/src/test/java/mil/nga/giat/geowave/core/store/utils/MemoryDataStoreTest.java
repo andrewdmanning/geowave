@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -299,14 +300,14 @@ public class MemoryDataStoreTest
 		}
 
 		@Override
-		public MultiDimensionalNumericData getIndexConstraints(
+		public List<MultiDimensionalNumericData> getIndexConstraints(
 				final NumericIndexStrategy indexStrategy ) {
-			return new BasicNumericDataset(
+			return Collections.<MultiDimensionalNumericData> singletonList(new BasicNumericDataset(
 					new NumericData[] {
 						new NumericRange(
 								min,
 								max)
-					});
+					}));
 		}
 
 	}

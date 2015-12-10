@@ -40,6 +40,7 @@ public class InputFormatAccumuloRangeQuery extends
 	private final boolean isOutputWritable;
 
 	private static List<ByteArrayId> getAdapterIds(
+			final PrimaryIndex index,
 			final AdapterStore adapterStore,
 			final QueryOptions queryOptions ) {
 		try {
@@ -62,6 +63,7 @@ public class InputFormatAccumuloRangeQuery extends
 			final QueryOptions queryOptions ) {
 		super(
 				getAdapterIds(
+						index,
 						adapterStore,
 						queryOptions),
 				index,

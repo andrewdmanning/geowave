@@ -488,6 +488,7 @@ public class GeoserverServiceImpl implements
 		String authMgmtPrvdr = "empty";
 		String authDataUrl = "";
 		String customWorkspace = defaultWorkspace;
+		String queryIndexStrategy = "Best Match";
 		String geowaveStoreType = "memory";
 		String name = "geowave";
 		final Map<String, String> geowaveStoreConfig = new HashMap<String, String>();
@@ -496,6 +497,11 @@ public class GeoserverServiceImpl implements
 				if (e.getKey().equals(
 						"lockMgmt")) {
 					lockMgmt = e.getValue().get(
+							0).getValue();
+				}
+				else if (e.getKey().equals(
+						"queryIndexStrategy")) {
+					queryIndexStrategy = e.getValue().get(
 							0).getValue();
 				}
 				else if (e.getKey().equals(
@@ -546,6 +552,7 @@ public class GeoserverServiceImpl implements
 				lockMgmt,
 				authMgmtPrvdr,
 				authDataUrl,
+				queryIndexStrategy,
 				true);
 
 		// create a new geoserver style
@@ -593,6 +600,7 @@ public class GeoserverServiceImpl implements
 			final String lockMgmt,
 			final String authMgmtProvider,
 			final String authDataUrl,
+			final String queryIndexStrategy,
 			final boolean enabled ) {
 		final JSONObject dataStore = new JSONObject();
 		dataStore.put(
@@ -614,6 +622,11 @@ public class GeoserverServiceImpl implements
 		connParams.put(
 				"Lock Management",
 				lockMgmt);
+
+		connParams.put(
+				GeoWavePluginConfig.QUERY_INDEX_STRATEGY_KEY,
+				queryIndexStrategy);
+
 		connParams.put(
 				"Authorization Management Provider",
 				authMgmtProvider);

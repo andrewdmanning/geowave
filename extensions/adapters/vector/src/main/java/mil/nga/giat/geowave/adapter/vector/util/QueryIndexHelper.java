@@ -14,6 +14,7 @@ import mil.nga.giat.geowave.core.geotime.store.query.TemporalRange;
 import mil.nga.giat.geowave.core.geotime.store.statistics.BoundingBoxDataStatistics;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
+import mil.nga.giat.geowave.core.store.query.BasicQuery.ConstraintSet;
 import mil.nga.giat.geowave.core.store.query.BasicQuery.Constraints;
 
 import org.opengis.feature.simple.SimpleFeature;
@@ -141,7 +142,7 @@ public class QueryIndexHelper
 		else if ((timeDescriptors.getTime() != null) && constraintsSet.hasConstraintsFor(timeDescriptors.getTime().getLocalName())) {
 			return constraintsSet.getConstraintsFor(timeDescriptors.getTime().getLocalName());
 		}
-		return null;
+		return new TemporalConstraints();
 	}
 
 	/**
@@ -168,7 +169,7 @@ public class QueryIndexHelper
 		return bbox;
 	}
 
-	public static Constraints getTimeConstraintsFromIndex(
+	public static ConstraintSet getTimeConstraintsFromIndex(
 			final TimeDescriptors timeDescriptors,
 			final Map<ByteArrayId, DataStatistics<SimpleFeature>> stats ) {
 
@@ -201,10 +202,10 @@ public class QueryIndexHelper
 						true);
 			}
 		}
-		return new Constraints();
+		return new ConstraintSet();
 	}
 
-	public static Constraints getBBOXIndexConstraints(
+	public static ConstraintSet getBBOXIndexConstraintsFromIndex(
 			final SimpleFeatureType featureType,
 			final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap ) {
 
@@ -212,14 +213,14 @@ public class QueryIndexHelper
 
 		final ByteArrayId statId = FeatureBoundingBoxStatistics.composeId(geoAttrName);
 		final BoundingBoxDataStatistics<SimpleFeature> bboxStats = (BoundingBoxDataStatistics<SimpleFeature>) statsMap.get(statId);
-		return (bboxStats != null) ? bboxStats.getConstraints() : new Constraints();
+		return (bboxStats != null) ? bboxStats.getConstraints() : new ConstraintSet();
 	}
 
-	public static TemporalConstraints getTemporalConstraintsForIndex(
+	public static TemporalConstraints getTemporalConstraintsForDescriptors(
 			final TimeDescriptors timeDescriptors,
 			final TemporalConstraintsSet timeBoundsSet ) {
 		if ((timeBoundsSet == null) || timeBoundsSet.isEmpty()) {
-			return null;
+			return new TemporalConstraints();
 		}
 
 		if ((timeDescriptors.getStartRange() != null) && (timeDescriptors.getEndRange() != null)) {
@@ -231,12 +232,12 @@ public class QueryIndexHelper
 			return timeBoundsSet.getConstraintsFor(timeDescriptors.getTime().getLocalName());
 		}
 
-		return null;
+		return new TemporalConstraints();
 	}
 
 	/**
-	 * * Compose a time constraints. When the provided constraints do not
-	 * fulfill the indexed dimensions, compose constraints from statistics.
+	 * Compose a time constraints. When the provided constraints do not fulfill
+	 * the indexed dimensions, compose constraints from statistics.
 	 * 
 	 * 
 	 * @param featureType
@@ -251,19 +252,20 @@ public class QueryIndexHelper
 			final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap,
 			final TemporalConstraintsSet timeBoundsSet ) {
 
-		final TemporalConstraints timeBounds = getTemporalConstraintsForIndex(
+		final TemporalConstraints timeBounds = getTemporalConstraintsForDescriptors(
 				timeDescriptors,
 				timeBoundsSet);
-		return timeBounds != null ? SpatialTemporalQuery.createConstraints(
+		return timeBounds != null && !timeBounds.isEmpty() ? SpatialTemporalQuery.createConstraints(
 				timeBounds,
-				false) : getTimeConstraintsFromIndex(
-				timeDescriptors,
-				statsMap);
+				false) : new Constraints(
+				getTimeConstraintsFromIndex(
+						timeDescriptors,
+						statsMap));
 	}
 
 	/**
-	 * If composed constraints matched statistics constraints or are null, then
-	 * return empty constraint set to indicate a full table scan.
+	 * If composed constraints matched statistics constraints, are empty or
+	 * null, then return empty constraint set.
 	 * 
 	 * 
 	 * @param featureType
@@ -277,24 +279,29 @@ public class QueryIndexHelper
 			final TimeDescriptors timeDescriptors,
 			final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap,
 			final TemporalConstraintsSet timeBoundsSet ) {
-		final Constraints indexTimeConstraints = QueryIndexHelper.getTimeConstraintsFromIndex(
-				timeDescriptors,
-				statsMap);
-		// full table scan case?
+
 		if (timeBoundsSet == null || timeBoundsSet.isEmpty() || !timeDescriptors.hasTime()) return new Constraints();
 
-		final TemporalConstraints boundsTemporalConstraints = QueryIndexHelper.getTemporalConstraintsForIndex(
+		final TemporalConstraints boundsTemporalConstraints = QueryIndexHelper.getTemporalConstraintsForDescriptors(
 				timeDescriptors,
 				timeBoundsSet);
-		final Constraints boundsTimeConstraints = boundsTemporalConstraints == null ? indexTimeConstraints : SpatialTemporalQuery.createConstraints(
+
+		if (boundsTemporalConstraints.isEmpty()) return new Constraints();
+
+		final Constraints indexTimeConstraints = new Constraints(
+				QueryIndexHelper.getTimeConstraintsFromIndex(
+						timeDescriptors,
+						statsMap));
+
+		final Constraints boundsTimeConstraints = SpatialTemporalQuery.createConstraints(
 				boundsTemporalConstraints,
 				false);
 		return (boundsTimeConstraints.matches(indexTimeConstraints)) ? new Constraints() : boundsTimeConstraints;
 	}
 
 	/**
-	 * * Compose a time constraints. When the provided constraints do not
-	 * fulfill the indexed dimensions, compose constraints from statistics.
+	 * If composed constraints matched statistics constraints, are empty or
+	 * null, then return empty constraint set
 	 * 
 	 * 
 	 * @param featureType
@@ -307,14 +314,18 @@ public class QueryIndexHelper
 			final SimpleFeatureType featureType,
 			final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap,
 			final Geometry jtsBounds ) {
-		return jtsBounds != null ? GeometryUtils.basicConstraintsFromGeometry(jtsBounds) : getBBOXIndexConstraints(
-				featureType,
-				statsMap);
+		if (jtsBounds == null) return new Constraints();
+		final Constraints geoConstraints = GeometryUtils.basicConstraintsFromGeometry(jtsBounds);
+		final Constraints statsConstraints = new Constraints(
+				getBBOXIndexConstraintsFromIndex(
+						featureType,
+						statsMap));
+		return (geoConstraints.matches(statsConstraints)) ? new Constraints() : geoConstraints;
 	}
 
 	/**
 	 * Compose a query from the set of constraints. When the provided
-	 * constraints do not fulfill the indexed dimensions, compose consraints
+	 * constraints do not fulfill the indexed dimensions, compose constraints
 	 * from statistics.
 	 * 
 	 * @param featureType

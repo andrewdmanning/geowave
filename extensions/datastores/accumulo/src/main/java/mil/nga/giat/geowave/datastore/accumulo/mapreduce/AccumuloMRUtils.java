@@ -259,7 +259,7 @@ public class AccumuloMRUtils
 			final NumericIndexStrategy indexStrategy = index.getIndexStrategy();
 			final TreeSet<Range> ranges;
 			if (query != null) {
-				final MultiDimensionalNumericData indexConstraints = query.getIndexConstraints(indexStrategy);
+				final List<MultiDimensionalNumericData> indexConstraints = query.getIndexConstraints(indexStrategy);
 				if ((maxSplits != null) && (maxSplits > 0)) {
 					ranges = AccumuloUtils.byteArrayRangesToAccumuloRanges(DataStoreUtils.constraintsToByteArrayRanges(
 							indexConstraints,
@@ -269,7 +269,8 @@ public class AccumuloMRUtils
 				else {
 					ranges = AccumuloUtils.byteArrayRangesToAccumuloRanges(DataStoreUtils.constraintsToByteArrayRanges(
 							indexConstraints,
-							indexStrategy));
+							indexStrategy,
+							-1));
 				}
 				if (ranges.size() == 1) {
 					Range range = ranges.first();

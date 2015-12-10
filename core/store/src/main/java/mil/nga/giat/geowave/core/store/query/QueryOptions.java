@@ -31,6 +31,10 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
  * adapters and indices to a QueryOptions. This maximizes the reuse of the code
  * making the query.
  * 
+ * If no index is provided, all indices are checked. The data store is expected
+ * to use statistics to determine which the indices that index data for the any
+ * given adapter.
+ * 
  * If queries are made across multiple indices, the default is to de-duplicate.
  * 
  * Container object that encapsulates additional options to be applied to a
@@ -97,6 +101,11 @@ public class QueryOptions implements
 	public QueryOptions(
 			final PrimaryIndex index ) {
 		setIndex(index);
+	}
+
+	public QueryOptions(
+			final DataAdapter<?> adapter ) {
+		setAdapter(adapter);
 	}
 
 	public QueryOptions(

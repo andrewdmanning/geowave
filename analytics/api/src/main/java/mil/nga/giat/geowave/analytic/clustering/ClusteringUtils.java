@@ -22,6 +22,7 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 
 import org.geotools.feature.type.BasicFeatureTypes;
 import org.slf4j.Logger;
@@ -108,9 +109,11 @@ public class ClusteringUtils
 			final Polygon polygon ) {
 
 		final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
-		final List<ByteArrayRange> ranges = index.getIndexStrategy().getQueryRanges(
+		final List<ByteArrayRange> ranges = DataStoreUtils.constraintsToByteArrayRanges(
 				new SpatialQuery(
-						polygon).getIndexConstraints(index.getIndexStrategy()));
+						polygon).getIndexConstraints(index.getIndexStrategy()),
+				index.getIndexStrategy(),
+				-1);
 
 		return ranges;
 	}

@@ -58,9 +58,9 @@ public class DataIdQuery implements
 	}
 
 	@Override
-	public MultiDimensionalNumericData getIndexConstraints(
-			NumericIndexStrategy indexStrategy ) {
-		return null;
+	public List<MultiDimensionalNumericData> getIndexConstraints(
+			final NumericIndexStrategy indexStrategy ) {
+		return Collections.emptyList();
 	}
 
 }

@@ -15,9 +15,14 @@ public class FilterList<T extends QueryFilter> implements
 		QueryFilter
 {
 	protected List<T> filters;
-	protected boolean allMatch = true;
+	protected boolean logicalAnd = true;
 
 	protected FilterList() {}
+
+	protected FilterList(
+			boolean logicalAnd ) {
+		this.logicalAnd = logicalAnd;
+	}
 
 	public FilterList(
 			final List<T> filters ) {
@@ -25,29 +30,25 @@ public class FilterList<T extends QueryFilter> implements
 	}
 
 	public FilterList(
-			List<T> filters,
-			boolean allMatch ) {
-		super();
+			boolean logicalAnd,
+			final List<T> filters ) {
+		this.logicalAnd = logicalAnd;
 		this.filters = filters;
-		this.allMatch = allMatch;
 	}
 
 	@Override
 	public boolean accept(
 			final CommonIndexModel indexModel,
 			final IndexedPersistenceEncoding<?> entry ) {
-		if (filters.size() == 0) return true;
-		boolean matches = false;
 		for (final QueryFilter filter : filters) {
-			if (!filter.accept(
+			final boolean ok = filter.accept(
 					indexModel,
-					entry)) {
-				if (allMatch) return false;
-			}
-			else
-				matches = true;
+					entry);
+			if (!ok && logicalAnd) return false;
+			if (ok && !logicalAnd) return true;
+
 		}
-		return matches;
+		return logicalAnd;
 	}
 
 }

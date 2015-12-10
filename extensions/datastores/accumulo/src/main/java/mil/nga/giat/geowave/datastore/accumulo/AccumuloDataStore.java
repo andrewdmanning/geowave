@@ -32,6 +32,7 @@ import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.memory.MemoryAdapterStore;
 import mil.nga.giat.geowave.core.store.query.AdapterIdQuery;
 import mil.nga.giat.geowave.core.store.query.DataIdQuery;
@@ -284,20 +285,34 @@ public class AccumuloDataStore implements
 
 					AccumuloConstraintsQuery accumuloQuery;
 					try {
-						accumuloQuery = new AccumuloConstraintsQuery(
-								queryOptions.getAdapterIds(adapterStore),
-								index,
-								sanitizedQuery,
-								filter,
-								queryOptions.getScanCallback(),
-								queryOptions.getFieldIds(),
-								queryOptions.getAuthorizations());
+						List<ByteArrayId> adapterIds = queryOptions.getAdapterIds(adapterStore);
+						// only narrow adapter Ids if the set of adapter id's is
+						// resolved
+						try (CloseableIterator<DataAdapter<?>> adapters = queryOptions.getAdapters(getAdapterStore())) {
+							adapterIds = (adapterIds != null && accumuloOptions.persistDataStatistics && adapterIds.size() > 0) ? DataStoreUtils.trimAdapterIdsByIndex(
+									statisticsStore,
+									index.getId(),
+									adapters,
+									queryOptions.getAuthorizations()) : adapterIds;
+						}
+						// the null case should not happen, but the findbugs
+						// seems to like it.
+						if (adapterIds == null || adapterIds.size() > 0) {
+							accumuloQuery = new AccumuloConstraintsQuery(
+									adapterIds,
+									index,
+									sanitizedQuery,
+									filter,
+									queryOptions.getScanCallback(),
+									queryOptions.getFieldIds(),
+									queryOptions.getAuthorizations());
 
-						results.add(accumuloQuery.query(
-								accumuloOperations,
-								tempAdapterStore,
-								queryOptions.getLimit(),
-								true));
+							results.add(accumuloQuery.query(
+									accumuloOperations,
+									tempAdapterStore,
+									queryOptions.getLimit(),
+									true));
+						}
 					}
 					catch (final IOException e) {
 						LOGGER.error("Cannot resolve adapter Ids " + queryOptions.toString());

@@ -98,9 +98,6 @@ public class AccumuloUtils
 		"rawtypes",
 		"unchecked"
 	})
-	private static final UniformVisibilityWriter DEFAULT_VISIBILITY = new UniformVisibilityWriter(
-			new UnconstrainedVisibilityHandler());
-
 	public static Range byteArrayRangeToAccumuloRange(
 			final ByteArrayRange byteArrayRange ) {
 		final Text start = new Text(

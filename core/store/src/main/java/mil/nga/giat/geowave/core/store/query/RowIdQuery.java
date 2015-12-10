@@ -48,9 +48,9 @@ public class RowIdQuery implements
 	}
 
 	@Override
-	public MultiDimensionalNumericData getIndexConstraints(
+	public List<MultiDimensionalNumericData> getIndexConstraints(
 			final NumericIndexStrategy indexStrategy ) {
-		return null;
+		return Collections.emptyList();
 	}
 
 }

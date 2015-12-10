@@ -121,6 +121,7 @@ public class GeoWaveIngestGeoserverIT extends
 				null,
 				null,
 				null,
+				null,
 				WORKSPACE));
 		Assert.assertTrue(geoserverServiceClient.publishLayer(
 				TEST_NAMESPACE,

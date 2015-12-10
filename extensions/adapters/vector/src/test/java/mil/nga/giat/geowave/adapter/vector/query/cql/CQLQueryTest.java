@@ -3,6 +3,7 @@ package mil.nga.giat.geowave.adapter.vector.query.cql;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.List;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
@@ -42,14 +43,16 @@ public class CQLQueryTest
 				adapter);
 		final MultiDimensionalNumericData constraints = query.getIndexConstraints(SPATIAL_TEMPORAL_INDEX_STRATEGY);
 		assertTrue(Arrays.equals(
-				constraints.getMinValuesPerDimension(),
+				constraints.get(
+						0).getMinValuesPerDimension(),
 				new double[] {
 					27.2,
 					41.2,
 					1.116534776E12
 				}));
 		assertTrue(Arrays.equals(
-				constraints.getMaxValuesPerDimension(),
+				constraints.get(
+						0).getMaxValuesPerDimension(),
 				new double[] {
 					27.3,
 					41.3,
@@ -65,13 +68,15 @@ public class CQLQueryTest
 				adapter);
 		final MultiDimensionalNumericData constraints = query.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
 		assertTrue(Arrays.equals(
-				constraints.getMinValuesPerDimension(),
+				constraints.get(
+						0).getMinValuesPerDimension(),
 				new double[] {
 					27.2,
 					41.2
 				}));
 		assertTrue(Arrays.equals(
-				constraints.getMaxValuesPerDimension(),
+				constraints.get(
+						0).getMaxValuesPerDimension(),
 				new double[] {
 					27.3,
 					41.3
@@ -86,13 +91,15 @@ public class CQLQueryTest
 				adapter);
 		final MultiDimensionalNumericData constraints = query.getIndexConstraints(SPATIAL_INDEX_STRATEGY);
 		assertTrue(Arrays.equals(
-				constraints.getMinValuesPerDimension(),
+				constraints.get(
+						0).getMinValuesPerDimension(),
 				new double[] {
 					27.2,
 					41.2
 				}));
 		assertTrue(Arrays.equals(
-				constraints.getMaxValuesPerDimension(),
+				constraints.get(
+						0).getMaxValuesPerDimension(),
 				new double[] {
 					27.3,
 					41.3

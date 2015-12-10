@@ -126,6 +126,7 @@ public class GeoserverServiceClient
 				null,
 				null,
 				null,
+				null,
 				null);
 	}
 
@@ -136,6 +137,7 @@ public class GeoserverServiceClient
 			final String lockMgmt,
 			final String authMgmtProvider,
 			final String authDataUrl,
+			final String queryIndexStrategy,
 			final String workspace ) {
 		final FormDataMultiPart multiPart = new FormDataMultiPart();
 
@@ -150,6 +152,12 @@ public class GeoserverServiceClient
 			multiPart.field(
 					"lockMgmt",
 					lockMgmt);
+		}
+
+		if (queryIndexStrategy != null) {
+			multiPart.field(
+					"queryIndexStrategy",
+					queryIndexStrategy);
 		}
 
 		if (authMgmtProvider != null) {

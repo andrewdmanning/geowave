@@ -16,7 +16,7 @@ import mil.nga.giat.geowave.core.geotime.store.filter.SpatialQueryFilter.Compare
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
-import mil.nga.giat.geowave.core.store.filter.QueryFilter;
+import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.index.FilterableConstraints;
 import mil.nga.giat.geowave.core.store.query.BasicQuery;
 
@@ -112,7 +112,7 @@ public class SpatialQuery extends
 	}
 
 	@Override
-	protected QueryFilter createQueryFilter(
+	protected DistributableQueryFilter createQueryFilter(
 			final MultiDimensionalNumericData constraints,
 			final NumericDimensionField<?>[] dimensionFields ) {
 		return new SpatialQueryFilter(
