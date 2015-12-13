@@ -1,8 +1,11 @@
 package mil.nga.giat.geowave.datastore.accumulo.query;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+
+import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.client.ScannerBase;
+import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -17,10 +20,6 @@ import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.query.Query;
-
-import org.apache.accumulo.core.client.IteratorSetting;
-import org.apache.accumulo.core.client.ScannerBase;
-import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 
 /**
  * This class represents basic numeric contraints applied to an Accumulo Query
@@ -40,7 +39,6 @@ public class AccumuloConstraintsQuery extends
 			final Query query,
 			final DedupeFilter clientDedupeFilter,
 			final ScanCallback<?> scanCallback,
-			final Collection<String> fieldIds,
 			final String[] authorizations ) {
 		this(
 				adapterIds,
@@ -49,7 +47,6 @@ public class AccumuloConstraintsQuery extends
 				query != null ? query.createFilters(index.getIndexModel()) : null,
 				clientDedupeFilter,
 				scanCallback,
-				fieldIds,
 				authorizations);
 		if (query != null && !query.isSupported(index)) {
 			throw new IllegalArgumentException(
@@ -81,7 +78,6 @@ public class AccumuloConstraintsQuery extends
 				queryFilters,
 				(DedupeFilter) null,
 				(ScanCallback<?>) null,
-				(Collection<String>) null,
 				new String[0]);
 
 	}
@@ -99,7 +95,6 @@ public class AccumuloConstraintsQuery extends
 				queryFilters,
 				(DedupeFilter) null,
 				(ScanCallback<?>) null,
-				(Collection<String>) null,
 				authorizations);
 
 	}
@@ -111,13 +106,11 @@ public class AccumuloConstraintsQuery extends
 			final List<QueryFilter> queryFilters,
 			final DedupeFilter clientDedupeFilter,
 			final ScanCallback<?> scanCallback,
-			final Collection<String> fieldIds,
 			final String[] authorizations ) {
 		super(
 				adapterIds,
 				index,
 				scanCallback,
-				fieldIds,
 				authorizations);
 		this.constraints = constraints;
 		final SplitFilterLists lists = splitList(queryFilters);

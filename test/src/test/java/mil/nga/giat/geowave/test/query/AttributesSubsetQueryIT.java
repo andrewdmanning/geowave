@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.util.FeatureTranslatingIterator;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
@@ -111,7 +112,6 @@ public class AttributesSubsetQueryIT extends
 
 		final CloseableIterator<SimpleFeature> results = dataStore.query(
 				new QueryOptions(
-						attributesSubset,
 						dataAdapter,
 						DEFAULT_SPATIAL_INDEX,
 						-1,
@@ -141,7 +141,6 @@ public class AttributesSubsetQueryIT extends
 
 		final CloseableIterator<SimpleFeature> results = dataStore.query(
 				new QueryOptions(
-						attributesSubset,
 						dataAdapter,
 						DEFAULT_SPATIAL_INDEX,
 						-1,
@@ -170,19 +169,21 @@ public class AttributesSubsetQueryIT extends
 		int numResults = 0;
 		SimpleFeature currentFeature;
 		Object currentAttributeValue;
+		final CloseableIterator<SimpleFeature> translatedResults = new FeatureTranslatingIterator(
+				simpleFeatureType,
+				attributesExpected,
+				results);
 
-		while (results.hasNext()) {
+		while (translatedResults.hasNext()) {
 
-			currentFeature = results.next();
+			currentFeature = translatedResults.next();
 			numResults++;
 
-			for (String currentAttribute : ALL_ATTRIBUTES) {
+			for (final String currentAttribute : ALL_ATTRIBUTES) {
 
 				currentAttributeValue = currentFeature.getAttribute(currentAttribute);
 
-				if (attributesExpected.contains(currentAttribute) || currentAttribute.equals(GEOMETRY_ATTRIBUTE)) {
-					// geometry will always be included since indexed by spatial
-					// dimensionality
+				if (attributesExpected.contains(currentAttribute)) {
 					Assert.assertNotNull(
 							"Expected non-null " + currentAttribute + " value!",
 							currentAttributeValue);
@@ -195,7 +196,7 @@ public class AttributesSubsetQueryIT extends
 			}
 		}
 
-		results.close();
+		translatedResults.close();
 
 		Assert.assertEquals(
 				"Unexpected number of query results",
@@ -212,7 +213,7 @@ public class AttributesSubsetQueryIT extends
 					"testCityData",
 					CITY_ATTRIBUTE + ":String," + STATE_ATTRIBUTE + ":String," + POPULATION_ATTRIBUTE + ":Double," + LAND_AREA_ATTRIBUTE + ":Double," + GEOMETRY_ATTRIBUTE + ":Geometry");
 		}
-		catch (SchemaException e) {
+		catch (final SchemaException e) {
 			LOGGER.error(
 					"Unable to create SimpleFeatureType",
 					e);
@@ -229,7 +230,7 @@ public class AttributesSubsetQueryIT extends
 		try (IndexWriter writer = dataStore.createIndexWriter(
 				DEFAULT_SPATIAL_INDEX,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
-			for (SimpleFeature sf : buildCityDataSet()) {
+			for (final SimpleFeature sf : buildCityDataSet()) {
 				writer.write(
 						dataAdapter,
 						sf);
@@ -329,11 +330,11 @@ public class AttributesSubsetQueryIT extends
 	}
 
 	private static SimpleFeature buildSimpleFeature(
-			String city,
-			String state,
-			double population,
-			double landArea,
-			Coordinate coordinate ) {
+			final String city,
+			final String state,
+			final double population,
+			final double landArea,
+			final Coordinate coordinate ) {
 
 		final SimpleFeatureBuilder builder = new SimpleFeatureBuilder(
 				simpleFeatureType);

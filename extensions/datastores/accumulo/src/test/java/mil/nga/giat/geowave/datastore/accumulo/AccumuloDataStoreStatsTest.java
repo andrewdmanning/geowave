@@ -7,9 +7,22 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.mock.MockInstance;
+import org.apache.accumulo.core.client.security.tokens.PasswordToken;
+import org.apache.log4j.Logger;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
 
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
@@ -48,20 +61,6 @@ import mil.nga.giat.geowave.datastore.accumulo.index.secondary.AccumuloSecondary
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloAdapterStore;
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloIndexStore;
-
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.mock.MockInstance;
-import org.apache.accumulo.core.client.security.tokens.PasswordToken;
-import org.apache.log4j.Logger;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
 
 public class AccumuloDataStoreStatsTest
 {
@@ -240,7 +239,6 @@ public class AccumuloDataStoreStatsTest
 
 		try (CloseableIterator<?> it1 = mockDataStore.query(
 				new QueryOptions(
-						Collections.<String> emptyList(),
 						adapter,
 						index,
 						-1,
@@ -308,7 +306,6 @@ public class AccumuloDataStoreStatsTest
 				false);
 		mockDataStore.delete(
 				new QueryOptions(
-						Collections.<String> emptyList(),
 						adapter,
 						index,
 						-1,
@@ -332,7 +329,6 @@ public class AccumuloDataStoreStatsTest
 
 		try (CloseableIterator<?> it1 = mockDataStore.query(
 				new QueryOptions(
-						Collections.<String> emptyList(),
 						adapter,
 						index,
 						-1,
@@ -354,7 +350,6 @@ public class AccumuloDataStoreStatsTest
 
 		mockDataStore.delete(
 				new QueryOptions(
-						Collections.<String> emptyList(),
 						adapter,
 						index,
 						-1,
@@ -369,7 +364,6 @@ public class AccumuloDataStoreStatsTest
 
 		try (CloseableIterator<?> it1 = mockDataStore.query(
 				new QueryOptions(
-						Collections.<String> emptyList(),
 						adapter,
 						index,
 						-1,
@@ -428,7 +422,6 @@ public class AccumuloDataStoreStatsTest
 
 		assertTrue(mockDataStore.delete(
 				new QueryOptions(
-						Collections.<String> emptyList(),
 						adapter,
 						index,
 						-1,
@@ -449,7 +442,6 @@ public class AccumuloDataStoreStatsTest
 
 		try (CloseableIterator<?> it1 = mockDataStore.query(
 				new QueryOptions(
-						Collections.<String> emptyList(),
 						adapter,
 						index,
 						-1,

@@ -5,7 +5,6 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,7 +52,6 @@ public class QueryOptions implements
 	 * 
 	 */
 	private static final long serialVersionUID = 544085046847603372L;
-	private Collection<String> fieldIds = Collections.emptyList();
 
 	private static ScanCallback<Object> DEFAULT_CALLBACK = new ScanCallback<Object>() {
 		@Override
@@ -78,16 +76,6 @@ public class QueryOptions implements
 	private transient ScanCallback<?> scanCallback = DEFAULT_CALLBACK;
 	private String[] authorizations = new String[0];
 	private Boolean dedupAcrossIndices = null;
-
-	/**
-	 * @param fieldIds
-	 *            the desired subset of fieldIds to be included in query results
-	 */
-	public QueryOptions(
-			final Collection<String> fieldIds ) {
-		super();
-		this.fieldIds = fieldIds;
-	}
 
 	public QueryOptions(
 			final ByteArrayId adapterId,
@@ -133,7 +121,6 @@ public class QueryOptions implements
 
 	public QueryOptions(
 			final QueryOptions options ) {
-		fieldIds = options.fieldIds;
 		indexIds = options.indexIds;
 		adapterIds = options.adapterIds;
 		adapters = options.adapters;
@@ -146,8 +133,6 @@ public class QueryOptions implements
 
 	/**
 	 * 
-	 * @param fieldIds
-	 *            specific fields to return for the underlying data entries
 	 * @param adapter
 	 * @param index
 	 * @param limit
@@ -157,14 +142,12 @@ public class QueryOptions implements
 	 * @param authorizations
 	 */
 	public QueryOptions(
-			final Collection<String> fieldIds,
 			final DataAdapter<?> adapter,
 			final PrimaryIndex index,
 			final Integer limit,
 			final ScanCallback<?> scanCallback,
 			final String[] authorizations ) {
 		super();
-		this.fieldIds = fieldIds;
 		setAdapter(adapter);
 		setIndex(index);
 		setLimit(limit);
@@ -176,36 +159,6 @@ public class QueryOptions implements
 
 	public boolean isDedupAcrossIndices() {
 		return dedupAcrossIndices == null ? (this.indexIds == null || this.indexIds.size() > 0) : dedupAcrossIndices;
-	}
-
-	/**
-	 * @param fieldIds
-	 *            comma-separated list of field IDS
-	 */
-	public QueryOptions(
-			final String fieldIds ) {
-		super();
-		final String[] ids = fieldIds.split(",");
-		this.fieldIds = Arrays.asList(ids);
-	}
-
-	/**
-	 * @return the fieldIds or an empty List, will never return null
-	 */
-	public Collection<String> getFieldIds() {
-		if (fieldIds == null) {
-			fieldIds = Collections.emptyList();
-		}
-		return fieldIds;
-	}
-
-	/**
-	 * @param fieldIds
-	 *            the desired subset of fieldIds to be included in query results
-	 */
-	public void setFieldIds(
-			final Collection<String> fieldIds ) {
-		this.fieldIds = fieldIds;
 	}
 
 	public void setAdapterIds(
@@ -390,9 +343,6 @@ public class QueryOptions implements
 	@Override
 	public byte[] toBinary() {
 
-		final String[] fieldIdArray = fieldIds.toArray(new String[fieldIds.size()]);
-
-		final byte[] fieldBytes = StringUtils.stringsToBinary(fieldIdArray);
 		final byte[] authBytes = StringUtils.stringsToBinary(getAuthorizations());
 		int iSize = 4;
 		if (indexIds != null && !indexIds.isEmpty()) {
@@ -408,11 +358,9 @@ public class QueryOptions implements
 			}
 		}
 
-		final ByteBuffer buf = ByteBuffer.allocate(20 + fieldBytes.length + authBytes.length + aSize + iSize);
+		final ByteBuffer buf = ByteBuffer.allocate(16 + authBytes.length + aSize + iSize);
 
 		buf.putInt(dedupAcrossIndices == null ? -1 : (dedupAcrossIndices ? 1 : 0));
-		buf.putInt(fieldBytes.length);
-		buf.put(fieldBytes);
 		buf.putInt(authBytes.length);
 		buf.put(authBytes);
 
@@ -448,12 +396,9 @@ public class QueryOptions implements
 		if (dedupCode >= 0) {
 			dedupAcrossIndices = dedupCode > 0 ? Boolean.TRUE : Boolean.FALSE;
 		}
-		final byte[] fieldBytes = new byte[buf.getInt()];
-		buf.get(fieldBytes);
 		final byte[] authBytes = new byte[buf.getInt()];
 		buf.get(authBytes);
 
-		fieldIds = Arrays.asList(StringUtils.stringsFromBinary(fieldBytes));
 		authorizations = StringUtils.stringsFromBinary(authBytes);
 
 		int count = buf.getInt();
@@ -482,6 +427,6 @@ public class QueryOptions implements
 
 	@Override
 	public String toString() {
-		return "QueryOptions [fieldIds=" + fieldIds + ", adapterId=" + adapterIds + ", indexIds=" + indexIds + ", limit=" + limit + ", authorizations=" + Arrays.toString(authorizations) + "]";
+		return "QueryOptions [adapterId=" + adapterIds + ", indexIds=" + indexIds + ", limit=" + limit + ", authorizations=" + Arrays.toString(authorizations) + "]";
 	}
 }

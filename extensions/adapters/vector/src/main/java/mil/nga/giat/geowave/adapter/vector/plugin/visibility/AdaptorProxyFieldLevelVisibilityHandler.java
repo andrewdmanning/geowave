@@ -16,9 +16,9 @@ import org.opengis.feature.simple.SimpleFeature;
  * {@link FeatureDataAdapter} occurs prior to the resolution of the
  * {@link VisibilityManagement}. Referencing the {@link FeatureDataAdapter}
  * removes the initialization order constraint.
- *
- *
- *
+ * 
+ * 
+ * 
  * @param <CommonIndexValue>
  */
 public class AdaptorProxyFieldLevelVisibilityHandler implements
@@ -31,7 +31,7 @@ public class AdaptorProxyFieldLevelVisibilityHandler implements
 
 	/**
 	 * Used when acting with an Index adaptor as a visibility handler. This
-	 *
+	 * 
 	 * @param fieldVisiblityHandler
 	 * @param visibilityAttribute
 	 * @param visibilityManagement

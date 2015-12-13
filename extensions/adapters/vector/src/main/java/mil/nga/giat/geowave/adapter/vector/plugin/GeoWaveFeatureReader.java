@@ -8,7 +8,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -57,7 +56,7 @@ import com.vividsolutions.jts.geom.Geometry;
  * This class wraps a geotools data store as well as one for statistics (for
  * example to display Heatmaps) into a GeoTools FeatureReader for simple feature
  * data. It acts as a helper for GeoWave's GeoTools data store.
- *
+ * 
  */
 public class GeoWaveFeatureReader implements
 		FeatureReader<SimpleFeatureType, SimpleFeature>
@@ -250,7 +249,6 @@ public class GeoWaveFeatureReader implements
 				final mil.nga.giat.geowave.core.store.query.Query query ) {
 			return components.getDataStore().query(
 					new QueryOptions(
-							Collections.EMPTY_LIST,
 							components.getAdapter(),
 							index,
 							limit,
@@ -378,7 +376,6 @@ public class GeoWaveFeatureReader implements
 				final mil.nga.giat.geowave.core.store.query.Query query ) {
 			return components.getDataStore().query(
 					new QueryOptions(
-							Collections.EMPTY_LIST,
 							components.getAdapter(),
 							index,
 							limit,
@@ -454,7 +451,6 @@ public class GeoWaveFeatureReader implements
 
 			return components.getDataStore().query(
 					new QueryOptions(
-							Collections.EMPTY_LIST,
 							components.getAdapter(),
 							components.getCurrentIndex(),
 							limit,
