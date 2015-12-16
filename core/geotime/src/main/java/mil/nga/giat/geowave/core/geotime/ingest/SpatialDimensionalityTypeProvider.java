@@ -1,5 +1,7 @@
 package mil.nga.giat.geowave.core.geotime.ingest;
 
+import com.beust.jcommander.Parameter;
+
 import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
@@ -15,8 +17,6 @@ import mil.nga.giat.geowave.core.store.index.BasicIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-
-import com.beust.jcommander.Parameter;
 
 public class SpatialDimensionalityTypeProvider implements
 		IngestDimensionalityTypeProviderSpi
@@ -60,6 +60,8 @@ public class SpatialDimensionalityTypeProvider implements
 	// just use the same range for latitude to make square sfc values in
 	// decimal degrees (EPSG:4326)
 	};
+
+	public SpatialDimensionalityTypeProvider() {}
 
 	@Override
 	public String getDimensionalityTypeName() {

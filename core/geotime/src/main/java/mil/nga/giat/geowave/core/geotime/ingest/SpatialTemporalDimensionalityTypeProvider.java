@@ -1,5 +1,11 @@
 package mil.nga.giat.geowave.core.geotime.ingest;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.beust.jcommander.IStringConverter;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
+
 import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TemporalBinningStrategy.Unit;
@@ -20,18 +26,14 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.beust.jcommander.IStringConverter;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterException;
-
 public class SpatialTemporalDimensionalityTypeProvider implements
 		IngestDimensionalityTypeProviderSpi
 {
 	private final SpatialTemporalOptions options = new SpatialTemporalOptions();
 	private static final ByteArrayId DEFAULT_SPATIAL_TEMPORAL_ID = new ByteArrayId(
 			"SPATIAL_TEMPORAL_IDX");
+
+	public SpatialTemporalDimensionalityTypeProvider() {}
 
 	@Override
 	public String getDimensionalityTypeName() {
@@ -183,7 +185,7 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 		}
 	}
 
-	protected static class BiasConverter implements
+	public static class BiasConverter implements
 			IStringConverter<Bias>
 	{
 		@Override
@@ -202,7 +204,7 @@ public class SpatialTemporalDimensionalityTypeProvider implements
 
 	}
 
-	protected static class UnitConverter implements
+	public static class UnitConverter implements
 			IStringConverter<Unit>
 	{
 

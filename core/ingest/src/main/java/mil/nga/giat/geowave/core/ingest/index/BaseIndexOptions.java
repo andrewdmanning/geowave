@@ -54,7 +54,7 @@ public class BaseIndexOptions
 		}
 	}
 
-	protected static class PartitionStrategyConverter implements
+	public static class PartitionStrategyConverter implements
 			IStringConverter<PartitionStrategy>
 	{
 		@Override

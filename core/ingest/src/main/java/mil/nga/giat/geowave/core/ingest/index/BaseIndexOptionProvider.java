@@ -12,6 +12,10 @@ public class BaseIndexOptionProvider implements
 {
 	private final BaseIndexOptions options = new BaseIndexOptions();
 
+	public BaseIndexOptionProvider() {
+		super();
+	}
+
 	@Override
 	public Object getOptions() {
 		return options;
