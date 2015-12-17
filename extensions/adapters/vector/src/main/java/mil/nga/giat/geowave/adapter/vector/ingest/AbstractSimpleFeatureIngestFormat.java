@@ -47,7 +47,7 @@ abstract public class AbstractSimpleFeatureIngestFormat<I> implements
 				new IngestFormatOptionProvider[] {
 					// TODO: because other formats are not yet implemented,
 					// don't expose the options to the user
-					// serializationFormatOptionProvider,
+					serializationFormatOptionProvider,
 					cqlFilterOptionProvider
 				});
 	}

@@ -43,6 +43,9 @@ public class DataStatisticsBuilder<T> implements
 		DataStatistics<T> statistics = statisticsMap.get(visibility);
 		if (statistics == null) {
 			statistics = adapter.createDataStatistics(statisticsId);
+			if (statistics == null) {
+				return;
+			}
 			statistics.setVisibility(visibility.getBytes());
 			statisticsMap.put(
 					visibility,
@@ -92,6 +95,9 @@ public class DataStatisticsBuilder<T> implements
 		DataStatistics<T> statistics = statisticsMap.get(visibility);
 		if (statistics == null) {
 			statistics = adapter.createDataStatistics(statisticsId);
+			if (statistics == null) {
+				return;
+			}
 			statistics.setVisibility(visibility.getBytes());
 			statisticsMap.put(
 					visibility,
