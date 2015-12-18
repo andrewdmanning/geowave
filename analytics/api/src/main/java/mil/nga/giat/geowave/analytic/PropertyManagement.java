@@ -95,7 +95,7 @@ public class PropertyManagement implements
 		for (final PropertyConverter<?> converter : converters) {
 			addConverter(converter);
 		}
-		store(
+		storeAll(
 				names,
 				values);
 	}
@@ -108,7 +108,7 @@ public class PropertyManagement implements
 		converters.add(new PathConverter());
 		converters.add(new PersistableConverter());
 		converters.add(new DoubleConverter());
-		store(
+		storeAll(
 				names,
 				values);
 	}
@@ -201,7 +201,7 @@ public class PropertyManagement implements
 		}
 	}
 
-	public synchronized void store(
+	public synchronized void storeAll(
 			final ParameterEnum<?>[] names,
 			final Object[] values ) {
 		if (values.length != names.length) {

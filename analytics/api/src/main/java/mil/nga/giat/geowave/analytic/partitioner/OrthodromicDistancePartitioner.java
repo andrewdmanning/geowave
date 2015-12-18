@@ -55,13 +55,21 @@ import com.vividsolutions.jts.geom.Geometry;
  */
 public class OrthodromicDistancePartitioner<T> extends
 		AbstractPartitioner<T> implements
-		Partitioner<T>
+		Partitioner<T>,
+		java.io.Serializable
 {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	final static Logger LOGGER = LoggerFactory.getLogger(OrthodromicDistancePartitioner.class);
 
 	private Unit<Length> geometricDistanceUnit = SI.METER;
-	private CoordinateReferenceSystem crs = null;
-	private GeometryCalculations calculator;
+	private String crsName;
+	private transient CoordinateReferenceSystem crs = null;
+	private transient GeometryCalculations calculator;
 	private DimensionExtractor<T> dimensionExtractor;
 	private int latDimensionPosition;
 	private int longDimensionPosition;
@@ -77,9 +85,9 @@ public class OrthodromicDistancePartitioner<T> extends
 		super(
 				distancePerDimension);
 		this.crs = crs;
+		this.crsName = crs.getIdentifiers().iterator().next().toString();
 		this.geometricDistanceUnit = geometricDistanceUnit;
 		this.dimensionExtractor = dimensionExtractor;
-		initCalculator();
 		initIndex(
 				indexModel,
 				distancePerDimension);
@@ -160,7 +168,7 @@ public class OrthodromicDistancePartitioner<T> extends
 	private List<Geometry> getGeometries(
 			final Coordinate coordinate,
 			final double[] distancePerDimension ) {
-		return calculator.buildSurroundingGeometries(
+		return getCalculator().buildSurroundingGeometries(
 				new double[] {
 					distancePerDimension[longDimensionPosition],
 					distancePerDimension[latDimensionPosition]
@@ -169,25 +177,28 @@ public class OrthodromicDistancePartitioner<T> extends
 				coordinate);
 	}
 
-	private void initCalculator() {
-		// this block would only occur in test or in failed initialization
-		if (crs == null) {
-			try {
-				crs = CRS.decode(
-						"EPSG:4326",
-						true);
+	private GeometryCalculations getCalculator() {
+		if (calculator == null) {
+			// this block would only occur in test or in failed initialization
+			if (crs == null) {
+				try {
+					crs = CRS.decode(
+							crsName,
+							true);
+				}
+				catch (final FactoryException e) {
+					LOGGER.error(
+							"CRS not providd and default EPSG:4326 cannot be instantiated",
+							e);
+					throw new RuntimeException(
+							e);
+				}
 			}
-			catch (final FactoryException e) {
-				LOGGER.error(
-						"CRS not providd and default EPSG:4326 cannot be instantiated",
-						e);
-				throw new RuntimeException(
-						e);
-			}
-		}
 
-		calculator = new GeometryCalculations(
-				crs);
+			calculator = new GeometryCalculations(
+					crs);
+		}
+		return calculator;
 	}
 
 	@Override
@@ -228,11 +239,25 @@ public class OrthodromicDistancePartitioner<T> extends
 			final JobContext context,
 			final Class<?> scope )
 			throws IOException {
-
-		final ScopedJobConfiguration config = new ScopedJobConfiguration(
+		this.initialize(
 				context.getConfiguration(),
 				scope);
-		final String crsName = config.getString(
+	}
+
+	public void initialize(
+			final Configuration configuration,
+			final Class<?> scope )
+			throws IOException {
+		initialize(new ScopedJobConfiguration(
+				configuration,
+				scope));
+	}
+
+	public void initialize(
+			ScopedJobConfiguration config )
+			throws IOException {
+
+		crsName = config.getString(
 				GlobalParameters.Global.CRS_ID,
 				"EPSG:4326");
 		try {
@@ -264,11 +289,7 @@ public class OrthodromicDistancePartitioner<T> extends
 
 		this.geometricDistanceUnit = (Unit<Length>) Unit.valueOf(distanceUnit);
 
-		initCalculator();
-
-		super.initialize(
-				context,
-				scope);
+		super.initialize(config);
 	}
 
 	@Override

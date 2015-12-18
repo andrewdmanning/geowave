@@ -31,7 +31,8 @@ import org.apache.hadoop.mapreduce.JobContext;
  * 
  * @param <T>
  */
-public interface Partitioner<T>
+public interface Partitioner<T> extends
+		Serializable
 {
 
 	public void initialize(

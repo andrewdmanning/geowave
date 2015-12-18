@@ -9,8 +9,8 @@ import mil.nga.giat.geowave.adapter.vector.index.SecondaryIndexManager;
 import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveGTDataStore;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.AdaptorProxyFieldLevelVisibilityHandler;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.JsonDefinitionColumnVisibilityManagement;
-import mil.nga.giat.geowave.adapter.vector.stats.StatsConfigurationCollection.SimpleFeatureStatsConfigurationCollection;
 import mil.nga.giat.geowave.adapter.vector.stats.StatsManager;
+import mil.nga.giat.geowave.adapter.vector.stats.StatsConfigurationCollection.SimpleFeatureStatsConfigurationCollection;
 import mil.nga.giat.geowave.adapter.vector.util.FeatureDataUtils;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
 import mil.nga.giat.geowave.adapter.vector.utils.TimeDescriptors;
@@ -24,8 +24,8 @@ import mil.nga.giat.geowave.core.store.adapter.AbstractDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.IndexFieldHandler;
 import mil.nga.giat.geowave.core.store.adapter.NativeFieldHandler;
-import mil.nga.giat.geowave.core.store.adapter.NativeFieldHandler.RowBuilder;
 import mil.nga.giat.geowave.core.store.adapter.PersistentIndexFieldHandler;
+import mil.nga.giat.geowave.core.store.adapter.NativeFieldHandler.RowBuilder;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticalDataAdapter;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
@@ -94,7 +94,6 @@ import org.opengis.referencing.operation.MathTransform;
  * efficiency of query processing.
  * 
  */
-@SuppressWarnings("unchecked")
 public class FeatureDataAdapter extends
 		AbstractDataAdapter<SimpleFeature> implements
 		StatisticalDataAdapter<SimpleFeature>,
@@ -102,6 +101,7 @@ public class FeatureDataAdapter extends
 		SecondaryIndexDataAdapter<SimpleFeature>
 {
 	private final static Logger LOGGER = Logger.getLogger(FeatureDataAdapter.class);
+
 	// the original coordinate system will always be represented internally by
 	// the persisted type
 	private SimpleFeatureType persistedType;
@@ -175,7 +175,7 @@ public class FeatureDataAdapter extends
 		fieldVisibilityManagement = visibilityManagement;
 	}
 
-	private void setFeatureType(
+	protected void setFeatureType(
 			final SimpleFeatureType type ) {
 		persistedType = type;
 		determineVisibilityAttribute();
@@ -212,7 +212,7 @@ public class FeatureDataAdapter extends
 				statsManager);
 	}
 
-	private static List<NativeFieldHandler<SimpleFeature, Object>> typeToFieldHandlers(
+	protected List<NativeFieldHandler<SimpleFeature, Object>> typeToFieldHandlers(
 			final SimpleFeatureType type ) {
 		final List<NativeFieldHandler<SimpleFeature, Object>> nativeHandlers = new ArrayList<NativeFieldHandler<SimpleFeature, Object>>(
 				type.getAttributeCount());
@@ -231,7 +231,7 @@ public class FeatureDataAdapter extends
 		return fieldVisibilityManagement;
 	}
 
-	private IndexFieldHandler<SimpleFeature, Time, Object> getTimeRangeHandler(
+	protected IndexFieldHandler<SimpleFeature, Time, Object> getTimeRangeHandler(
 			final SimpleFeatureType featureType ) {
 		final TimeDescriptors timeDescriptors = inferTimeAttributeDescriptor(featureType);
 		if ((timeDescriptors.getStartRange() != null) && (timeDescriptors.getEndRange() != null)) {
@@ -382,6 +382,7 @@ public class FeatureDataAdapter extends
 		return buf.array();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	protected Object defaultTypeDataFromBinary(
 			final byte[] bytes ) {
@@ -510,7 +511,6 @@ public class FeatureDataAdapter extends
 	public AdapterPersistenceEncoding encode(
 			final SimpleFeature entry,
 			final CommonIndexModel indexModel ) {
-
 		return super.encode(
 				FeatureDataUtils.defaultCRSTransform(
 						entry,

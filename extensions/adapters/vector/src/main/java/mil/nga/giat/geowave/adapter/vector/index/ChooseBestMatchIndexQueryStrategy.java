@@ -49,7 +49,7 @@ public class ChooseBestMatchIndexQueryStrategy implements
 				nextIdx = null;
 				return returnVal;
 			}
-			
+
 			@Override
 			public void remove() {}
 
