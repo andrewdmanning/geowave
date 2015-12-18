@@ -94,7 +94,7 @@ public class ChooseHeuristicMatchIndexQueryStrategy implements
 			}
 		};
 	}
-	
+
 	private static final double getCostLogic(
 			final NumericIndexStrategy indexStrategy,
 			final CommonIndexModel indexModel,
@@ -106,15 +106,14 @@ public class ChooseHeuristicMatchIndexQueryStrategy implements
 				rangePerDimension);
 		for (int d = 0; d < rangePerDimension.length; d++) {
 			final double range = (data.getMaxValuesPerDimension()[d] - data.getMinValuesPerDimension()[d]);
-			//ratio of bits used to bits required
-			final double temp = log2(Math.ceil(range / rangePerDimension[d]))/bitsPerDimension[d];
+			// ratio of bits used to bits required
+			final double temp = log2(Math.ceil(range / rangePerDimension[d])) / bitsPerDimension[d];
 			result = Math.min(
 					temp,
 					result);
 		}
 		return result * rangePerDimension.length;
 	}
-
 
 	private static final double[] getBitsPerDimension(
 			final CommonIndexModel indexModel,
@@ -126,8 +125,9 @@ public class ChooseHeuristicMatchIndexQueryStrategy implements
 		}
 		return result;
 	}
-	
-	private static double log2(double v) {
-		return Math.log(v)/Math.log(2);
+
+	private static double log2(
+			double v ) {
+		return Math.log(v) / Math.log(2);
 	}
 }

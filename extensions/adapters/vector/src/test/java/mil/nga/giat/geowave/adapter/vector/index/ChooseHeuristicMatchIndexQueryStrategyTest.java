@@ -12,10 +12,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider.SpatialIndexBuilder;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider.SpatialTemporalIndexBuilder;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericData;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericRange;
@@ -37,7 +38,7 @@ public class ChooseHeuristicMatchIndexQueryStrategyTest
 
 	@Test
 	public void testChooseTemporalWithoutStats() {
-		ChooseHeuristicMatchIndexQueryStrategy strategy = new ChooseHeuristicMatchIndexQueryStrategy();
+		final ChooseHeuristicMatchIndexQueryStrategy strategy = new ChooseHeuristicMatchIndexQueryStrategy();
 
 		final ConstraintSet cs1 = new ConstraintSet();
 		cs1.addConstraint(
@@ -71,7 +72,7 @@ public class ChooseHeuristicMatchIndexQueryStrategyTest
 		final BasicQuery query = new BasicQuery(
 				constraints);
 
-		Iterator<Index<?, ?>> it = getIndices(
+		final Iterator<Index<?, ?>> it = getIndices(
 				new HashMap<ByteArrayId, DataStatistics<SimpleFeature>>(),
 				query,
 				strategy);
@@ -85,7 +86,7 @@ public class ChooseHeuristicMatchIndexQueryStrategyTest
 
 	@Test
 	public void testChooseSpatialWithoutStats() {
-		ChooseHeuristicMatchIndexQueryStrategy strategy = new ChooseHeuristicMatchIndexQueryStrategy();
+		final ChooseHeuristicMatchIndexQueryStrategy strategy = new ChooseHeuristicMatchIndexQueryStrategy();
 
 		final ConstraintSet cs1 = new ConstraintSet();
 		cs1.addConstraint(
@@ -119,7 +120,7 @@ public class ChooseHeuristicMatchIndexQueryStrategyTest
 		final BasicQuery query = new BasicQuery(
 				constraints);
 
-		Iterator<Index<?, ?>> it = getIndices(
+		final Iterator<Index<?, ?>> it = getIndices(
 				new HashMap<ByteArrayId, DataStatistics<SimpleFeature>>(),
 				query,
 				strategy);
@@ -147,8 +148,8 @@ public class ChooseHeuristicMatchIndexQueryStrategyTest
 							}
 						},
 						Arrays.asList(
-								IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex(),
-								IndexType.SPATIAL_VECTOR.createDefaultIndex()).iterator()));
+								new SpatialTemporalIndexBuilder().createIndex(),
+								new SpatialIndexBuilder().createIndex()).iterator()));
 	}
 
 	public static class ConstrainedIndexValue extends

@@ -13,10 +13,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LatitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider.SpatialIndexBuilder;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider.SpatialTemporalIndexBuilder;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
@@ -48,26 +49,30 @@ public class ChooseBestMatchIndexQueryStrategyTest
 	@Test
 	public void testChooseTemporalWithStats() {
 
-		final PrimaryIndex temporalindex = IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex();
-		final PrimaryIndex spatialIndex = IndexType.SPATIAL_VECTOR.createDefaultIndex();
-		
-		RowRangeHistogramStatistics<SimpleFeature> rangeTempStats = new RowRangeHistogramStatistics<SimpleFeature>(
+		final PrimaryIndex temporalindex = new SpatialTemporalIndexBuilder().createIndex();
+		final PrimaryIndex spatialIndex = new SpatialIndexBuilder().createIndex();
+
+		final RowRangeHistogramStatistics<SimpleFeature> rangeTempStats = new RowRangeHistogramStatistics<SimpleFeature>(
 				temporalindex.getId(),
 				temporalindex.getId(),
 				new FixedBinNumericHistogramFactory(),
 				1024);
 
-		RowRangeHistogramStatistics<SimpleFeature> rangeStats = new RowRangeHistogramStatistics<SimpleFeature>(
+		final RowRangeHistogramStatistics<SimpleFeature> rangeStats = new RowRangeHistogramStatistics<SimpleFeature>(
 				spatialIndex.getId(),
 				spatialIndex.getId(),
 				new FixedBinNumericHistogramFactory(),
 				1024);
 
 		final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsMap = new HashMap<ByteArrayId, DataStatistics<SimpleFeature>>();
-		statsMap.put(RowRangeHistogramStatistics.composeId(spatialIndex.getId()),rangeStats);
-		statsMap.put(RowRangeHistogramStatistics.composeId(temporalindex.getId()),rangeTempStats);
-		
-		ChooseBestMatchIndexQueryStrategy strategy = new ChooseBestMatchIndexQueryStrategy();
+		statsMap.put(
+				RowRangeHistogramStatistics.composeId(spatialIndex.getId()),
+				rangeStats);
+		statsMap.put(
+				RowRangeHistogramStatistics.composeId(temporalindex.getId()),
+				rangeTempStats);
+
+		final ChooseBestMatchIndexQueryStrategy strategy = new ChooseBestMatchIndexQueryStrategy();
 
 		final ConstraintSet cs1 = new ConstraintSet();
 		cs1.addConstraint(
@@ -101,7 +106,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 		final BasicQuery query = new BasicQuery(
 				constraints);
 
-		final NumericIndexStrategy temporalIndexStrategy = IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex().getIndexStrategy();
+		final NumericIndexStrategy temporalIndexStrategy = new SpatialTemporalIndexBuilder().createIndex().getIndexStrategy();
 		final List<MultiDimensionalNumericData> tempConstraints = query.getIndexConstraints(temporalIndexStrategy);
 
 		final List<ByteArrayRange> temporalRanges = DataStoreUtils.constraintsToByteArrayRanges(
@@ -109,7 +114,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 				temporalIndexStrategy,
 				5000);
 
-		for (ByteArrayRange range : temporalRanges) {
+		for (final ByteArrayRange range : temporalRanges) {
 			rangeTempStats.entryIngested(
 					new DataStoreEntryInfo(
 							new byte[] {
@@ -125,10 +130,10 @@ public class ChooseBestMatchIndexQueryStrategyTest
 							},
 							Arrays.asList(range.getEnd()),
 							Collections.<FieldInfo<?>> emptyList()),
-							null);
+					null);
 		}
 
-		final NumericIndexStrategy indexStrategy = IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex().getIndexStrategy();
+		final NumericIndexStrategy indexStrategy = new SpatialTemporalIndexBuilder().createIndex().getIndexStrategy();
 		final List<MultiDimensionalNumericData> spatialConstraints = query.getIndexConstraints(indexStrategy);
 
 		final List<ByteArrayRange> spatialRanges = DataStoreUtils.constraintsToByteArrayRanges(
@@ -136,7 +141,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 				indexStrategy,
 				5000);
 
-		for (ByteArrayRange range : spatialRanges) {
+		for (final ByteArrayRange range : spatialRanges) {
 			rangeStats.entryIngested(
 					new DataStoreEntryInfo(
 							new byte[] {
@@ -147,8 +152,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 					null);
 		}
 
-	
-		Iterator<Index<?, ?>> it = getIndices(
+		final Iterator<Index<?, ?>> it = getIndices(
 				statsMap,
 				query,
 				strategy);
@@ -162,7 +166,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 
 	@Test
 	public void testChooseTemporalWithoutStats() {
-		ChooseBestMatchIndexQueryStrategy strategy = new ChooseBestMatchIndexQueryStrategy();
+		final ChooseBestMatchIndexQueryStrategy strategy = new ChooseBestMatchIndexQueryStrategy();
 
 		final ConstraintSet cs1 = new ConstraintSet();
 		cs1.addConstraint(
@@ -196,7 +200,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 		final BasicQuery query = new BasicQuery(
 				constraints);
 
-		Iterator<Index<?, ?>> it = getIndices(
+		final Iterator<Index<?, ?>> it = getIndices(
 				new HashMap<ByteArrayId, DataStatistics<SimpleFeature>>(),
 				query,
 				strategy);
@@ -210,7 +214,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 
 	@Test
 	public void testChooseSpatialWithoutStats() {
-		ChooseBestMatchIndexQueryStrategy strategy = new ChooseBestMatchIndexQueryStrategy();
+		final ChooseBestMatchIndexQueryStrategy strategy = new ChooseBestMatchIndexQueryStrategy();
 
 		final ConstraintSet cs1 = new ConstraintSet();
 		cs1.addConstraint(
@@ -235,7 +239,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 		final BasicQuery query = new BasicQuery(
 				constraints);
 
-		Iterator<Index<?, ?>> it = getIndices(
+		final Iterator<Index<?, ?>> it = getIndices(
 				new HashMap<ByteArrayId, DataStatistics<SimpleFeature>>(),
 				query,
 				strategy);
@@ -263,8 +267,8 @@ public class ChooseBestMatchIndexQueryStrategyTest
 							}
 						},
 						Arrays.asList(
-								IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex(),
-								IndexType.SPATIAL_VECTOR.createDefaultIndex()).iterator()));
+								new SpatialTemporalIndexBuilder().createIndex(),
+								new SpatialIndexBuilder().createIndex()).iterator()));
 	}
 
 	public static class ConstrainedIndexValue extends
