@@ -1,7 +1,5 @@
 package mil.nga.giat.geowave.datastore.accumulo.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -602,29 +600,30 @@ public class AccumuloUtils
 			return originalList;
 		}
 		for (final Entry<ByteArrayId, List<FieldInfo<?>>> entry : vizToFieldMap.entrySet()) {
-			try (final ByteArrayOutputStream baos = new ByteArrayOutputStream(); final DataOutputStream output = new DataOutputStream(
-					baos);) {
-				output.writeInt(entry.getValue().size());
-				for (final FieldInfo<?> fieldInfo : entry.getValue()) {
-					final byte[] fieldIdBytes = fieldInfo.getDataValue().getId().getBytes();
-					output.writeInt(fieldIdBytes.length);
-					output.write(fieldIdBytes);
-					output.writeInt(fieldInfo.getWrittenValue().length);
-					output.write(fieldInfo.getWrittenValue());
-				}
-				final FieldInfo<?> composite = new FieldInfo<T>(
-						new PersistentValue<T>(
-								COMPOSITE_CQ,
-								null), // unnecessary
-						baos.toByteArray(),
-						entry.getKey().getBytes());
-				retVal.add(composite);
+			final List<byte[]> fieldInfoBytesList = new ArrayList<>();
+			int totalLength = 0;
+			for (final FieldInfo<?> fieldInfo : entry.getValue()) {
+				final byte[] fieldIdBytes = fieldInfo.getDataValue().getId().getBytes();
+				final ByteBuffer fieldInfoBytes = ByteBuffer.allocate(8 + fieldIdBytes.length + fieldInfo.getWrittenValue().length);
+				fieldInfoBytes.putInt(fieldIdBytes.length);
+				fieldInfoBytes.put(fieldIdBytes);
+				fieldInfoBytes.putInt(fieldInfo.getWrittenValue().length);
+				fieldInfoBytes.put(fieldInfo.getWrittenValue());
+				fieldInfoBytesList.add(fieldInfoBytes.array());
+				totalLength += fieldInfoBytes.array().length;
 			}
-			catch (final IOException e) {
-				LOGGER.error(
-						"Unable to compose flattened fields.",
-						e);
+			final ByteBuffer allFields = ByteBuffer.allocate(4 + totalLength);
+			allFields.putInt(entry.getValue().size());
+			for (final byte[] bytes : fieldInfoBytesList) {
+				allFields.put(bytes);
 			}
+			final FieldInfo<?> composite = new FieldInfo<T>(
+					new PersistentValue<T>(
+							COMPOSITE_CQ,
+							null), // unnecessary
+					allFields.array(),
+					entry.getKey().getBytes());
+			retVal.add(composite);
 		}
 		return retVal;
 	}
