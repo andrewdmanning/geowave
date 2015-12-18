@@ -168,7 +168,13 @@ abstract public class AbstractDataAdapter<T> implements
 		List<ByteArrayId> ids = new ArrayList<ByteArrayId>();
 		final Set<ByteArrayId> nativeFieldsInIndex = new HashSet<ByteArrayId>();
 		for (NumericDimensionField f : model.getDimensions()) {
+			final IndexFieldHandler<T, ? extends CommonIndexValue, Object> fieldHandler = getFieldHandler(f);
+			if (fieldHandler == null) {
+				LOGGER.warn("Unable to find field handler for data adapter '" + StringUtils.stringFromBinary(getAdapterId().getBytes()) + "'");
+				continue;
+			}
 			ids.add(f.getFieldId());
+			nativeFieldsInIndex.addAll(Arrays.asList(fieldHandler.getNativeFieldIds()));
 		}
 		if (nativeFieldHandlers != null) {
 			for (final NativeFieldHandler<T, Object> fieldHandler : nativeFieldHandlers) {

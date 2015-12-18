@@ -113,7 +113,8 @@ public class QueryFilterIterator extends
 					final List<FieldInfo<Object>> fieldInfos = AccumuloUtils.decomposeFlattenedFields(
 							model,
 							valueBytes,
-							key.getColumnVisibilityData().getBackingArray());
+							key.getColumnVisibilityData().getBackingArray(),
+							null);
 					for (final FieldInfo<Object> fieldInfo : fieldInfos) {
 						final ByteArrayId fieldId = fieldInfo.getDataValue().getId();
 						final FieldReader<? extends CommonIndexValue> reader = model.getReader(fieldId);

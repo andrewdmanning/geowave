@@ -37,6 +37,7 @@ import mil.nga.giat.geowave.core.store.data.PersistentDataset;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
+import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.filter.FilterList;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
@@ -647,12 +648,20 @@ public class AccumuloUtils
 		final List<FieldInfo<Object>> fieldInfoList = new ArrayList<>();
 		final ByteBuffer input = ByteBuffer.wrap(flattenedValue);
 		// final int numFields = input.getInt();
-		List<ByteArrayId> ids = ((AbstractDataAdapter<?>) dataAdapter).getOrderedFields(model);
+		List<ByteArrayId> ids;
+		if (dataAdapter != null) {
+			ids = ((AbstractDataAdapter<?>) dataAdapter).getOrderedFields(model);
+		}
+		else {
+			ids = new ArrayList<ByteArrayId>();
+			for (NumericDimensionField field : model.getDimensions()) {
+				ids.add(field.getFieldId());
+			}
+		}
 		for (ByteArrayId fieldId : ids) {
 			final int fieldLength = input.getInt();
 			final byte[] fieldValueBytes = new byte[fieldLength];
 			input.get(fieldValueBytes);
-			model.getDimensions();
 			final PersistentValue<Object> persistentValue = new PersistentValue<Object>(
 					fieldId,
 					null);

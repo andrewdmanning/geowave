@@ -3,10 +3,6 @@ package mil.nga.giat.geowave.datastore.accumulo.query;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.accumulo.core.client.IteratorSetting;
-import org.apache.accumulo.core.client.ScannerBase;
-import org.apache.accumulo.core.iterators.user.WholeRowIterator;
-
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
@@ -20,6 +16,10 @@ import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.query.Query;
+
+import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.client.ScannerBase;
+import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 
 /**
  * This class represents basic numeric contraints applied to an Accumulo Query
@@ -48,7 +48,7 @@ public class AccumuloConstraintsQuery extends
 				clientDedupeFilter,
 				scanCallback,
 				authorizations);
-		if (query != null && !query.isSupported(index)) {
+		if ((query != null) && !query.isSupported(index)) {
 			throw new IllegalArgumentException(
 					"Index does not support the query");
 		}
@@ -125,7 +125,7 @@ public class AccumuloConstraintsQuery extends
 		}
 		super.setClientFilters(clientFilters);
 		distributableFilters = lists.distributableFilters;
-		if (clientDedupeFilter != null) {
+		if (!distributableFilters.isEmpty() && (clientDedupeFilter != null)) {
 			distributableFilters.add(
 					0,
 					clientDedupeFilter);
@@ -174,7 +174,7 @@ public class AccumuloConstraintsQuery extends
 	}
 
 	public void setQueryFiltersEnabled(
-			boolean queryFiltersEnabled ) {
+			final boolean queryFiltersEnabled ) {
 		this.queryFiltersEnabled = queryFiltersEnabled;
 	}
 
