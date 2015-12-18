@@ -603,10 +603,8 @@ public class AccumuloUtils
 			return originalList;
 		}
 		for (final Entry<ByteArrayId, List<FieldInfo<?>>> entry : vizToFieldMap.entrySet()) {
-			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			final DataOutputStream output = new DataOutputStream(
-					baos);
-			try {
+			try (final ByteArrayOutputStream baos = new ByteArrayOutputStream(); final DataOutputStream output = new DataOutputStream(
+					baos);) {
 				output.writeInt(entry.getValue().size());
 				for (final FieldInfo<?> fieldInfo : entry.getValue()) {
 					final byte[] fieldIdBytes = fieldInfo.getDataValue().getId().getBytes();
@@ -615,7 +613,6 @@ public class AccumuloUtils
 					output.writeInt(fieldInfo.getWrittenValue().length);
 					output.write(fieldInfo.getWrittenValue());
 				}
-				output.close();
 				final FieldInfo<?> composite = new FieldInfo<T>(
 						new PersistentValue<T>(
 								COMPOSITE_CQ,
