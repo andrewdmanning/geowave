@@ -44,7 +44,7 @@ public class PropertyManagementTest
 			throws Exception {
 		final PropertyManagement pm = new PropertyManagement();
 
-		pm.store(
+		pm.storeAll(
 				new ParameterEnum[] {
 					ExtractParameters.Extract.DATA_NAMESPACE_URI
 				},
@@ -59,7 +59,7 @@ public class PropertyManagementTest
 			throws Exception {
 		final PropertyManagement pm = new PropertyManagement();
 
-		pm.store(
+		pm.storeAll(
 				new ParameterEnum[] {
 					ExtractParameters.Extract.DIMENSION_EXTRACT_CLASS
 				},
@@ -75,7 +75,7 @@ public class PropertyManagementTest
 	@Test(expected = IllegalArgumentException.class)
 	public void testClassFailure() {
 		final PropertyManagement pm = new PropertyManagement();
-		pm.store(
+		pm.storeAll(
 
 				new ParameterEnum[] {
 					ExtractParameters.Extract.DIMENSION_EXTRACT_CLASS
