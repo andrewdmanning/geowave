@@ -1,12 +1,11 @@
 package mil.nga.giat.geowave.datastore.accumulo.util;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -85,7 +84,7 @@ import org.apache.log4j.Logger;
  * A set of convenience methods for common operations on Accumulo within
  * GeoWave, such as conversions between GeoWave objects and corresponding
  * Accumulo objects.
- * 
+ *
  */
 public class AccumuloUtils
 {
@@ -562,7 +561,7 @@ public class AccumuloUtils
 	/**
 	 * This method combines all FieldInfos that share a common visibility into a
 	 * single FieldInfo
-	 * 
+	 *
 	 * @param originalList
 	 * @param index
 	 * @return a new list of composite FieldInfos
@@ -604,10 +603,8 @@ public class AccumuloUtils
 			return originalList;
 		}
 		for (final Entry<ByteArrayId, List<FieldInfo<?>>> entry : vizToFieldMap.entrySet()) {
-			final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			final DataOutputStream output = new DataOutputStream(
-					baos);
-			try {
+			try (final ByteArrayOutputStream baos = new ByteArrayOutputStream(); final DataOutputStream output = new DataOutputStream(
+					baos);) {
 				output.writeInt(entry.getValue().size());
 				for (final FieldInfo<?> fieldInfo : entry.getValue()) {
 					final byte[] fieldIdBytes = fieldInfo.getDataValue().getId().getBytes();
@@ -616,7 +613,6 @@ public class AccumuloUtils
 					output.writeInt(fieldInfo.getWrittenValue().length);
 					output.write(fieldInfo.getWrittenValue());
 				}
-				output.close();
 				final FieldInfo<?> composite = new FieldInfo<T>(
 						new PersistentValue<T>(
 								COMPOSITE_CQ,
@@ -638,7 +634,7 @@ public class AccumuloUtils
 	 * Takes a byte array representing a serialized composite group of
 	 * FieldInfos sharing a common visibility and returns a List of the
 	 * individual FieldInfos
-	 * 
+	 *
 	 * @param model
 	 * @param flattenedValue
 	 *            the serialized composite FieldInfo
@@ -651,50 +647,36 @@ public class AccumuloUtils
 			final byte[] flattenedValue,
 			final byte[] commonVisibility ) {
 		final List<FieldInfo<Object>> fieldInfoList = new ArrayList<>();
-		try (final DataInputStream input = new DataInputStream(
-				new ByteArrayInputStream(
-						flattenedValue))) {
-			final int numFields = input.readInt();
-			for (int x = 0; x < numFields; x++) {
-				final int fieldIdLength = input.readInt();
-				final byte[] fieldIdBytes = new byte[fieldIdLength];
-				int bytesRead = input.read(fieldIdBytes);
-				if (bytesRead != fieldIdLength) {
-					LOGGER.error("Error reading from input stream while deserializing FieldInfos");
-				}
-				final int fieldLength = input.readInt();
-				final byte[] fieldValueBytes = new byte[fieldLength];
-				bytesRead = input.read(fieldValueBytes);
-				if (bytesRead != fieldLength) {
-					LOGGER.error("Error reading from input stream while deserializing FieldInfos");
-				}
-				final ByteArrayId fieldId = new ByteArrayId(
-						fieldIdBytes);
-				final FieldReader<? extends CommonIndexValue> fieldReader = model.getReader(fieldId);
-				Object fieldValue = null;
-				if (fieldReader != null) {
-					fieldValue = fieldReader.readField(fieldValueBytes);
-				}
-				final PersistentValue<Object> persistentValue = new PersistentValue<Object>(
-						fieldId,
-						fieldValue);
-				final FieldInfo<Object> fieldInfo = DataStoreUtils.getFieldInfo(
-						persistentValue,
-						fieldValueBytes,
-						commonVisibility);
-				fieldInfoList.add(fieldInfo);
+		final ByteBuffer input = ByteBuffer.wrap(flattenedValue);
+		final int numFields = input.getInt();
+		for (int x = 0; x < numFields; x++) {
+			final int fieldIdLength = input.getInt();
+			final byte[] fieldIdBytes = new byte[fieldIdLength];
+			input.get(fieldIdBytes);
+			final int fieldLength = input.getInt();
+			final byte[] fieldValueBytes = new byte[fieldLength];
+			input.get(fieldValueBytes);
+			final ByteArrayId fieldId = new ByteArrayId(
+					fieldIdBytes);
+			final FieldReader<? extends CommonIndexValue> fieldReader = model.getReader(fieldId);
+			Object fieldValue = null;
+			if (fieldReader != null) {
+				fieldValue = fieldReader.readField(fieldValueBytes);
 			}
-		}
-		catch (final IOException e) {
-			LOGGER.error(
-					"Unable to decompose flattened fields.",
-					e);
+			final PersistentValue<Object> persistentValue = new PersistentValue<Object>(
+					fieldId,
+					fieldValue);
+			final FieldInfo<Object> fieldInfo = DataStoreUtils.getFieldInfo(
+					persistentValue,
+					fieldValueBytes,
+					commonVisibility);
+			fieldInfoList.add(fieldInfo);
 		}
 		return fieldInfoList;
 	}
 
 	/**
-	 * 
+	 *
 	 * @param dataWriter
 	 * @param index
 	 * @param entry
@@ -725,7 +707,7 @@ public class AccumuloUtils
 
 	/**
 	 * Get Namespaces
-	 * 
+	 *
 	 * @param connector
 	 */
 	public static List<String> getNamespaces(
@@ -745,7 +727,7 @@ public class AccumuloUtils
 
 	/**
 	 * Get list of data adapters associated with the given namespace
-	 * 
+	 *
 	 * @param connector
 	 * @param namespace
 	 */
@@ -776,7 +758,7 @@ public class AccumuloUtils
 
 	/**
 	 * Get list of indices associated with the given namespace
-	 * 
+	 *
 	 * @param connector
 	 * @param namespace
 	 */
@@ -849,7 +831,7 @@ public class AccumuloUtils
 	/**
 	 * Set splits on a table based on quantile distribution and fixed number of
 	 * splits
-	 * 
+	 *
 	 * @param namespace
 	 * @param index
 	 * @param quantile
@@ -913,7 +895,7 @@ public class AccumuloUtils
 	/**
 	 * Set splits on table based on equal interval distribution and fixed number
 	 * of splits.
-	 * 
+	 *
 	 * @param namespace
 	 * @param index
 	 * @param numberSplits
@@ -995,7 +977,7 @@ public class AccumuloUtils
 
 	/**
 	 * Set splits on table based on fixed number of rows per split.
-	 * 
+	 *
 	 * @param namespace
 	 * @param index
 	 * @param numberRows
@@ -1052,7 +1034,7 @@ public class AccumuloUtils
 
 	/**
 	 * Check if locality group is set.
-	 * 
+	 *
 	 * @param namespace
 	 * @param index
 	 * @param adapter
@@ -1083,7 +1065,7 @@ public class AccumuloUtils
 
 	/**
 	 * Set locality group.
-	 * 
+	 *
 	 * @param namespace
 	 * @param index
 	 * @param adapter
@@ -1113,7 +1095,7 @@ public class AccumuloUtils
 
 	/**
 	 * Get number of entries for a data adapter in an index.
-	 * 
+	 *
 	 * @param namespace
 	 * @param index
 	 * @param adapter
@@ -1164,7 +1146,7 @@ public class AccumuloUtils
 
 	/**
 	 * * Get number of entries per index.
-	 * 
+	 *
 	 * @param namespace
 	 * @param index
 	 * @return
