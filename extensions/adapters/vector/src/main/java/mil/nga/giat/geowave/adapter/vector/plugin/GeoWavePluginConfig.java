@@ -14,9 +14,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ServiceLoader;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.log4j.Logger;
+import org.geotools.data.DataAccessFactory.Param;
+import org.geotools.data.Parameter;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+
 import mil.nga.giat.geowave.adapter.vector.auth.AuthorizationFactorySPI;
 import mil.nga.giat.geowave.adapter.vector.auth.EmptyAuthorizationFactory;
-import mil.nga.giat.geowave.adapter.vector.index.ChooseAllMatchIndexQueryStrategy;
+import mil.nga.giat.geowave.adapter.vector.index.ChooseBestMatchIndexQueryStrategy;
+import mil.nga.giat.geowave.adapter.vector.index.ChooseHeuristicMatchIndexQueryStrategy;
 import mil.nga.giat.geowave.adapter.vector.index.IndexQueryStrategySPI;
 import mil.nga.giat.geowave.adapter.vector.plugin.lock.LockingManagementFactory;
 import mil.nga.giat.geowave.core.store.DataStore;
@@ -29,15 +39,6 @@ import mil.nga.giat.geowave.core.store.config.ConfigUtils;
 import mil.nga.giat.geowave.core.store.config.PasswordConfigOption;
 import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
-
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.log4j.Logger;
-import org.geotools.data.DataAccessFactory.Param;
-import org.geotools.data.Parameter;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
 
 /**
  * This class encapsulates the parameterized configuration that can be provided
@@ -292,7 +293,7 @@ public class GeoWavePluginConfig
 			}
 
 		}
-		return new ChooseAllMatchIndexQueryStrategy();
+		return new ChooseHeuristicMatchIndexQueryStrategy();
 	}
 
 	public static URL getAuthorizationURL(

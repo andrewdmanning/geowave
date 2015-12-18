@@ -9,7 +9,7 @@ import com.vividsolutions.jts.io.WKTReader;
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.query.cql.CQLQuery;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider.SpatialIndexBuilder;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
@@ -203,7 +203,7 @@ public class SpatialQueryExample
 		// and an iterator of SimpleFeature
 		ingest(
 				sfAdapter,
-				IndexType.SPATIAL_VECTOR.createDefaultIndex(),
+				new SpatialIndexBuilder().createIndex(),
 				features);
 	}
 
@@ -296,7 +296,7 @@ public class SpatialQueryExample
 		// and an iterator of SimpleFeature
 		ingest(
 				sfAdapter,
-				IndexType.SPATIAL_VECTOR.createDefaultIndex(),
+				new SpatialIndexBuilder().createIndex(),
 				features);
 
 		/**
@@ -347,7 +347,7 @@ public class SpatialQueryExample
 
 		final QueryOptions options = new QueryOptions(
 				bfAdapter,
-				IndexType.SPATIAL_VECTOR.createDefaultIndex());
+				new SpatialIndexBuilder().createIndex());
 		options.setAuthorizations(new String[] {
 			"root"
 		});
@@ -401,7 +401,7 @@ public class SpatialQueryExample
 		 */
 		final QueryOptions options = new QueryOptions(
 				bfAdapter,
-				IndexType.SPATIAL_VECTOR.createDefaultIndex(),
+				new SpatialIndexBuilder().createIndex(),
 				new String[] {
 					"root"
 				});
@@ -451,7 +451,7 @@ public class SpatialQueryExample
 		 */
 		final QueryOptions options = new QueryOptions(
 				bfAdapter,
-				IndexType.SPATIAL_VECTOR.createDefaultIndex(),
+				new SpatialIndexBuilder().createIndex(),
 				new String[] {
 					"root"
 				});
@@ -509,7 +509,7 @@ public class SpatialQueryExample
 		 */
 		final QueryOptions options = new QueryOptions(
 				bfAdapter,
-				IndexType.SPATIAL_VECTOR.createDefaultIndex(),
+				new SpatialIndexBuilder().createIndex(),
 				new String[] {
 					"root"
 				});
@@ -605,7 +605,7 @@ public class SpatialQueryExample
 		// and an iterator of SimpleFeature
 		ingest(
 				sfAdapter,
-				IndexType.SPATIAL_VECTOR.createDefaultIndex(),
+				new SpatialIndexBuilder().createIndex(),
 				features);
 		log.info("Polygon data ingested");
 	}
@@ -645,7 +645,7 @@ public class SpatialQueryExample
 
 		final QueryOptions options = new QueryOptions(
 				bfAdapter,
-				IndexType.SPATIAL_VECTOR.createDefaultIndex(),
+				new SpatialIndexBuilder().createIndex(),
 				new String[] {
 					"root"
 				});

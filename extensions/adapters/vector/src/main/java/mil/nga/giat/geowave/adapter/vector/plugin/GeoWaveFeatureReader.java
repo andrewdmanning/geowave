@@ -160,17 +160,19 @@ public class GeoWaveFeatureReader implements
 		 * is missing equates to a full table scan. @see BasicQuery
 		 */
 
+		final BasicQuery query = composeQuery(
+				jtsBounds,
+				geoConstraints,
+				timeConstraints);
+
 		try (CloseableIterator<Index<?, ?>> indexIt = getComponents().getIndices(
-				timeConstraints,
-				geoConstraints)) {
+				statsMap,
+				query)) {
 			while (indexIt.hasNext()) {
 				final PrimaryIndex index = (PrimaryIndex) indexIt.next();
 				results.add(issuer.query(
 						index,
-						composeQuery(
-								jtsBounds,
-								geoConstraints,
-								timeConstraints)));
+						query));
 
 			}
 		}

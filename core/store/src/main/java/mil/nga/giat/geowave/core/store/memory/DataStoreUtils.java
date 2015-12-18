@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -21,6 +24,7 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.IndexedAdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticalDataAdapter;
@@ -37,8 +41,6 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
-import org.apache.log4j.Logger;
-
 /*
  */
 public class DataStoreUtils
@@ -51,6 +53,21 @@ public class DataStoreUtils
 	})
 	public static final UniformVisibilityWriter DEFAULT_VISIBILITY = new UniformVisibilityWriter(
 			new UnconstrainedVisibilityHandler());
+
+	public static <T> long cardinality(
+			final PrimaryIndex index,
+			final Map<ByteArrayId, DataStatistics<T>> stats,
+			List<ByteArrayRange> ranges ) {
+		RowRangeHistogramStatistics rangeStats = (RowRangeHistogramStatistics) stats.get(RowRangeHistogramStatistics.composeId(index.getId()));
+		if (rangeStats == null) return Long.MAX_VALUE - 1;
+		long count = 0;
+		for (ByteArrayRange range : ranges) {
+			count += rangeStats.cardinality(
+					range.getStart().getBytes(),
+					range.getEnd().getBytes());
+		}
+		return count;
+	}
 
 	public static List<ByteArrayRange> constraintsToByteArrayRanges(
 			final List<MultiDimensionalNumericData> constraints,
