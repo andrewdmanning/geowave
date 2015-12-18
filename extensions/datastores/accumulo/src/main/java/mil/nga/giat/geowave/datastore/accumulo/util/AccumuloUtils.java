@@ -1,7 +1,5 @@
 package mil.nga.giat.geowave.datastore.accumulo.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -311,7 +309,8 @@ public class AccumuloUtils
 				final List<FieldInfo<Object>> fieldInfos = decomposeFlattenedFields(
 						indexModel,
 						byteValue,
-						entry.getKey().getColumnVisibilityData().getBackingArray());
+						entry.getKey().getColumnVisibilityData().getBackingArray(),
+						adapter);
 				for (final FieldInfo<Object> fieldInfo : fieldInfos) {
 					final FieldReader<? extends CommonIndexValue> indexFieldReader = indexModel.getReader(fieldInfo.getDataValue().getId());
 					if (indexFieldReader != null) {
@@ -603,29 +602,27 @@ public class AccumuloUtils
 			return originalList;
 		}
 		for (final Entry<ByteArrayId, List<FieldInfo<?>>> entry : vizToFieldMap.entrySet()) {
-			try (final ByteArrayOutputStream baos = new ByteArrayOutputStream(); final DataOutputStream output = new DataOutputStream(
-					baos);) {
-				output.writeInt(entry.getValue().size());
-				for (final FieldInfo<?> fieldInfo : entry.getValue()) {
-					final byte[] fieldIdBytes = fieldInfo.getDataValue().getId().getBytes();
-					output.writeInt(fieldIdBytes.length);
-					output.write(fieldIdBytes);
-					output.writeInt(fieldInfo.getWrittenValue().length);
-					output.write(fieldInfo.getWrittenValue());
-				}
-				final FieldInfo<?> composite = new FieldInfo<T>(
-						new PersistentValue<T>(
-								COMPOSITE_CQ,
-								null), // unnecessary
-						baos.toByteArray(),
-						entry.getKey().getBytes());
-				retVal.add(composite);
+			final List<byte[]> fieldInfoBytesList = new ArrayList<>();
+			int totalLength = 0;
+			for (final FieldInfo<?> fieldInfo : entry.getValue()) {
+				final ByteBuffer fieldInfoBytes = ByteBuffer.allocate(4 + fieldInfo.getWrittenValue().length);
+				fieldInfoBytes.putInt(fieldInfo.getWrittenValue().length);
+				fieldInfoBytes.put(fieldInfo.getWrittenValue());
+				fieldInfoBytesList.add(fieldInfoBytes.array());
+				totalLength += fieldInfoBytes.array().length;
 			}
-			catch (final IOException e) {
-				LOGGER.error(
-						"Unable to compose flattened fields.",
-						e);
+			final ByteBuffer allFields = ByteBuffer.allocate(totalLength);
+			// allFields.putInt(entry.getValue().size());
+			for (final byte[] bytes : fieldInfoBytesList) {
+				allFields.put(bytes);
 			}
+			final FieldInfo<?> composite = new FieldInfo<T>(
+					new PersistentValue<T>(
+							COMPOSITE_CQ,
+							null), // unnecessary
+					allFields.array(),
+					entry.getKey().getBytes());
+			retVal.add(composite);
 		}
 		return retVal;
 	}
@@ -645,27 +642,20 @@ public class AccumuloUtils
 	public static <T> List<FieldInfo<Object>> decomposeFlattenedFields(
 			final CommonIndexModel model,
 			final byte[] flattenedValue,
-			final byte[] commonVisibility ) {
+			final byte[] commonVisibility,
+			final DataAdapter<T> dataAdapter ) {
 		final List<FieldInfo<Object>> fieldInfoList = new ArrayList<>();
 		final ByteBuffer input = ByteBuffer.wrap(flattenedValue);
-		final int numFields = input.getInt();
-		for (int x = 0; x < numFields; x++) {
-			final int fieldIdLength = input.getInt();
-			final byte[] fieldIdBytes = new byte[fieldIdLength];
-			input.get(fieldIdBytes);
+		// final int numFields = input.getInt();
+		List<ByteArrayId> ids = ((AbstractDataAdapter<?>) dataAdapter).getOrderedFields(model);
+		for (ByteArrayId fieldId : ids) {
 			final int fieldLength = input.getInt();
 			final byte[] fieldValueBytes = new byte[fieldLength];
 			input.get(fieldValueBytes);
-			final ByteArrayId fieldId = new ByteArrayId(
-					fieldIdBytes);
-			final FieldReader<? extends CommonIndexValue> fieldReader = model.getReader(fieldId);
-			Object fieldValue = null;
-			if (fieldReader != null) {
-				fieldValue = fieldReader.readField(fieldValueBytes);
-			}
+			model.getDimensions();
 			final PersistentValue<Object> persistentValue = new PersistentValue<Object>(
 					fieldId,
-					fieldValue);
+					null);
 			final FieldInfo<Object> fieldInfo = DataStoreUtils.getFieldInfo(
 					persistentValue,
 					fieldValueBytes,

@@ -163,6 +163,25 @@ abstract public class AbstractDataAdapter<T> implements
 				extendedData);
 	}
 
+	public List<ByteArrayId> getOrderedFields(
+			CommonIndexModel model ) {
+		List<ByteArrayId> ids = new ArrayList<ByteArrayId>();
+		final Set<ByteArrayId> nativeFieldsInIndex = new HashSet<ByteArrayId>();
+		for (NumericDimensionField f : model.getDimensions()) {
+			ids.add(f.getFieldId());
+		}
+		if (nativeFieldHandlers != null) {
+			for (final NativeFieldHandler<T, Object> fieldHandler : nativeFieldHandlers) {
+				final ByteArrayId fieldId = fieldHandler.getFieldId();
+				if (nativeFieldsInIndex.contains(fieldId)) {
+					continue;
+				}
+				ids.add(fieldId);
+			}
+		}
+		return ids;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public T decode(
