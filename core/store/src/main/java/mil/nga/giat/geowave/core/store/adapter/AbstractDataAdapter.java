@@ -173,7 +173,9 @@ abstract public class AbstractDataAdapter<T> implements
 				LOGGER.warn("Unable to find field handler for data adapter '" + StringUtils.stringFromBinary(getAdapterId().getBytes()) + "'");
 				continue;
 			}
-			ids.add(f.getFieldId());
+			if (!ids.contains(f.getFieldId())){
+				ids.add(f.getFieldId());
+			}
 			nativeFieldsInIndex.addAll(Arrays.asList(fieldHandler.getNativeFieldIds()));
 		}
 		if (nativeFieldHandlers != null) {
@@ -182,7 +184,9 @@ abstract public class AbstractDataAdapter<T> implements
 				if (nativeFieldsInIndex.contains(fieldId)) {
 					continue;
 				}
-				ids.add(fieldId);
+				if (!ids.contains(fieldId)){
+					ids.add(fieldId);
+				}
 			}
 		}
 		return ids;
