@@ -10,7 +10,6 @@ import mil.nga.giat.geowave.adapter.vector.stats.StatsManager;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
-import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.FieldIdStatisticVisibility;
@@ -75,7 +74,7 @@ public class SecondaryIndexManager implements
 			for (final ByteArrayId numericField : numericFields) {
 				numericStatistics.add(new FeatureNumericHistogramStatistics(
 						dataAdapter.getAdapterId(),
-						StringUtils.stringFromBinary(numericField.getBytes())));
+						numericField.getString()));
 			}
 			supportedSecondaryIndices.add(new SecondaryIndex<SimpleFeature>(
 					new NumericIndexStrategy(),
@@ -88,7 +87,7 @@ public class SecondaryIndexManager implements
 			for (final ByteArrayId textField : textFields) {
 				textStatistics.add(new FeatureHyperLogLogStatistics(
 						dataAdapter.getAdapterId(),
-						StringUtils.stringFromBinary(textField.getBytes()),
+						textField.getString(),
 						16));
 			}
 			supportedSecondaryIndices.add(new SecondaryIndex<SimpleFeature>(
@@ -102,7 +101,7 @@ public class SecondaryIndexManager implements
 			for (final ByteArrayId temporalField : temporalFields) {
 				temporalStatistics.add(new FeatureNumericHistogramStatistics(
 						dataAdapter.getAdapterId(),
-						StringUtils.stringFromBinary(temporalField.getBytes())));
+						temporalField.getString()));
 			}
 			supportedSecondaryIndices.add(new SecondaryIndex<SimpleFeature>(
 					new TemporalIndexStrategy(),

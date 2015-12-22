@@ -55,7 +55,7 @@ public class TextRangeFilter implements
 		final ByteArrayId stringBytes = (ByteArrayId) persistenceEncoding.getCommonData().getValue(
 				fieldId);
 		if (stringBytes != null) {
-			String value = StringUtils.stringFromBinary(stringBytes.getBytes());
+			String value = stringBytes.getString();
 			value = caseSensitive ? value : value.toLowerCase();
 			final int toStart = value.compareTo(start);
 			final int toEnd = value.compareTo(end);

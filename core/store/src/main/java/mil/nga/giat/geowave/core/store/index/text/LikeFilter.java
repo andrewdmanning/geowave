@@ -58,8 +58,7 @@ public class LikeFilter implements
 		final ByteArrayId stringBytes = (ByteArrayId) persistenceEncoding.getCommonData().getValue(
 				fieldId);
 		if (stringBytes != null) {
-			final String value = StringUtils.stringFromBinary(stringBytes.getBytes());
-			final Matcher matcher = regex.matcher(value);
+			final Matcher matcher = regex.matcher(stringBytes.getString());
 			return matcher.matches();
 		}
 		return false;

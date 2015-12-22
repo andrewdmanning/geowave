@@ -230,7 +230,7 @@ public class AccumuloIndexWriter implements
 					"Unable to determine existence of locality group [" + writableAdapter.getAdapterId().getString() + "]",
 					e);
 		}
-		final String tableName = StringUtils.stringFromBinary(index.getId().getBytes());
+		final String tableName = index.getId().getString();
 		final String altIdxTableName = tableName + AccumuloUtils.ALT_INDEX_TABLE;
 
 		DataStoreEntryInfo entryInfo;

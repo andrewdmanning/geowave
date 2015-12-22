@@ -11,8 +11,8 @@ import mil.nga.giat.geowave.adapter.vector.index.SecondaryIndexManager;
 import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveGTDataStore;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.AdaptorProxyFieldLevelVisibilityHandler;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.JsonDefinitionColumnVisibilityManagement;
-import mil.nga.giat.geowave.adapter.vector.stats.StatsManager;
 import mil.nga.giat.geowave.adapter.vector.stats.StatsConfigurationCollection.SimpleFeatureStatsConfigurationCollection;
+import mil.nga.giat.geowave.adapter.vector.stats.StatsManager;
 import mil.nga.giat.geowave.adapter.vector.util.FeatureDataUtils;
 import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
 import mil.nga.giat.geowave.adapter.vector.utils.TimeDescriptors;
@@ -26,8 +26,8 @@ import mil.nga.giat.geowave.core.store.adapter.AbstractDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.IndexFieldHandler;
 import mil.nga.giat.geowave.core.store.adapter.NativeFieldHandler;
-import mil.nga.giat.geowave.core.store.adapter.PersistentIndexFieldHandler;
 import mil.nga.giat.geowave.core.store.adapter.NativeFieldHandler.RowBuilder;
+import mil.nga.giat.geowave.core.store.adapter.PersistentIndexFieldHandler;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticalDataAdapter;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
@@ -298,7 +298,7 @@ public class FeatureDataAdapter extends
 			final ByteArrayId fieldId ) {
 		FieldReader<Object> reader = idToReaderMap.get(fieldId);
 		if (reader == null) {
-			final AttributeDescriptor descriptor = reprojectedType.getDescriptor(StringUtils.stringFromBinary(fieldId.getBytes()));
+			final AttributeDescriptor descriptor = reprojectedType.getDescriptor(fieldId.getString());
 			final Class<?> bindingClass = descriptor.getType().getBinding();
 			reader = (FieldReader<Object>) FieldUtils.getDefaultReaderForClass(bindingClass);
 
@@ -316,7 +316,7 @@ public class FeatureDataAdapter extends
 			final ByteArrayId fieldId ) {
 		FieldWriter<SimpleFeature, Object> writer = idToWriterMap.get(fieldId);
 		if (writer == null) {
-			final AttributeDescriptor descriptor = reprojectedType.getDescriptor(StringUtils.stringFromBinary(fieldId.getBytes()));
+			final AttributeDescriptor descriptor = reprojectedType.getDescriptor(fieldId.getString());
 
 			final Class<?> bindingClass = descriptor.getType().getBinding();
 			FieldWriter<SimpleFeature, Object> basicWriter;

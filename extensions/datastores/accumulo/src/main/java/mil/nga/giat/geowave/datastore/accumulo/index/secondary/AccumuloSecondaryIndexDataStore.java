@@ -14,7 +14,6 @@ import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
-import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreEntryInfo.FieldInfo;
@@ -181,7 +180,7 @@ public class AccumuloSecondaryIndexDataStore implements
 				scanner.setRange(range);
 				for (final Entry<Key, Value> entry : scanner) {
 					if (entry.getKey().getColumnQualifier().toString().equals(
-							StringUtils.stringFromBinary(primaryIndexId.getBytes()))) {
+							primaryIndexId.getString())) {
 						// found query match: keep track of primaryIndexRowId
 						primaryIndexRowIds.add(new ByteArrayId(
 								entry.getValue().get()));
@@ -246,7 +245,7 @@ public class AccumuloSecondaryIndexDataStore implements
 				ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(filterList)));
 		iteratorSettings.addOption(
 				SecondaryIndexQueryFilterIterator.PRIMARY_INDEX_ID,
-				StringUtils.stringFromBinary(primaryIndexId.getBytes()));
+				primaryIndexId.getString());
 		return iteratorSettings;
 	}
 
