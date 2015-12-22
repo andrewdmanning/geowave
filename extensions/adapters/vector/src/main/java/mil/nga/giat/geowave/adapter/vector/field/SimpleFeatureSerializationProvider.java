@@ -1,21 +1,16 @@
 package mil.nga.giat.geowave.adapter.vector.field;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-
-import org.geotools.feature.FeatureBuilder;
-import org.geotools.feature.simple.SimpleFeatureImpl;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
+import java.nio.ByteBuffer;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
-import mil.nga.giat.geowave.core.store.data.field.FieldSerializationProviderSpi;
 import mil.nga.giat.geowave.core.store.data.field.FieldUtils;
 import mil.nga.giat.geowave.core.store.data.field.FieldWriter;
+
+import org.opengis.feature.simple.SimpleFeatureType;
 
 public class SimpleFeatureSerializationProvider
 {
@@ -38,28 +33,19 @@ public class SimpleFeatureSerializationProvider
 			if (fieldData == null) {
 				return null;
 			}
-			final DataInputStream input = new DataInputStream(
-					new ByteArrayInputStream(
-							fieldData));
+			final ByteBuffer input = ByteBuffer.wrap(fieldData);
 			int attrCnt = type.getAttributeCount();
 			byte[][] retVal = new byte[attrCnt][];
-			try {
-
-				for (int i = 0; i < attrCnt; i++) {
-					int byteLength;
-					byteLength = input.readInt();
-					if (byteLength < 0) {
-						retVal[i] = null;
-						continue;
-					}
-					byte[] fieldValue = new byte[byteLength];
-					input.read(fieldValue);
-					retVal[i] = fieldValue;
+			for (int i = 0; i < attrCnt; i++) {
+				int byteLength;
+				byteLength = input.getInt();
+				if (byteLength < 0) {
+					retVal[i] = null;
+					continue;
 				}
-			}
-			catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				byte[] fieldValue = new byte[byteLength];
+				input.get(fieldValue);
+				retVal[i] = fieldValue;
 			}
 			return retVal;
 		}

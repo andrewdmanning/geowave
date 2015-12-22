@@ -3,6 +3,8 @@ package mil.nga.giat.geowave.core.index;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * This class is a wrapper around a byte array to ensure equals and hashcode
  * operations use the values of the bytes rather than explicit object identity
@@ -11,7 +13,9 @@ public class ByteArrayId implements
 		java.io.Serializable,
 		Comparable<ByteArrayId>
 {
+	private static final long serialVersionUID = 1L;
 	private final byte[] id;
+	@SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
 	private transient String stringId;
 
 	public ByteArrayId(
