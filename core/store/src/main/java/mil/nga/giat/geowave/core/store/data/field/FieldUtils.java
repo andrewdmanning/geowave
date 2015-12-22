@@ -3,12 +3,13 @@ package mil.nga.giat.geowave.core.store.data.field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
-import mil.nga.giat.geowave.core.store.spi.SPIServiceRegistry;
+import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
+import mil.nga.giat.geowave.core.store.spi.SPIServiceRegistry;
 
 /**
  * This class has a set of convenience methods to determine the appropriate
@@ -17,7 +18,8 @@ import org.slf4j.LoggerFactory;
  */
 public class FieldUtils
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(FieldUtils.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(
+			FieldUtils.class);
 	private static Map<Class<?>, FieldReader<?>> fieldReaderRegistry = null;
 	private static Map<Class<?>, FieldWriter<?, ?>> fieldWriterRegistry = null;
 
@@ -39,7 +41,8 @@ public class FieldUtils
 		fieldReaderRegistry = new HashMap<Class<?>, FieldReader<?>>();
 		fieldWriterRegistry = new HashMap<Class<?>, FieldWriter<?, ?>>();
 		final Iterator<FieldSerializationProviderSpi> serializationProviders = new SPIServiceRegistry(
-				FieldSerializationProviderSpi.class).load(FieldSerializationProviderSpi.class);
+				FieldSerializationProviderSpi.class).load(
+						FieldSerializationProviderSpi.class);
 		while (serializationProviders.hasNext()) {
 			final FieldSerializationProviderSpi<?> serializationProvider = serializationProviders.next();
 			if (serializationProvider != null) {
@@ -48,8 +51,10 @@ public class FieldUtils
 						FieldSerializationProviderSpi.class);
 				final FieldReader<?> reader = serializationProvider.getFieldReader();
 				if (reader != null) {
-					if (fieldReaderRegistry.containsKey(type)) {
-						LOGGER.warn("Field reader already registered for " + type + "; not able to add " + reader);
+					if (fieldReaderRegistry.containsKey(
+							type)) {
+						LOGGER.warn(
+								"Field reader already registered for " + type + "; not able to add " + reader);
 					}
 					else {
 						fieldReaderRegistry.put(
@@ -59,8 +64,10 @@ public class FieldUtils
 				}
 				final FieldWriter<?, ?> writer = serializationProvider.getFieldWriter();
 				if (writer != null) {
-					if (fieldWriterRegistry.containsKey(type)) {
-						LOGGER.warn("Field writer already registered for " + type + "; not able to add " + writer);
+					if (fieldWriterRegistry.containsKey(
+							type)) {
+						LOGGER.warn(
+								"Field writer already registered for " + type + "; not able to add " + writer);
 					}
 					else {
 						fieldWriterRegistry.put(
@@ -77,7 +84,8 @@ public class FieldUtils
 			final Class<T> myClass ) {
 		final Map<Class<?>, FieldReader<?>> internalFieldReaders = getRegisteredFieldReaders();
 		// try concrete class
-		final FieldReader<T> reader = (FieldReader<T>) internalFieldReaders.get(myClass);
+		final FieldReader<T> reader = (FieldReader<T>) internalFieldReaders.get(
+				myClass);
 		if (reader != null) {
 			return reader;
 		}
@@ -92,10 +100,11 @@ public class FieldUtils
 			final Class<T> myClass ) {
 		final Map<Class<?>, FieldWriter<?, ?>> internalFieldWriters = getRegisteredFieldWriters();
 		// try concrete class
-		final FieldWriter<?, T> writer = (FieldWriter<?, T>) internalFieldWriters.get(myClass);
+		final FieldWriter<?, T> writer = (FieldWriter<?, T>) internalFieldWriters.get(
+				myClass);
 		if (writer != null) {
 			return writer;
-		}// if the concrete class lookup failed, try inheritance
+		} // if the concrete class lookup failed, try inheritance
 		return (FieldWriter<?, T>) getAssignableValueFromClassMap(
 				myClass,
 				internalFieldWriters);
@@ -104,10 +113,12 @@ public class FieldUtils
 	public static <T> T getAssignableValueFromClassMap(
 			final Class<?> myClass,
 			final Map<Class<?>, T> classToAssignableValueMap ) {
-		final T assignable = classToAssignableValueMap.get(myClass);
-		if (assignable != null) {
-			if (((Class<?>) assignable).isAssignableFrom(myClass)) {
-				return assignable;
+		// loop through the map to discover the first class that is assignable
+		// from myClass
+		for (final Entry<Class<?>, T> candidate : classToAssignableValueMap.entrySet()) {
+			if (candidate.getKey().isAssignableFrom(
+					myClass)) {
+				return candidate.getValue();
 			}
 		}
 		return null;
@@ -117,7 +128,8 @@ public class FieldUtils
 			final Class<FieldType> myClass,
 			final FieldVisibilityHandler<RowType, Object> visibilityHandler ) {
 		return new BasicWriter<RowType, FieldType>(
-				getDefaultWriterForClass(myClass),
+				getDefaultWriterForClass(
+						myClass),
 				visibilityHandler);
 	}
 }
