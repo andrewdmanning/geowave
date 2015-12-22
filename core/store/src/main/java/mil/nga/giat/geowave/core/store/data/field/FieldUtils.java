@@ -1,11 +1,8 @@
 package mil.nga.giat.geowave.core.store.data.field;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.ServiceLoader;
 
 import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
 import mil.nga.giat.geowave.core.store.spi.SPIServiceRegistry;
@@ -16,7 +13,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This class has a set of convenience methods to determine the appropriate
  * field reader and writer for a given field type (Class)
- * 
+ *
  */
 public class FieldUtils
 {
@@ -107,12 +104,10 @@ public class FieldUtils
 	public static <T> T getAssignableValueFromClassMap(
 			final Class<?> myClass,
 			final Map<Class<?>, T> classToAssignableValueMap ) {
-		// loop through the map to discover the first class that is assignable
-		// from myClass
-		for (final Entry<Class<?>, T> candidate : classToAssignableValueMap.entrySet()) {
-			if (candidate.getKey().isAssignableFrom(
-					myClass)) {
-				return candidate.getValue();
+		final T assignable = classToAssignableValueMap.get(myClass);
+		if (assignable != null) {
+			if (((Class<?>) assignable).isAssignableFrom(myClass)) {
+				return assignable;
 			}
 		}
 		return null;
