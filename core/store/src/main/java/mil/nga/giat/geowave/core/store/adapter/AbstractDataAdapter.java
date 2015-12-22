@@ -163,29 +163,34 @@ abstract public class AbstractDataAdapter<T> implements
 				extendedData);
 	}
 
+	private List<ByteArrayId> ids;
+
 	public List<ByteArrayId> getOrderedFields(
 			CommonIndexModel model ) {
-		List<ByteArrayId> ids = new ArrayList<ByteArrayId>();
-		final Set<ByteArrayId> nativeFieldsInIndex = new HashSet<ByteArrayId>();
-		for (NumericDimensionField f : model.getDimensions()) {
-			final IndexFieldHandler<T, ? extends CommonIndexValue, Object> fieldHandler = getFieldHandler(f);
-			if (fieldHandler == null) {
-				LOGGER.warn("Unable to find field handler for data adapter '" + StringUtils.stringFromBinary(getAdapterId().getBytes()) + "'");
-				continue;
-			}
-			if (!ids.contains(f.getFieldId())){
-				ids.add(f.getFieldId());
-			}
-			nativeFieldsInIndex.addAll(Arrays.asList(fieldHandler.getNativeFieldIds()));
-		}
-		if (nativeFieldHandlers != null) {
-			for (final NativeFieldHandler<T, Object> fieldHandler : nativeFieldHandlers) {
-				final ByteArrayId fieldId = fieldHandler.getFieldId();
-				if (nativeFieldsInIndex.contains(fieldId)) {
+		// List<ByteArrayId> ids = new ArrayList<ByteArrayId>();
+		if (ids == null) {
+			ids = new ArrayList<ByteArrayId>();
+			final Set<ByteArrayId> nativeFieldsInIndex = new HashSet<ByteArrayId>();
+			for (NumericDimensionField f : model.getDimensions()) {
+				final IndexFieldHandler<T, ? extends CommonIndexValue, Object> fieldHandler = getFieldHandler(f);
+				if (fieldHandler == null) {
+					LOGGER.warn("Unable to find field handler for data adapter '" + StringUtils.stringFromBinary(getAdapterId().getBytes()) + "'");
 					continue;
 				}
-				if (!ids.contains(fieldId)){
-					ids.add(fieldId);
+				if (!ids.contains(f.getFieldId())) {
+					ids.add(f.getFieldId());
+				}
+				nativeFieldsInIndex.addAll(Arrays.asList(fieldHandler.getNativeFieldIds()));
+			}
+			if (nativeFieldHandlers != null) {
+				for (final NativeFieldHandler<T, Object> fieldHandler : nativeFieldHandlers) {
+					final ByteArrayId fieldId = fieldHandler.getFieldId();
+					if (nativeFieldsInIndex.contains(fieldId)) {
+						continue;
+					}
+					if (!ids.contains(fieldId)) {
+						ids.add(fieldId);
+					}
 				}
 			}
 		}
@@ -236,6 +241,9 @@ abstract public class AbstractDataAdapter<T> implements
 							dimension.getClass(),
 							NumericDimensionField.class),
 					typeMatchingFieldHandlers);
+			dimensionMatchingFieldHandlers.put(
+					dimension.getFieldId(),
+					fieldHandler);
 		}
 		return fieldHandler;
 	}

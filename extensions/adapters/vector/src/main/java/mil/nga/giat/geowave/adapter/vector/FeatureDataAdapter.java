@@ -3,7 +3,9 @@ package mil.nga.giat.geowave.adapter.vector;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import mil.nga.giat.geowave.adapter.vector.index.SecondaryIndexManager;
 import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveGTDataStore;
@@ -289,38 +291,57 @@ public class FeatureDataAdapter extends
 		reprojectedType = builder.buildFeatureType();
 	}
 
+	private Map<ByteArrayId, FieldReader<Object>> idToReaderMap = new HashMap<ByteArrayId, FieldReader<Object>>();
+
 	@Override
 	public FieldReader<Object> getReader(
 			final ByteArrayId fieldId ) {
-		final AttributeDescriptor descriptor = reprojectedType.getDescriptor(StringUtils.stringFromBinary(fieldId.getBytes()));
-		final Class<?> bindingClass = descriptor.getType().getBinding();
-		return (FieldReader<Object>) FieldUtils.getDefaultReaderForClass(bindingClass);
+		FieldReader<Object> reader = idToReaderMap.get(fieldId);
+		if (reader == null) {
+			final AttributeDescriptor descriptor = reprojectedType.getDescriptor(StringUtils.stringFromBinary(fieldId.getBytes()));
+			final Class<?> bindingClass = descriptor.getType().getBinding();
+			reader = (FieldReader<Object>) FieldUtils.getDefaultReaderForClass(bindingClass);
+
+			idToReaderMap.put(
+					fieldId,
+					reader);
+		}
+		return reader;
 	}
+
+	private Map<ByteArrayId, FieldWriter<SimpleFeature, Object>> idToWriterMap = new HashMap<ByteArrayId, FieldWriter<SimpleFeature, Object>>();
 
 	@Override
 	public FieldWriter<SimpleFeature, Object> getWriter(
 			final ByteArrayId fieldId ) {
+		FieldWriter<SimpleFeature, Object> writer = idToWriterMap.get(fieldId);
+		if (writer == null) {
+			final AttributeDescriptor descriptor = reprojectedType.getDescriptor(StringUtils.stringFromBinary(fieldId.getBytes()));
 
-		final AttributeDescriptor descriptor = reprojectedType.getDescriptor(StringUtils.stringFromBinary(fieldId.getBytes()));
+			final Class<?> bindingClass = descriptor.getType().getBinding();
+			FieldWriter<SimpleFeature, Object> basicWriter;
+			if (fieldVisiblityHandler != null) {
+				basicWriter = (FieldWriter<SimpleFeature, Object>) FieldUtils.getDefaultWriterForClass(
+						bindingClass,
+						fieldVisiblityHandler);
+			}
+			else {
+				basicWriter = (FieldWriter<SimpleFeature, Object>) FieldUtils.getDefaultWriterForClass(bindingClass);
+			}
+			if (basicWriter == null) {
+				LOGGER.error("BasicWriter not found for binding type:" + bindingClass.getName().toString());
+			}
 
-		final Class<?> bindingClass = descriptor.getType().getBinding();
-		FieldWriter<SimpleFeature, Object> basicWriter;
-		if (fieldVisiblityHandler != null) {
-			basicWriter = (FieldWriter<SimpleFeature, Object>) FieldUtils.getDefaultWriterForClass(
-					bindingClass,
-					fieldVisiblityHandler);
+			writer = fieldVisibilityManagement.createVisibilityWriter(
+					descriptor.getLocalName(),
+					basicWriter,
+					fieldVisiblityHandler,
+					visibilityAttributeName);
+			idToWriterMap.put(
+					fieldId,
+					writer);
 		}
-		else {
-			basicWriter = (FieldWriter<SimpleFeature, Object>) FieldUtils.getDefaultWriterForClass(bindingClass);
-		}
-		if (basicWriter == null) {
-			LOGGER.error("BasicWriter not found for binding type:" + bindingClass.getName().toString());
-		}
-		return fieldVisibilityManagement.createVisibilityWriter(
-				descriptor.getLocalName(),
-				basicWriter,
-				fieldVisiblityHandler,
-				visibilityAttributeName);
+		return writer;
 	}
 
 	@Override
@@ -498,10 +519,15 @@ public class FeatureDataAdapter extends
 				StringUtils.stringToBinary(entry.getID()));
 	}
 
+	FeatureRowBuilder builder;
+
 	@Override
 	protected RowBuilder<SimpleFeature, Object> newBuilder() {
-		return new FeatureRowBuilder(
-				reprojectedType);
+		if (builder == null) {
+			builder = new FeatureRowBuilder(
+					reprojectedType);
+		}
+		return builder;
 	}
 
 	@Override

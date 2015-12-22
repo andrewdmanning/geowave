@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class StringUtils
 {
-	public static final Charset UTF8_CHAR_SET = Charset.forName("UTF-8");
+	public static final Charset UTF8_CHAR_SET = Charset.forName("ISO-8859-1");
 
 	/**
 	 * Utility to convert a String to bytes
