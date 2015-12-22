@@ -10,22 +10,24 @@ import org.opengis.feature.type.AttributeDescriptor;
 /**
  * This is used by the FeatureDataAdapter to handle GeoWave 'fields' using
  * SimpleFeature 'attributes.'
- * 
+ *
  */
 public class FeatureAttributeHandler implements
 		NativeFieldHandler<SimpleFeature, Object>
 {
 	protected final AttributeDescriptor attrDesc;
+	private final ByteArrayId fieldId;
 
 	public FeatureAttributeHandler(
 			final AttributeDescriptor attrDesc ) {
 		this.attrDesc = attrDesc;
+		fieldId = new ByteArrayId(
+				StringUtils.stringToBinary(attrDesc.getLocalName()));
 	}
 
 	@Override
 	public ByteArrayId getFieldId() {
-		return new ByteArrayId(
-				StringUtils.stringToBinary(attrDesc.getLocalName()));
+		return fieldId;
 	}
 
 	@Override
