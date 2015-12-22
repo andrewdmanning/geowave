@@ -12,6 +12,7 @@ public class ByteArrayId implements
 		Comparable<ByteArrayId>
 {
 	private final byte[] id;
+	private transient String stringId;
 
 	public ByteArrayId(
 			final byte[] id ) {
@@ -21,6 +22,7 @@ public class ByteArrayId implements
 	public ByteArrayId(
 			final String id ) {
 		this.id = StringUtils.stringToBinary(id);
+		stringId = id;
 	}
 
 	public byte[] getBytes() {
@@ -28,7 +30,10 @@ public class ByteArrayId implements
 	}
 
 	public String getString() {
-		return StringUtils.stringFromBinary(id);
+		if (stringId == null) {
+			stringId = StringUtils.stringFromBinary(id);
+		}
+		return stringId;
 	}
 
 	@Override
