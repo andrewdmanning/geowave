@@ -413,10 +413,13 @@ public class GeoWaveFeatureReader implements
 						fid));
 			}
 
+			final List<PrimaryIndex> writeIndices = components.getWriteIndices();
+			PrimaryIndex queryIndex = (writeIndices != null && writeIndices.size() > 0) ? writeIndices.get(0) : null;
+
 			return components.getDataStore().query(
 					new QueryOptions(
 							components.getAdapter(),
-							components.getCurrentIndex(),
+							queryIndex,
 							limit,
 							null,
 							transaction.composeAuthorizations()),
