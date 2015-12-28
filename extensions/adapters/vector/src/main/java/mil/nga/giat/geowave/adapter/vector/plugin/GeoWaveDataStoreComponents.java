@@ -38,7 +38,7 @@ public class GeoWaveDataStoreComponents
 	private final GeoWaveGTDataStore gtStore;
 	private final TransactionsAllocator transactionAllocator;
 
-	private final PrimaryIndex currentIndex;
+	private final List<PrimaryIndex> writeIndices;
 
 	public GeoWaveDataStoreComponents(
 			final DataStore dataStore,
@@ -52,7 +52,7 @@ public class GeoWaveDataStoreComponents
 		this.indexStore = indexStore;
 		this.dataStatisticsStore = dataStatisticsStore;
 		this.gtStore = gtStore;
-		currentIndex = gtStore.getIndex(adapter);
+		writeIndices = gtStore.getWriteIndices(adapter);
 		this.transactionAllocator = transactionAllocator;
 	}
 
@@ -72,8 +72,8 @@ public class GeoWaveDataStoreComponents
 		return gtStore;
 	}
 
-	public PrimaryIndex getCurrentIndex() {
-		return currentIndex;
+	public List<PrimaryIndex> getWriteIndices() {
+		return writeIndices;
 	}
 
 	public DataStatisticsStore getStatsStore() {
@@ -94,11 +94,13 @@ public class GeoWaveDataStoreComponents
 			final GeoWaveTransaction transaction )
 			throws IOException {
 
+		final QueryOptions options = new QueryOptions(
+				adapter);
+		options.setAuthorizations(transaction.composeAuthorizations());
+		options.setIndices(writeIndices.toArray(new Index[writeIndices.size()]));
+
 		dataStore.delete(
-				new QueryOptions(
-						adapter,
-						currentIndex,
-						transaction.composeAuthorizations()),
+				options,
 				new DataIdQuery(
 						adapter.getAdapterId(),
 						adapter.getDataId(feature)));
@@ -109,11 +111,13 @@ public class GeoWaveDataStoreComponents
 			final GeoWaveTransaction transaction )
 			throws IOException {
 
+		final QueryOptions options = new QueryOptions(
+				adapter);
+		options.setAuthorizations(transaction.composeAuthorizations());
+		options.setIndices(writeIndices.toArray(new Index[writeIndices.size()]));
+
 		dataStore.delete(
-				new QueryOptions(
-						adapter,
-						currentIndex,
-						transaction.composeAuthorizations()),
+				options,
 				new DataIdQuery(
 						new ByteArrayId(
 								StringUtils.stringToBinary(fid)),
@@ -127,33 +131,37 @@ public class GeoWaveDataStoreComponents
 			final Set<String> fidList,
 			final GeoWaveTransaction transaction )
 			throws IOException {
-		try (IndexWriter indexWriter = dataStore.createIndexWriter(
-				currentIndex,
-				new UniformVisibilityWriter<SimpleFeature>(
-						new GlobalVisibilityHandler(
-								transaction.composeVisibility())))) {
-			while (featureIt.hasNext()) {
-				final SimpleFeature feature = featureIt.next();
-				fidList.add(feature.getID());
-				indexWriter.write(
-						adapter,
-						feature);
+		for (PrimaryIndex currentIndex : this.writeIndices) {
+			try (IndexWriter indexWriter = dataStore.createIndexWriter(
+					currentIndex,
+					new UniformVisibilityWriter<SimpleFeature>(
+							new GlobalVisibilityHandler(
+									transaction.composeVisibility())))) {
+				while (featureIt.hasNext()) {
+					final SimpleFeature feature = featureIt.next();
+					fidList.add(feature.getID());
+					indexWriter.write(
+							adapter,
+							feature);
+				}
 			}
 		}
 	}
 
-	public List<ByteArrayId> writeCommit(
+	public void writeCommit(
 			final SimpleFeature feature,
 			final GeoWaveTransaction transaction )
 			throws IOException {
-		try (IndexWriter indexWriter = dataStore.createIndexWriter(
-				currentIndex,
-				new UniformVisibilityWriter<SimpleFeature>(
-						new GlobalVisibilityHandler(
-								transaction.composeVisibility())))) {
-			return indexWriter.write(
-					adapter,
-					feature);
+		for (PrimaryIndex currentIndex : this.writeIndices) {
+			try (IndexWriter indexWriter = dataStore.createIndexWriter(
+					currentIndex,
+					new UniformVisibilityWriter<SimpleFeature>(
+							new GlobalVisibilityHandler(
+									transaction.composeVisibility())))) {
+				indexWriter.write(
+						adapter,
+						feature);
+			}
 		}
 	}
 
