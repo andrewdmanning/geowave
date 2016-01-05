@@ -6,6 +6,15 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.iterators.IteratorEnvironment;
+import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
+import org.apache.accumulo.core.iterators.user.WholeRowIterator;
+import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
+import org.apache.hadoop.io.Text;
+import org.apache.log4j.Logger;
+
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
@@ -19,15 +28,6 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloRowId;
 import mil.nga.giat.geowave.datastore.accumulo.util.AccumuloUtils;
-
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.iterators.IteratorEnvironment;
-import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
-import org.apache.accumulo.core.iterators.user.WholeRowIterator;
-import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
-import org.apache.hadoop.io.Text;
-import org.apache.log4j.Logger;
 
 /**
  * This iterator wraps a DistributableQueryFilter which is deserialized from a
@@ -113,8 +113,7 @@ public class QueryFilterIterator extends
 					final List<FieldInfo<Object>> fieldInfos = AccumuloUtils.decomposeFlattenedFields(
 							model,
 							valueBytes,
-							key.getColumnVisibilityData().getBackingArray(),
-							null);
+							key.getColumnVisibilityData().getBackingArray());
 					for (final FieldInfo<Object> fieldInfo : fieldInfos) {
 						final ByteArrayId fieldId = fieldInfo.getDataValue().getId();
 						final FieldReader<? extends CommonIndexValue> reader = model.getReader(fieldId);

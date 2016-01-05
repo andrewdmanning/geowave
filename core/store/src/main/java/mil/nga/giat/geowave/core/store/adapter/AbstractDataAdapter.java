@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
@@ -24,8 +26,6 @@ import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
 import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-
-import org.apache.log4j.Logger;
 
 /**
  * This class generically supports most of the operations necessary to implement
@@ -161,40 +161,6 @@ abstract public class AbstractDataAdapter<T> implements
 				getDataId(entry),
 				indexData,
 				extendedData);
-	}
-
-	private List<ByteArrayId> ids;
-
-	public List<ByteArrayId> getOrderedFields(
-			CommonIndexModel model ) {
-		// List<ByteArrayId> ids = new ArrayList<ByteArrayId>();
-		if (ids == null) {
-			ids = new ArrayList<ByteArrayId>();
-			final Set<ByteArrayId> nativeFieldsInIndex = new HashSet<ByteArrayId>();
-			for (NumericDimensionField f : model.getDimensions()) {
-				final IndexFieldHandler<T, ? extends CommonIndexValue, Object> fieldHandler = getFieldHandler(f);
-				if (fieldHandler == null) {
-					LOGGER.warn("Unable to find field handler for data adapter '" + StringUtils.stringFromBinary(getAdapterId().getBytes()) + "'");
-					continue;
-				}
-				if (!ids.contains(f.getFieldId())) {
-					ids.add(f.getFieldId());
-				}
-				nativeFieldsInIndex.addAll(Arrays.asList(fieldHandler.getNativeFieldIds()));
-			}
-			if (nativeFieldHandlers != null) {
-				for (final NativeFieldHandler<T, Object> fieldHandler : nativeFieldHandlers) {
-					final ByteArrayId fieldId = fieldHandler.getFieldId();
-					if (nativeFieldsInIndex.contains(fieldId)) {
-						continue;
-					}
-					if (!ids.contains(fieldId)) {
-						ids.add(fieldId);
-					}
-				}
-			}
-		}
-		return ids;
 	}
 
 	@SuppressWarnings("unchecked")
