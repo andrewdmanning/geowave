@@ -5,6 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeDescriptor;
+import org.opengis.referencing.operation.MathTransform;
+
+import com.vividsolutions.jts.geom.Geometry;
+
 import mil.nga.giat.geowave.core.geotime.TimeUtils;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -15,14 +23,6 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.CountDataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.FieldIdStatisticVisibility;
 import mil.nga.giat.geowave.core.store.adapter.statistics.FieldTypeStatisticVisibility;
-
-import org.apache.log4j.Logger;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.AttributeDescriptor;
-import org.opengis.referencing.operation.MathTransform;
-
-import com.vividsolutions.jts.geom.Geometry;
 
 public class StatsManager
 {
@@ -126,24 +126,24 @@ public class StatsManager
 								new ByteArrayId(
 										descriptor.getLocalName())));
 
-				// addStats(
-				// new FeatureFixedBinNumericStatistics(
-				// dataAdapter.getAdapterId(),
-				// descriptor.getLocalName()),
-				// new FieldIdStatisticVisibility(
-				// new ByteArrayId(
-				// descriptor.getLocalName())));
+				 addStats(
+				 new FeatureFixedBinNumericStatistics(
+				 dataAdapter.getAdapterId(),
+				 descriptor.getLocalName()),
+				 new FieldIdStatisticVisibility(
+				 new ByteArrayId(
+				 descriptor.getLocalName())));
 
 			}
 			else if (String.class.isAssignableFrom(descriptor.getType().getBinding())) {
-				// addStats(
-				// new FeatureHyperLogLogStatistics(
-				// dataAdapter.getAdapterId(),
-				// descriptor.getLocalName(),
-				// 16),
-				// new FieldIdStatisticVisibility(
-				// new ByteArrayId(
-				// descriptor.getLocalName())));
+				 addStats(
+				 new FeatureHyperLogLogStatistics(
+				 dataAdapter.getAdapterId(),
+				 descriptor.getLocalName(),
+				 16),
+				 new FieldIdStatisticVisibility(
+				 new ByteArrayId(
+				 descriptor.getLocalName())));
 			}
 
 		}
