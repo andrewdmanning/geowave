@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import mil.nga.giat.geowave.adapter.vector.AvroFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.WholeFeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -77,13 +78,20 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 			final SimpleFeatureType type,
 			final FieldVisibilityHandler<SimpleFeature, Object> fieldVisiblityHandler ) {
 		// TODO: assign other adapters based on serialization option
-		if (serializationFormatOptionProvider.isKryo() || serializationFormatOptionProvider.isAvro()) {
-			return new WholeFeatureDataAdapter(
-					type);
+		switch (serializationFormatOptionProvider.getSerializationFormat()) {
+			case FEATURE:
+				return new WholeFeatureDataAdapter(
+						type);
+			case AVRO:
+				return new AvroFeatureDataAdapter(
+						type,
+						fieldVisiblityHandler);
+			default:
+			case ATTRIBUTE:
+				return new FeatureDataAdapter(
+						type,
+						fieldVisiblityHandler);
 		}
-		return new FeatureDataAdapter(
-				type,
-				fieldVisiblityHandler);
 	}
 
 	abstract protected SimpleFeatureType[] getTypes();
