@@ -788,47 +788,47 @@ public class GPXConsumer implements
 			final GPXDataElement element ) {
 
 		switch (element.elementType) {
-		// case "trk": {
-		// if ((element.children != null) && element.build(trackBuilder)) {
-		// trackBuilder.set(
-		// "TrackId",
-		// inputID.length() > 0 ? inputID : element.composeID(
-		// "",
-		// false,
-		// true));
-		// return buildGeoWaveDataInstance(
-		// element.composeID(
-		// inputID,
-		// false,
-		// true),
-		// primaryIndexId,
-		// trackKey,
-		// trackBuilder,
-		// additionalData.get(element.getPath()));
-		// }
-		// break;
-		// }
-		// case "rte": {
-		//
-		// if ((element.children != null) && element.build(routeBuilder)) {
-		// trackBuilder.set(
-		// "TrackId",
-		// inputID.length() > 0 ? inputID : element.composeID(
-		// "",
-		// false,
-		// true));
-		// return buildGeoWaveDataInstance(
-		// element.composeID(
-		// inputID,
-		// false,
-		// true),
-		// primaryIndexId,
-		// routeKey,
-		// routeBuilder,
-		// additionalData.get(element.getPath()));
-		// }
-		// break;
-		// }
+			case "trk": {
+				if ((element.children != null) && element.build(trackBuilder)) {
+					trackBuilder.set(
+							"TrackId",
+							inputID.length() > 0 ? inputID : element.composeID(
+									"",
+									false,
+									true));
+					return buildGeoWaveDataInstance(
+							element.composeID(
+									inputID,
+									false,
+									true),
+							primaryIndexId,
+							trackKey,
+							trackBuilder,
+							additionalData.get(element.getPath()));
+				}
+				break;
+			}
+			case "rte": {
+
+				if ((element.children != null) && element.build(routeBuilder)) {
+					trackBuilder.set(
+							"TrackId",
+							inputID.length() > 0 ? inputID : element.composeID(
+									"",
+									false,
+									true));
+					return buildGeoWaveDataInstance(
+							element.composeID(
+									inputID,
+									false,
+									true),
+							primaryIndexId,
+							routeKey,
+							routeBuilder,
+							additionalData.get(element.getPath()));
+				}
+				break;
+			}
 			case "wpt": {
 
 				if (element.build(waypointBuilder)) {
