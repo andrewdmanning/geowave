@@ -656,12 +656,12 @@ public class AccumuloUtils
 			final byte[] fieldValueBytes = new byte[fieldLength];
 			input.get(fieldValueBytes);
 			final ByteArrayId fieldId = new ByteArrayId(
-					 fieldIdBytes);
-					 final FieldReader<? extends CommonIndexValue> fieldReader = model.getReader(fieldId);
-					 Object fieldValue = null;
-					 if (fieldReader != null) {
-					 	fieldValue = fieldReader.readField(fieldValueBytes);
-					 }
+					fieldIdBytes);
+			final FieldReader<? extends CommonIndexValue> fieldReader = model.getReader(fieldId);
+			Object fieldValue = null;
+			if (fieldReader != null) {
+				fieldValue = fieldReader.readField(fieldValueBytes);
+			}
 			final PersistentValue<Object> persistentValue = new PersistentValue<Object>(
 					fieldId,
 					fieldValue);

@@ -10,7 +10,7 @@ import org.opengis.feature.type.AttributeDescriptor;
 /**
  * This is used by the FeatureDataAdapter to handle GeoWave 'fields' using
  * SimpleFeature 'attributes.'
- *
+ * 
  */
 public class FeatureAttributeHandler implements
 		NativeFieldHandler<SimpleFeature, Object>

@@ -324,16 +324,17 @@ public class GeoWaveGTDataStore extends
 			return currentSelections;
 		}
 
-		currentSelections = new ArrayList<PrimaryIndex>(2);
+		currentSelections = new ArrayList<PrimaryIndex>(
+				2);
 		final List<String> indexNames = SimpleFeaturePrimaryIndexConfiguration.getIndexNames(adapter.getType());
-		PrimaryIndex bestSelection = null; 
+		PrimaryIndex bestSelection = null;
 		final boolean needTime = adapter.hasTemporalConstraints();
 
 		try (CloseableIterator<Index<?, ?>> indices = indexStore.getIndices()) {
 			boolean currentSelectionHasTime = false;
 			while (indices.hasNext()) {
 				final PrimaryIndex index = (PrimaryIndex) indices.next();
-				
+
 				if (!indexNames.isEmpty() && indexNames.contains(index.getId().getString())) {
 					currentSelections.add(index);
 				}
@@ -371,9 +372,8 @@ public class GeoWaveGTDataStore extends
 					ex);
 		}
 
-		if (currentSelections.isEmpty() && bestSelection != null)
-			currentSelections.add(bestSelection);
-		
+		if (currentSelections.isEmpty() && bestSelection != null) currentSelections.add(bestSelection);
+
 		preferredIndexes.put(
 				adapter.getType().getName().toString(),
 				currentSelections);

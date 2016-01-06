@@ -126,24 +126,24 @@ public class StatsManager
 								new ByteArrayId(
 										descriptor.getLocalName())));
 
-				 addStats(
-				 new FeatureFixedBinNumericStatistics(
-				 dataAdapter.getAdapterId(),
-				 descriptor.getLocalName()),
-				 new FieldIdStatisticVisibility(
-				 new ByteArrayId(
-				 descriptor.getLocalName())));
+				addStats(
+						new FeatureFixedBinNumericStatistics(
+								dataAdapter.getAdapterId(),
+								descriptor.getLocalName()),
+						new FieldIdStatisticVisibility(
+								new ByteArrayId(
+										descriptor.getLocalName())));
 
 			}
 			else if (String.class.isAssignableFrom(descriptor.getType().getBinding())) {
-				 addStats(
-				 new FeatureHyperLogLogStatistics(
-				 dataAdapter.getAdapterId(),
-				 descriptor.getLocalName(),
-				 16),
-				 new FieldIdStatisticVisibility(
-				 new ByteArrayId(
-				 descriptor.getLocalName())));
+				addStats(
+						new FeatureHyperLogLogStatistics(
+								dataAdapter.getAdapterId(),
+								descriptor.getLocalName(),
+								16),
+						new FieldIdStatisticVisibility(
+								new ByteArrayId(
+										descriptor.getLocalName())));
 			}
 
 		}

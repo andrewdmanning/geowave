@@ -16,7 +16,7 @@ import org.opengis.feature.type.AttributeDescriptor;
  * instants based on a temporal attribute (a Java binding class of Date or
  * Calendar for an attribute)to and from a GeoWave common index field for
  * SimpleFeature data.
- *
+ * 
  */
 public class FeatureTimestampHandler implements
 		IndexFieldHandler<SimpleFeature, Time, Object>

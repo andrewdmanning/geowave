@@ -14,12 +14,11 @@ import mil.nga.giat.geowave.core.store.spi.SPIServiceRegistry;
 /**
  * This class has a set of convenience methods to determine the appropriate
  * field reader and writer for a given field type (Class)
- *
+ * 
  */
 public class FieldUtils
 {
-	private static final Logger LOGGER = LoggerFactory.getLogger(
-			FieldUtils.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(FieldUtils.class);
 	private static Map<Class<?>, FieldReader<?>> fieldReaderRegistry = null;
 	private static Map<Class<?>, FieldWriter<?, ?>> fieldWriterRegistry = null;
 
@@ -41,8 +40,7 @@ public class FieldUtils
 		fieldReaderRegistry = new HashMap<Class<?>, FieldReader<?>>();
 		fieldWriterRegistry = new HashMap<Class<?>, FieldWriter<?, ?>>();
 		final Iterator<FieldSerializationProviderSpi> serializationProviders = new SPIServiceRegistry(
-				FieldSerializationProviderSpi.class).load(
-						FieldSerializationProviderSpi.class);
+				FieldSerializationProviderSpi.class).load(FieldSerializationProviderSpi.class);
 		while (serializationProviders.hasNext()) {
 			final FieldSerializationProviderSpi<?> serializationProvider = serializationProviders.next();
 			if (serializationProvider != null) {
@@ -51,10 +49,8 @@ public class FieldUtils
 						FieldSerializationProviderSpi.class);
 				final FieldReader<?> reader = serializationProvider.getFieldReader();
 				if (reader != null) {
-					if (fieldReaderRegistry.containsKey(
-							type)) {
-						LOGGER.warn(
-								"Field reader already registered for " + type + "; not able to add " + reader);
+					if (fieldReaderRegistry.containsKey(type)) {
+						LOGGER.warn("Field reader already registered for " + type + "; not able to add " + reader);
 					}
 					else {
 						fieldReaderRegistry.put(
@@ -64,10 +60,8 @@ public class FieldUtils
 				}
 				final FieldWriter<?, ?> writer = serializationProvider.getFieldWriter();
 				if (writer != null) {
-					if (fieldWriterRegistry.containsKey(
-							type)) {
-						LOGGER.warn(
-								"Field writer already registered for " + type + "; not able to add " + writer);
+					if (fieldWriterRegistry.containsKey(type)) {
+						LOGGER.warn("Field writer already registered for " + type + "; not able to add " + writer);
 					}
 					else {
 						fieldWriterRegistry.put(
@@ -84,8 +78,7 @@ public class FieldUtils
 			final Class<T> myClass ) {
 		final Map<Class<?>, FieldReader<?>> internalFieldReaders = getRegisteredFieldReaders();
 		// try concrete class
-		final FieldReader<T> reader = (FieldReader<T>) internalFieldReaders.get(
-				myClass);
+		final FieldReader<T> reader = (FieldReader<T>) internalFieldReaders.get(myClass);
 		if (reader != null) {
 			return reader;
 		}
@@ -100,8 +93,7 @@ public class FieldUtils
 			final Class<T> myClass ) {
 		final Map<Class<?>, FieldWriter<?, ?>> internalFieldWriters = getRegisteredFieldWriters();
 		// try concrete class
-		final FieldWriter<?, T> writer = (FieldWriter<?, T>) internalFieldWriters.get(
-				myClass);
+		final FieldWriter<?, T> writer = (FieldWriter<?, T>) internalFieldWriters.get(myClass);
 		if (writer != null) {
 			return writer;
 		} // if the concrete class lookup failed, try inheritance
@@ -128,8 +120,7 @@ public class FieldUtils
 			final Class<FieldType> myClass,
 			final FieldVisibilityHandler<RowType, Object> visibilityHandler ) {
 		return new BasicWriter<RowType, FieldType>(
-				getDefaultWriterForClass(
-						myClass),
+				getDefaultWriterForClass(myClass),
 				visibilityHandler);
 	}
 }
