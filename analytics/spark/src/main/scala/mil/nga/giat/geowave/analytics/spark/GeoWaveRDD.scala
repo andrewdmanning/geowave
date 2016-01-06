@@ -5,10 +5,18 @@ import org.apache.spark.rdd.RDD
 import org.apache.hadoop.conf.Configuration
 import org.opengis.feature.simple.SimpleFeature
 import org.apache.spark.SparkContext
+<<<<<<< HEAD
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey
 import mil.nga.giat.geowave.core.store.query.Query
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputFormat
 import mil.nga.giat.geowave.analytic.ScopedJobConfiguration
+=======
+import org.apache.accumulo.core.data.{ Key, Value }
+import mil.nga.giat.geowave.datastore.accumulo.mapreduce.input.GeoWaveInputKey
+import mil.nga.giat.geowave.core.store.query.Query
+import mil.nga.giat.geowave.datastore.accumulo.mapreduce.input.GeoWaveInputFormat
+import mil.nga.giat.geowave.analytic.ConfigurationWrapper
+>>>>>>> master
 import org.apache.spark.serializer.KryoRegistrator
 import com.esotericsoftware.kryo.Kryo
 import mil.nga.giat.geowave.analytic.partitioner.Partitioner
@@ -16,16 +24,25 @@ import mil.nga.giat.geowave.analytic.partitioner.Partitioner.PartitionData
 import scala.collection.JavaConverters._
 import mil.nga.giat.geowave.analytic.partitioner.OrthodromicDistancePartitioner
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter
+<<<<<<< HEAD
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputFormat
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputKey
+=======
+import mil.nga.giat.geowave.core.store.index.Index
+import mil.nga.giat.geowave.datastore.accumulo.mapreduce.output.GeoWaveOutputFormat
+import mil.nga.giat.geowave.datastore.accumulo.mapreduce.output.GeoWaveOutputKey
+>>>>>>> master
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.api.java.function.PairFunction
 import mil.nga.giat.geowave.core.store.query.DistributableQuery
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter
 import org.geotools.feature.simple.SimpleFeatureBuilder
+<<<<<<< HEAD
 import mil.nga.giat.geowave.analytic.PropertyManagement
 
+=======
+>>>>>>> master
 
 /**
  * Convenience obejct to provide different RDDs.
@@ -51,7 +68,11 @@ object GeoWaveRDD {
    * The default splits are necessarily optimal
    */
   def rddForSimpleFeatures(sc: SparkContext,   
+<<<<<<< HEAD
     index: PrimaryIndex,
+=======
+    index: Index,
+>>>>>>> master
     adapter: DataAdapter[SimpleFeature],
     minSplits: Int,
     maxSplits: Int,
@@ -59,6 +80,7 @@ object GeoWaveRDD {
 
     val conf = new org.apache.hadoop.conf.Configuration(sc.hadoopConfiguration)
 
+<<<<<<< HEAD
     GeoWaveInputFormat.setDataStoreName(conf,
        geoWaveContext.dataStoreName)
     
@@ -67,6 +89,14 @@ object GeoWaveRDD {
 
     GeoWaveInputFormat.setGeoWaveNamespace(conf,
 				geoWaveContext.tableNameSpace)
+=======
+    GeoWaveInputFormat.setAccumuloOperationsInfo(conf,
+      geoWaveContext.zookeepers,
+      geoWaveContext.instanceName,
+      geoWaveContext.user,
+      geoWaveContext.password,
+      geoWaveContext.tableNameSpace)
+>>>>>>> master
 
     // index and adapters are not mandatory.
     // they are used here as an example
@@ -87,19 +117,38 @@ object GeoWaveRDD {
    * Translate a set of objects in a JavaRDD to SimpleFeatures and push to GeoWave
    */
   def writeFeatureToGeoWave[V](sc: SparkContext,
+<<<<<<< HEAD
     index: PrimaryIndex,
     adapter: FeatureDataAdapter,
     inputRDD: JavaRDD[V],
     toOutput: (V) => SimpleFeature)(implicit geoWaveContext: GeoWaveContext) = {
 
     writeToGeoWave(sc, index, adapter, inputRDD, toOutput)
+=======
+    index: Index,
+    adapter: FeatureDataAdapter,
+    inputRDD: JavaRDD[V],
+    toOutput: (V, SimpleFeatureBuilder) => SimpleFeature)(implicit geoWaveContext: GeoWaveContext) = {
+    // not serializable
+    val pointBuilder = sc.broadcast(new SimpleFeatureBuilder(adapter.getType))
+
+    def myOutputFunc(in: V): SimpleFeature = {
+      toOutput(in, pointBuilder.value)
+    }
+
+    writeToGeoWave(sc, index, adapter, inputRDD, myOutputFunc)
+>>>>>>> master
   }
 
   /**
    * Translate a set of objects in a JavaRDD to a provided type and push to GeoWave
    */
   def writeToGeoWave[V, OutputType](sc: SparkContext,
+<<<<<<< HEAD
     index: PrimaryIndex,
+=======
+    index: Index,
+>>>>>>> master
     adapter: DataAdapter[OutputType],
     inputRDD: JavaRDD[V],
     toOutput: V => OutputType)(implicit geoWaveContext: GeoWaveContext) = {
@@ -107,6 +156,7 @@ object GeoWaveRDD {
     //setup the configuration and the output format
     val conf = new org.apache.hadoop.conf.Configuration(sc.hadoopConfiguration)
 
+<<<<<<< HEAD
     GeoWaveOutputFormat.setDataStoreName(conf,
         geoWaveContext.dataStoreName)
     
@@ -115,6 +165,14 @@ object GeoWaveRDD {
 
     GeoWaveOutputFormat.setGeoWaveNamespace(conf,
 				geoWaveContext.tableNameSpace)
+=======
+    GeoWaveOutputFormat.setAccumuloOperationsInfo(conf,
+      geoWaveContext.zookeepers,
+      geoWaveContext.instanceName,
+      geoWaveContext.user,
+      geoWaveContext.password,
+      geoWaveContext.tableNameSpace)
+>>>>>>> master
 
     GeoWaveOutputFormat.addIndex(conf, index)
     GeoWaveOutputFormat.addDataAdapter(conf, adapter)
@@ -137,11 +195,17 @@ object GeoWaveRDD {
     }) saveAsNewAPIHadoopDataset (job.getConfiguration)
   }
 
+<<<<<<< HEAD
   def sparkPartition(rdd: RDD[(GeoWaveInputKey, SimpleFeature)], pm: PropertyManagement, sc: SparkContext): PartitionVectorRDD = {
     val distancePartitioner = new OrthodromicDistancePartitioner[SimpleFeature]();
     val jobConfig = new org.apache.hadoop.conf.Configuration(sc.hadoopConfiguration)
     distancePartitioner.setup(pm,classOf[OrthodromicDistancePartitioner[SimpleFeature]], jobConfig)
     distancePartitioner.initialize(new ScopedJobConfiguration(jobConfig,classOf[OrthodromicDistancePartitioner[SimpleFeature]]));
+=======
+  def sparkPartition(rdd: RDD[(GeoWaveInputKey, SimpleFeature)], config: ConfigurationWrapper): PartitionVectorRDD = {
+    val distancePartitioner = new OrthodromicDistancePartitioner[SimpleFeature]();
+    distancePartitioner.initialize(config);
+>>>>>>> master
     PartitionVectorRDD(rdd, distancePartitioner)
   }
 

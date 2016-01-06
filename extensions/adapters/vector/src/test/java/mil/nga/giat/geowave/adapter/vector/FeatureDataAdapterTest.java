@@ -11,22 +11,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-import mil.nga.giat.geowave.adapter.vector.index.NumericSecondaryIndexConfiguration;
-import mil.nga.giat.geowave.adapter.vector.index.TemporalSecondaryIndexConfiguration;
-import mil.nga.giat.geowave.adapter.vector.index.TextSecondaryIndexConfiguration;
-import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveGTDataStore;
-import mil.nga.giat.geowave.adapter.vector.util.FeatureDataUtils;
-import mil.nga.giat.geowave.adapter.vector.utils.DateUtilities;
-import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfiguration;
-import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
-import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
-import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
-import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
-import mil.nga.giat.geowave.core.store.adapter.IndexFieldHandler;
-import mil.nga.giat.geowave.core.store.data.PersistentValue;
-import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
-import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
-
 import org.apache.commons.lang3.tuple.Pair;
 import org.geotools.data.DataUtilities;
 import org.geotools.feature.SchemaException;
@@ -45,6 +29,22 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.PrecisionModel;
+
+import mil.nga.giat.geowave.adapter.vector.index.NumericSecondaryIndexConfiguration;
+import mil.nga.giat.geowave.adapter.vector.index.TemporalSecondaryIndexConfiguration;
+import mil.nga.giat.geowave.adapter.vector.index.TextSecondaryIndexConfiguration;
+import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveGTDataStore;
+import mil.nga.giat.geowave.adapter.vector.util.FeatureDataUtils;
+import mil.nga.giat.geowave.adapter.vector.utils.DateUtilities;
+import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfiguration;
+import mil.nga.giat.geowave.adapter.vector.utils.SimpleFeatureUserDataConfigurationSet;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
+import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
+import mil.nga.giat.geowave.core.store.adapter.IndexFieldHandler;
+import mil.nga.giat.geowave.core.store.data.PersistentValue;
+import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
+import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 
 public class FeatureDataAdapterTest
 {

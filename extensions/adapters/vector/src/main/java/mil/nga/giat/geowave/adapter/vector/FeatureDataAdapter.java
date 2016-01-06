@@ -7,6 +7,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
+import org.geotools.data.DataUtilities;
+import org.geotools.feature.SchemaException;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.referencing.CRS;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeDescriptor;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.MathTransform;
+
 import mil.nga.giat.geowave.adapter.vector.index.SecondaryIndexManager;
 import mil.nga.giat.geowave.adapter.vector.plugin.GeoWaveGTDataStore;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.AdaptorProxyFieldLevelVisibilityHandler;
@@ -41,17 +52,6 @@ import mil.nga.giat.geowave.core.store.index.SecondaryIndex;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataAdapter;
 import mil.nga.giat.geowave.mapreduce.HadoopDataAdapter;
 import mil.nga.giat.geowave.mapreduce.HadoopWritableSerializer;
-
-import org.apache.log4j.Logger;
-import org.geotools.data.DataUtilities;
-import org.geotools.feature.SchemaException;
-import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.geotools.referencing.CRS;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
-import org.opengis.feature.type.AttributeDescriptor;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.MathTransform;
 
 /**
  * This data adapter will handle all reading/writing concerns for storing and
@@ -226,10 +226,12 @@ public class FeatureDataAdapter extends
 		return nativeHandlers;
 	}
 
+	@Override
 	public String getVisibilityAttributeName() {
 		return visibilityAttributeName;
 	}
 
+	@Override
 	public VisibilityManagement<SimpleFeature> getFieldVisibilityManagement() {
 		return fieldVisibilityManagement;
 	}
@@ -578,6 +580,7 @@ public class FeatureDataAdapter extends
 		timeDescriptors = inferTimeAttributeDescriptor(persistedType);
 	}
 
+	@Override
 	public synchronized TimeDescriptors getTimeDescriptors() {
 		if (timeDescriptors == null) {
 			timeDescriptors = inferTimeAttributeDescriptor(persistedType);

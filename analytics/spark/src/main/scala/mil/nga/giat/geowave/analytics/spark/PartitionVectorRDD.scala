@@ -5,9 +5,16 @@ import org.apache.spark.rdd.{ ShuffledRDD, RDD }
 import org.apache.hadoop.conf.Configuration
 import org.opengis.feature.simple.SimpleFeature
 import org.apache.spark.SparkContext
+<<<<<<< HEAD
 import scala.collection.JavaConverters._
 import mil.nga.giat.geowave.analytic.partitioner.Partitioner.PartitionData
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey
+=======
+import org.apache.accumulo.core.data.{ Key, Value }
+import scala.collection.JavaConverters._
+import mil.nga.giat.geowave.analytic.partitioner.Partitioner.PartitionData
+import mil.nga.giat.geowave.datastore.accumulo.mapreduce.input.GeoWaveInputKey
+>>>>>>> master
 import mil.nga.giat.geowave.analytic.partitioner.Partitioner
 
 /**

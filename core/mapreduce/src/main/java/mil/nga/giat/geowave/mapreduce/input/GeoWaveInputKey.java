@@ -4,10 +4,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.hadoop.io.WritableComparator;
+
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.mapreduce.GeoWaveKey;
-
-import org.apache.hadoop.io.WritableComparator;
 
 /**
  * This class encapsulates the unique identifier for GeoWave input data using a

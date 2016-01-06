@@ -3,7 +3,11 @@ package mil.nga.giat.geowave.analytics.spark.tools
 import scala.collection.mutable.PriorityQueue
 import org.opengis.feature.simple.SimpleFeature
 import mil.nga.giat.geowave.analytic.distance.DistanceFn
+<<<<<<< HEAD
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey
+=======
+import mil.nga.giat.geowave.datastore.accumulo.mapreduce.input.GeoWaveInputKey
+>>>>>>> master
 import org.apache.spark.rdd.RDD
 import mil.nga.giat.geowave.adapter.vector.FeatureWritable
 import org.apache.spark.SparkContext._
