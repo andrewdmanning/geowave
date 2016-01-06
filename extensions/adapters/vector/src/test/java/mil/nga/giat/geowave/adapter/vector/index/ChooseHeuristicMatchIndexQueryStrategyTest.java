@@ -18,6 +18,7 @@ import mil.nga.giat.geowave.core.geotime.index.dimension.TimeDefinition;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider.SpatialIndexBuilder;
 import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider.SpatialTemporalIndexBuilder;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericData;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericRange;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
@@ -78,7 +79,7 @@ public class ChooseHeuristicMatchIndexQueryStrategyTest
 				strategy);
 		assertTrue(it.hasNext());
 		assertEquals(
-				"SPATIAL_TEMPORAL_VECTOR_IDX",
+				StringUtils.stringFromBinary(new SpatialTemporalIndexBuilder().createIndex().getId().getBytes()),
 				it.next().getId().getString());
 		assertFalse(it.hasNext());
 
@@ -126,7 +127,7 @@ public class ChooseHeuristicMatchIndexQueryStrategyTest
 				strategy);
 		assertTrue(it.hasNext());
 		assertEquals(
-				"SPATIAL_VECTOR_IDX",
+				StringUtils.stringFromBinary(new SpatialIndexBuilder().createIndex().getId().getBytes()),
 				it.next().getId().getString());
 		assertFalse(it.hasNext());
 
