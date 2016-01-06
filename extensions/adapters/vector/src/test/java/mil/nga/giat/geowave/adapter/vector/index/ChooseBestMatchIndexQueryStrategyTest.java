@@ -47,7 +47,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 {
 
 	@Test
-	public void testChooseTemporalWithStats() {
+	public void testChooseSpatialWithStats() {
 
 		final PrimaryIndex temporalindex = new SpatialTemporalIndexBuilder().createIndex();
 		final PrimaryIndex spatialIndex = new SpatialIndexBuilder().createIndex();
@@ -166,6 +166,7 @@ public class ChooseBestMatchIndexQueryStrategyTest
 
 	@Test
 	public void testChooseTemporalWithoutStats() {
+		final PrimaryIndex temporalindex = new SpatialTemporalIndexBuilder().createIndex();
 		final ChooseBestMatchIndexQueryStrategy strategy = new ChooseBestMatchIndexQueryStrategy();
 
 		final ConstraintSet cs1 = new ConstraintSet();
@@ -206,14 +207,15 @@ public class ChooseBestMatchIndexQueryStrategyTest
 				strategy);
 		assertTrue(it.hasNext());
 		assertEquals(
-				"SPATIAL_TEMPORAL_VECTOR_IDX",
-				it.next().getId().getString());
+				temporalindex.getId(),
+				it.next().getId());
 		assertFalse(it.hasNext());
 
 	}
 
 	@Test
 	public void testChooseSpatialWithoutStats() {
+		final PrimaryIndex spatialIndex = new SpatialIndexBuilder().createIndex();
 		final ChooseBestMatchIndexQueryStrategy strategy = new ChooseBestMatchIndexQueryStrategy();
 
 		final ConstraintSet cs1 = new ConstraintSet();
@@ -245,8 +247,8 @@ public class ChooseBestMatchIndexQueryStrategyTest
 				strategy);
 		assertTrue(it.hasNext());
 		assertEquals(
-				"SPATIAL_VECTOR_IDX",
-				it.next().getId().getString());
+				spatialIndex.getId(),
+				it.next().getId());
 		assertFalse(it.hasNext());
 
 	}
