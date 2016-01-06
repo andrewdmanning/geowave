@@ -29,7 +29,6 @@ import org.apache.hadoop.util.ToolRunner;
 import org.geotools.geometry.GeneralEnvelope;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.opengis.coverage.grid.GridCoverage;
 
 public class KDERasterResizeIT extends
@@ -61,7 +60,7 @@ public class KDERasterResizeIT extends
 				TEST_CASE_BASE);
 	}
 
-	@Test
+	// @Test
 	public void testKDEAndRasterResize()
 			throws Exception {
 		accumuloOperations.deleteAll();
