@@ -10,7 +10,7 @@ public class FeatureSerializationOptionProvider implements
 		IngestFormatOptionProvider,
 		Persistable
 {
-	private boolean kryo = false;
+	private boolean whole = false;
 
 	private boolean avro = false;
 
@@ -18,9 +18,9 @@ public class FeatureSerializationOptionProvider implements
 	public void applyOptions(
 			final Options allOptions ) {
 		allOptions.addOption(
-				"kryo",
+				"whole",
 				false,
-				"A flag to indicate whether kryo serialization should be used");
+				"A flag to indicate whether whole feature serialization should be used");
 		allOptions.addOption(
 				"avro",
 				false,
@@ -30,16 +30,16 @@ public class FeatureSerializationOptionProvider implements
 	@Override
 	public void parseOptions(
 			final CommandLine commandLine ) {
-		if (commandLine.hasOption("kryo")) {
-			kryo = true;
+		if (commandLine.hasOption("whole")) {
+			whole = true;
 		}
 		if (commandLine.hasOption("avro")) {
 			avro = true;
 		}
 	}
 
-	public boolean isKryo() {
-		return kryo;
+	public boolean isWhole() {
+		return whole;
 	}
 
 	public boolean isAvro() {
@@ -49,7 +49,7 @@ public class FeatureSerializationOptionProvider implements
 	@Override
 	public byte[] toBinary() {
 		return new byte[] {
-			kryo ? (byte) 1 : avro ? (byte) 2 : (byte) 0
+			whole ? (byte) 1 : avro ? (byte) 2 : (byte) 0
 		};
 	}
 
@@ -58,7 +58,7 @@ public class FeatureSerializationOptionProvider implements
 			final byte[] bytes ) {
 		if ((bytes != null) && (bytes.length > 0)) {
 			if (bytes[0] == 1) {
-				kryo = true;
+				whole = true;
 			}
 			if (bytes[0] == 2) {
 				avro = true;

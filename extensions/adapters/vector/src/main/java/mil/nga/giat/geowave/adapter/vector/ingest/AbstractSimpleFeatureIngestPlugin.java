@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import mil.nga.giat.geowave.adapter.vector.AvroFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.WholeFeatureDataAdapter;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -68,17 +69,23 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 			bytes[0]
 		};
 		serializationFormatOptionProvider = new FeatureSerializationOptionProvider();
-		serializationFormatOptionProvider.fromBinary(kryoBytes);
+		serializationFormatOptionProvider.fromBinary(
+				kryoBytes);
 		filterOptionProvider = new CQLFilterOptionProvider();
-		filterOptionProvider.fromBinary(bytes);
+		filterOptionProvider.fromBinary(
+				bytes);
 	}
 
 	protected WritableDataAdapter<SimpleFeature> newAdapter(
 			final SimpleFeatureType type,
 			final FieldVisibilityHandler<SimpleFeature, Object> fieldVisiblityHandler ) {
 		// TODO: assign other adapters based on serialization option
-		if (serializationFormatOptionProvider.isKryo() || serializationFormatOptionProvider.isAvro()) {
+		if (serializationFormatOptionProvider.isWhole()) {
 			return new WholeFeatureDataAdapter(
+					type);
+		}
+		else if (serializationFormatOptionProvider.isAvro()) {
+			return new AvroFeatureDataAdapter(
 					type);
 		}
 		return new FeatureDataAdapter(
@@ -108,7 +115,8 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 			final File input,
 			final ByteArrayId primaryIndexId,
 			final String globalVisibility ) {
-		final I[] hdfsObjects = toAvroObjects(input);
+		final I[] hdfsObjects = toAvroObjects(
+				input);
 		final List<CloseableIterator<GeoWaveData<SimpleFeature>>> allData = new ArrayList<CloseableIterator<GeoWaveData<SimpleFeature>>>();
 		for (final I hdfsObject : hdfsObjects) {
 			final CloseableIterator<GeoWaveData<SimpleFeature>> geowaveData = toGeoWaveDataInternal(
@@ -122,17 +130,21 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 							@Override
 							public boolean apply(
 									final GeoWaveData<SimpleFeature> input ) {
-								return filterOptionProvider.evaluate(input.getValue());
+								return filterOptionProvider.evaluate(
+										input.getValue());
 							}
 						});
-				allData.add(new CloseableIteratorWrapper<GeoWaveData<SimpleFeature>>(
-						geowaveData,
-						it));
+				allData.add(
+						new CloseableIteratorWrapper<GeoWaveData<SimpleFeature>>(
+								geowaveData,
+								it));
 			}
-			allData.add(geowaveData);
+			allData.add(
+					geowaveData);
 		}
 		return new CloseableIterator.Wrapper<GeoWaveData<SimpleFeature>>(
-				Iterators.concat(allData.iterator()));
+				Iterators.concat(
+						allData.iterator()));
 	}
 
 	abstract protected CloseableIterator<GeoWaveData<SimpleFeature>> toGeoWaveDataInternal(
@@ -153,7 +165,8 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 		@Override
 		public WritableDataAdapter<SimpleFeature>[] getDataAdapters(
 				final String globalVisibility ) {
-			return parentPlugin.getDataAdapters(globalVisibility);
+			return parentPlugin.getDataAdapters(
+					globalVisibility);
 		}
 
 		@Override
@@ -175,7 +188,8 @@ abstract public class AbstractSimpleFeatureIngestPlugin<I> implements
 		@Override
 		public void fromBinary(
 				final byte[] bytes ) {
-			parentPlugin.fromBinary(bytes);
+			parentPlugin.fromBinary(
+					bytes);
 		}
 
 		@Override
