@@ -22,7 +22,7 @@ public class GeoWaveInputKey extends
 	 */
 	private static final long serialVersionUID = 1L;
 	private ByteArrayId dataId;
-	private ByteArrayId insertionId;
+	private transient ByteArrayId insertionId;
 
 	public GeoWaveInputKey() {
 		super();
