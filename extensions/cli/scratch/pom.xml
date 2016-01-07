@@ -4,7 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>mil.nga.giat</groupId>
-		<artifactId>geowave-parent</artifactId>
+		<artifactId>geowave-extension-parent</artifactId>
+		<relativePath>../../</relativePath>
 		<version>0.9.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>geowave-cli-scratch</artifactId>
