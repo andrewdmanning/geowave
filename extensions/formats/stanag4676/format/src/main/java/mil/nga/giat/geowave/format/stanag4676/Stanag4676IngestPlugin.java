@@ -2,6 +2,8 @@ package mil.nga.giat.geowave.format.stanag4676;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -9,9 +11,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
+import java.util.UUID;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.geotime.store.dimension.Time;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -30,6 +35,7 @@ import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
+import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.NullIndex;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.format.stanag4676.image.ImageChip;
@@ -59,6 +65,13 @@ public class Stanag4676IngestPlugin extends
 	private static Logger LOGGER = LoggerFactory.getLogger(Stanag4676IngestPlugin.class);
 	public final static PrimaryIndex IMAGE_CHIP_INDEX = new NullIndex(
 			"IMAGERY_CHIPS");
+	public final static ByteArrayId MISSION_SUMMARY_ID = new ByteArrayId(
+			"MISSION_SUMMARY");
+	private final static PrimaryIndex DEFAULT_SPATIAL_TEMPORAL = new SpatialTemporalDimensionalityTypeProvider.SpatialTemporalIndexBuilder().createIndex();
+	public final static PrimaryIndex MISSION_SUMMARY = new CustomIdIndex(
+			DEFAULT_SPATIAL_TEMPORAL.getIndexStrategy(),
+			DEFAULT_SPATIAL_TEMPORAL.getIndexModel(),
+			MISSION_SUMMARY_ID);
 
 	@Override
 	public String[] getFileExtensionFilters() {
@@ -116,7 +129,7 @@ public class Stanag4676IngestPlugin extends
 	}
 
 	private static class IngestWithReducerImpl implements
-			IngestWithReducer<WholeFile, Text, TrackEventWritable, Object>,
+			IngestWithReducer<WholeFile, Text, Stanag4676EventWritable, Object>,
 			IngestWithMapper<WholeFile, Object>
 	{
 		private final SimpleFeatureBuilder ptBuilder;
@@ -125,11 +138,19 @@ public class Stanag4676IngestPlugin extends
 
 		private final SimpleFeatureBuilder trackBuilder;
 
+		private final SimpleFeatureBuilder missionSummaryBuilder;
+
+		private final SimpleFeatureBuilder missionFrameBuilder;
+
 		private final SimpleFeatureType pointType;
 
 		private final SimpleFeatureType motionPointType;
 
 		private final SimpleFeatureType trackType;
+
+		private final SimpleFeatureType missionSummaryType;
+
+		private final SimpleFeatureType missionFrameType;
 
 		public IngestWithReducerImpl() {
 			pointType = Stanag4676Utils.createPointDataType();
@@ -137,6 +158,10 @@ public class Stanag4676IngestPlugin extends
 			motionPointType = Stanag4676Utils.createMotionDataType();
 
 			trackType = Stanag4676Utils.createTrackDataType();
+
+			missionSummaryType = Stanag4676Utils.createMissionSummaryDataType();
+
+			missionFrameType = Stanag4676Utils.createMissionFrameDataType();
 
 			ptBuilder = new SimpleFeatureBuilder(
 					pointType);
@@ -146,6 +171,12 @@ public class Stanag4676IngestPlugin extends
 
 			trackBuilder = new SimpleFeatureBuilder(
 					trackType);
+
+			missionSummaryBuilder = new SimpleFeatureBuilder(
+					missionSummaryType);
+
+			missionFrameBuilder = new SimpleFeatureBuilder(
+					missionFrameType);
 		}
 
 		@Override
@@ -171,6 +202,12 @@ public class Stanag4676IngestPlugin extends
 				new FeatureDataAdapter(
 						trackType,
 						fieldVisiblityHandler),
+				new FeatureDataAdapter(
+						missionSummaryType,
+						fieldVisiblityHandler),
+				new FeatureDataAdapter(
+						missionFrameType,
+						fieldVisiblityHandler),
 				new ImageChipDataAdapter(
 						fieldVisiblityHandler)
 			};
@@ -186,7 +223,7 @@ public class Stanag4676IngestPlugin extends
 				final byte[] bytes ) {}
 
 		@Override
-		public CloseableIterator<KeyValueData<Text, TrackEventWritable>> toIntermediateMapReduceData(
+		public CloseableIterator<KeyValueData<Text, Stanag4676EventWritable>> toIntermediateMapReduceData(
 				final WholeFile input ) {
 			final TrackFileReader fileReader = new TrackFileReader();
 			fileReader.setDecoder(new NATO4676Decoder());
@@ -195,7 +232,7 @@ public class Stanag4676IngestPlugin extends
 			fileReader.setHandler(handler);
 			fileReader.read(new ByteBufferBackedInputStream(
 					input.getOriginalFile()));
-			return new CloseableIterator.Wrapper<KeyValueData<Text, TrackEventWritable>>(
+			return new CloseableIterator.Wrapper<KeyValueData<Text, Stanag4676EventWritable>>(
 					handler.getIntermediateData().iterator());
 		}
 
@@ -204,18 +241,18 @@ public class Stanag4676IngestPlugin extends
 				final Text key,
 				final ByteArrayId primaryIndexId,
 				final String globalVisibility,
-				final Iterable<TrackEventWritable> values ) {
+				final Iterable<Stanag4676EventWritable> values ) {
 			final List<GeoWaveData<Object>> geowaveData = new ArrayList<GeoWaveData<Object>>();
 			// sort events
-			final List<TrackEventWritable> sortedTracks = new ArrayList<TrackEventWritable>();
+			final List<Stanag4676EventWritable> sortedEvents = new ArrayList<Stanag4676EventWritable>();
 
-			for (final TrackEventWritable track : values) {
-				sortedTracks.add(TrackEventWritable.clone(track));
+			for (final Stanag4676EventWritable event : values) {
+				sortedEvents.add(Stanag4676EventWritable.clone(event));
 			}
 
 			Collections.sort(
-					sortedTracks,
-					new ComparatorTrackEventWritable());
+					sortedEvents,
+					new ComparatorStanag4676EventWritable());
 
 			// define event values
 			String trackUuid = "";
@@ -225,8 +262,8 @@ public class Stanag4676IngestPlugin extends
 			String trackClassification = "";
 
 			// initial values for track point events
-			TrackEventWritable firstEvent = null;
-			TrackEventWritable lastEvent = null;
+			Stanag4676EventWritable firstEvent = null;
+			Stanag4676EventWritable lastEvent = null;
 			int numTrackPoints = 0;
 			double distanceKm = 0.0;
 			EarthVector prevEv = null;
@@ -243,12 +280,16 @@ public class Stanag4676IngestPlugin extends
 			long stopDuration = 0L;
 			long stopTime = -1L;
 
-			for (final TrackEventWritable event : sortedTracks) {
+			String objectClass = "";
+			String objectClassConf = "";
+			String objectClassRel = "";
+			String objectClassTimes = "";
+
+			for (final Stanag4676EventWritable event : sortedEvents) {
 
 				trackUuid = event.TrackUUID.toString();
-				mission = event.Mission.toString();
+				mission = event.MissionUUID.toString();
 				trackNumber = event.TrackNumber.toString();
-				// trackStatus = event.TrackStatus.toString();
 				trackClassification = event.TrackClassification.toString();
 
 				// build collection of track point
@@ -285,6 +326,7 @@ public class Stanag4676IngestPlugin extends
 					ptBuilder.add(trackNumber);
 					ptBuilder.add(trackUuid);
 					ptBuilder.add(event.TrackItemUUID.toString());
+					ptBuilder.add(event.TrackPointSource.toString());
 					ptBuilder.add(new Date(
 							event.TimeStamp.get()));
 					if (event.Speed.get() > maxSpeed) {
@@ -375,6 +417,56 @@ public class Stanag4676IngestPlugin extends
 							primaryIndexId,
 							motionBuilder.buildFeature(event.TrackItemUUID.toString())));
 				}
+				else if (event.EventType.get() == 2) {
+					Date date = new Date(
+							event.TimeStamp.get());
+					DateFormat format = new SimpleDateFormat(
+							"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+					format.setTimeZone(TimeZone.getTimeZone("UTC"));
+					String dateStr = format.format(date);
+
+					if (objectClass.length() != 0) objectClass += ",";
+					if (objectClassConf.length() != 0) objectClassConf += ",";
+					if (objectClassRel.length() != 0) objectClassRel += ",";
+					if (objectClassTimes.length() != 0) objectClassTimes += ",";
+
+					objectClass += event.ObjectClass.toString();
+					objectClassConf += event.ObjectClassConf.toString();
+					objectClassRel += event.ObjectClassRel.toString();
+					objectClassTimes += dateStr;
+				}
+				else if (event.EventType.get() == 3) {
+					missionFrameBuilder.add(GeometryUtils.geometryFromBinary(event.Geometry.getBytes()));
+					missionFrameBuilder.add(event.MissionUUID.toString());
+					missionFrameBuilder.add(new Date(
+							event.TimeStamp.get()));
+					missionFrameBuilder.add(event.FrameNumber.get());
+
+					geowaveData.add(new GeoWaveData<Object>(
+							new ByteArrayId(
+									StringUtils.stringToBinary(Stanag4676Utils.MISSION_FRAME)),
+							MISSION_SUMMARY_ID,
+							missionFrameBuilder.buildFeature(UUID.randomUUID().toString())));
+				}
+				else if (event.EventType.get() == 4) {
+
+					missionSummaryBuilder.add(GeometryUtils.geometryFromBinary(event.Geometry.getBytes()));
+					missionSummaryBuilder.add(event.MissionUUID.toString());
+					missionSummaryBuilder.add(new Date(
+							event.TimeStamp.get()));
+					missionSummaryBuilder.add(new Date(
+							event.EndTimeStamp.get()));
+					missionSummaryBuilder.add(event.MissionNumFrames.get());
+					missionSummaryBuilder.add(event.MissionName.toString());
+					missionSummaryBuilder.add(event.TrackClassification.toString());
+					missionSummaryBuilder.add(event.ObjectClass.toString());
+
+					geowaveData.add(new GeoWaveData<Object>(
+							new ByteArrayId(
+									StringUtils.stringToBinary(Stanag4676Utils.MISSION_SUMMARY)),
+							MISSION_SUMMARY_ID,
+							missionSummaryBuilder.buildFeature(UUID.randomUUID().toString())));
+				}
 				if (event.Image != null) {
 					final byte[] imageBytes = event.Image.getBytes();
 					if ((imageBytes != null) && (imageBytes.length > 0)) {
@@ -434,12 +526,16 @@ public class Stanag4676IngestPlugin extends
 				// classification and accumulo visibility
 				trackBuilder.add(trackClassification);
 
+				trackBuilder.add(objectClass);
+				trackBuilder.add(objectClassConf);
+				trackBuilder.add(objectClassRel);
+				trackBuilder.add(objectClassTimes);
+
 				geowaveData.add(new GeoWaveData<Object>(
 						new ByteArrayId(
 								StringUtils.stringToBinary(Stanag4676Utils.TRACK)),
 						primaryIndexId,
 						trackBuilder.buildFeature(trackUuid)));
-
 			}
 			return new CloseableIterator.Wrapper<GeoWaveData<Object>>(
 					geowaveData.iterator());
@@ -450,23 +546,23 @@ public class Stanag4676IngestPlugin extends
 				final WholeFile input,
 				final ByteArrayId primaryIndexId,
 				final String globalVisibility ) {
-			try (CloseableIterator<KeyValueData<Text, TrackEventWritable>> intermediateData = toIntermediateMapReduceData(input)) {
+			try (CloseableIterator<KeyValueData<Text, Stanag4676EventWritable>> intermediateData = toIntermediateMapReduceData(input)) {
 				// this is much better done in the reducer of a map reduce job,
 				// this aggregation by track UUID is not memory efficient
-				final Map<Text, List<TrackEventWritable>> trackUuidMap = new HashMap<Text, List<TrackEventWritable>>();
+				final Map<Text, List<Stanag4676EventWritable>> trackUuidMap = new HashMap<Text, List<Stanag4676EventWritable>>();
 				while (intermediateData.hasNext()) {
-					final KeyValueData<Text, TrackEventWritable> next = intermediateData.next();
-					List<TrackEventWritable> trackEvents = trackUuidMap.get(next.getKey());
+					final KeyValueData<Text, Stanag4676EventWritable> next = intermediateData.next();
+					List<Stanag4676EventWritable> trackEvents = trackUuidMap.get(next.getKey());
 					if (trackEvents == null) {
-						trackEvents = new ArrayList<TrackEventWritable>();
+						trackEvents = new ArrayList<Stanag4676EventWritable>();
 						trackUuidMap.put(
 								next.getKey(),
 								trackEvents);
 					}
-					trackEvents.add(next.getValue());
+					trackEvents.add((Stanag4676EventWritable) next.getValue());
 				}
 				final List<CloseableIterator<GeoWaveData<Object>>> iterators = new ArrayList<CloseableIterator<GeoWaveData<Object>>>();
-				for (final Entry<Text, List<TrackEventWritable>> entry : trackUuidMap.entrySet()) {
+				for (final Entry<Text, List<Stanag4676EventWritable>> entry : trackUuidMap.entrySet()) {
 					iterators.add(toGeoWaveData(
 							entry.getKey(),
 							primaryIndexId,
@@ -490,7 +586,8 @@ public class Stanag4676IngestPlugin extends
 	@Override
 	public PrimaryIndex[] getRequiredIndices() {
 		return new PrimaryIndex[] {
-			IMAGE_CHIP_INDEX
+			IMAGE_CHIP_INDEX,
+			MISSION_SUMMARY
 		};
 	}
 
