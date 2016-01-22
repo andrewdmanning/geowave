@@ -26,7 +26,7 @@ import mil.nga.giat.geowave.adapter.raster.adapter.RasterDataAdapter;
 import mil.nga.giat.geowave.adapter.raster.query.IndexOnlySpatialQuery;
 import mil.nga.giat.geowave.adapter.raster.stats.HistogramStatistics;
 import mil.nga.giat.geowave.adapter.raster.stats.OverviewStatistics;
-import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider.SpatialIndexBuilder;
 import mil.nga.giat.geowave.core.geotime.store.statistics.BoundingBoxDataStatistics;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.HierarchicalNumericIndexStrategy;
@@ -136,26 +136,35 @@ public class GeoWaveRasterReader extends
 				source,
 				uHints);
 		this.source = source;
-
-		final URL url = GeoWaveGTRasterFormat.getURLFromSource(source);
-
-		if (url == null) {
-			throw new MalformedURLException(
-					source.toString());
+		if (GeoWaveGTRasterFormat.isParamList(source)) {
+			try {
+				config = GeoWaveRasterConfig.readFromConfigParams(source.toString());
+			}
+			catch (final Exception e) {
+				throw new MalformedURLException(
+						source.toString());
+			}
 		}
+		else {
+			final URL url = GeoWaveGTRasterFormat.getURLFromSource(source);
 
-		try {
-			config = GeoWaveRasterConfig.readFrom(url);
-			init(config);
-		}
-		catch (final Exception e) {
-			LOGGER.error(
-					"Cannot read config",
-					e);
-			throw new IOException(
-					e);
-		}
+			if (url == null) {
+				throw new MalformedURLException(
+						source.toString());
+			}
 
+			try {
+				config = GeoWaveRasterConfig.readFromURL(url);
+			}
+			catch (final Exception e) {
+				LOGGER.error(
+						"Cannot read config",
+						e);
+				throw new IOException(
+						e);
+			}
+		}
+		init(config);
 	}
 
 	public GeoWaveRasterReader(
@@ -175,7 +184,8 @@ public class GeoWaveRasterReader extends
 		geowaveAdapterStore = config.getAdapterStore();
 		geowaveStatisticsStore = config.getDataStatisticsStore();
 
-		rasterIndex = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
+		rasterIndex = new SpatialIndexBuilder().setAllTiers(
+				true).createIndex();
 		crs = GeoWaveGTRasterFormat.DEFAULT_CRS;
 	}
 

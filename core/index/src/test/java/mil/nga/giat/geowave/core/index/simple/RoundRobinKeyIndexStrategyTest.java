@@ -177,7 +177,6 @@ public class RoundRobinKeyIndexStrategyTest
 						sfcIndexedRange,
 						8));
 		Assert.assertTrue(testIds.containsAll(compoundIndexIds));
-		// Assert.assertTrue(compoundIndexIds.containsAll(testIds));
 
 		final long[] sfcIndexCoordinatesPerDim = sfcIndexStrategy.getCoordinatesPerDimension(ids2.get(0));
 		final long[] coordinatesPerDim = compoundIndexStrategy.getCoordinatesPerDimension(ids.get(0));

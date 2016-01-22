@@ -4,9 +4,9 @@ import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.media.jai.Interpolation;
 
@@ -22,13 +22,12 @@ import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.datastore.accumulo.util.ConnectorPool;
 import mil.nga.giat.geowave.test.GeoWaveTestEnvironment;
 
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.hadoop.util.ToolRunner;
 import org.geotools.geometry.GeneralEnvelope;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.opengis.coverage.grid.GridCoverage;
 
 public class KDERasterResizeIT extends
@@ -60,7 +59,7 @@ public class KDERasterResizeIT extends
 				TEST_CASE_BASE);
 	}
 
-	// @Test
+	@Test
 	public void testKDEAndRasterResize()
 			throws Exception {
 		accumuloOperations.deleteAll();
@@ -123,27 +122,14 @@ public class KDERasterResizeIT extends
 						TEST_NAMESPACE,
 						"-input_datastore",
 						"accumulo",
-						"-input_" + BasicAccumuloOperations.ZOOKEEPER_CONFIG_NAME,
-						zookeeper,
-						"-input_" + BasicAccumuloOperations.INSTANCE_CONFIG_NAME,
-						accumuloInstance,
-						"-input_" + BasicAccumuloOperations.USER_CONFIG_NAME,
-						accumuloUser,
-						"-input_" + BasicAccumuloOperations.PASSWORD_CONFIG_NAME,
-						accumuloPassword,
+						"-input_" + GenericStoreCommandLineOptions.CONNECTION_OPTION_KEY,
+						BasicAccumuloOperations.ZOOKEEPER_CONFIG_NAME + "=" + zookeeper + ";" + BasicAccumuloOperations.INSTANCE_CONFIG_NAME + "=" + accumuloInstance + ";" + BasicAccumuloOperations.USER_CONFIG_NAME + "=" + accumuloUser + ";" + BasicAccumuloOperations.PASSWORD_CONFIG_NAME + "=" + accumuloPassword,
 						"-output_" + GenericStoreCommandLineOptions.NAMESPACE_OPTION_KEY,
 						TEST_COVERAGE_NAMESPACE,
 						"-output_datastore",
 						"accumulo",
-						"-output_" + BasicAccumuloOperations.ZOOKEEPER_CONFIG_NAME,
-						zookeeper,
-						"-output_" + BasicAccumuloOperations.INSTANCE_CONFIG_NAME,
-						accumuloInstance,
-						"-output_" + BasicAccumuloOperations.USER_CONFIG_NAME,
-						accumuloUser,
-						"-output_" + BasicAccumuloOperations.PASSWORD_CONFIG_NAME,
-						accumuloPassword
-
+						"-output_" + GenericStoreCommandLineOptions.CONNECTION_OPTION_KEY,
+						BasicAccumuloOperations.ZOOKEEPER_CONFIG_NAME + "=" + zookeeper + ";" + BasicAccumuloOperations.INSTANCE_CONFIG_NAME + "=" + accumuloInstance + ";" + BasicAccumuloOperations.USER_CONFIG_NAME + "=" + accumuloUser + ";" + BasicAccumuloOperations.PASSWORD_CONFIG_NAME + "=" + accumuloPassword
 					});
 		}
 		final int numLevels = (BASE_MAX_LEVEL - BASE_MIN_LEVEL) + 1;
@@ -219,26 +205,14 @@ public class KDERasterResizeIT extends
 						TEST_COVERAGE_NAMESPACE,
 						"-input_datastore",
 						"accumulo",
-						"-input_" + BasicAccumuloOperations.ZOOKEEPER_CONFIG_NAME,
-						zookeeper,
-						"-input_" + BasicAccumuloOperations.INSTANCE_CONFIG_NAME,
-						accumuloInstance,
-						"-input_" + BasicAccumuloOperations.USER_CONFIG_NAME,
-						accumuloUser,
-						"-input_" + BasicAccumuloOperations.PASSWORD_CONFIG_NAME,
-						accumuloPassword,
+						"-input_" + GenericStoreCommandLineOptions.CONNECTION_OPTION_KEY,
+						BasicAccumuloOperations.ZOOKEEPER_CONFIG_NAME + "=" + zookeeper + ";" + BasicAccumuloOperations.INSTANCE_CONFIG_NAME + "=" + accumuloInstance + ";" + BasicAccumuloOperations.USER_CONFIG_NAME + "=" + accumuloUser + ";" + BasicAccumuloOperations.PASSWORD_CONFIG_NAME + "=" + accumuloPassword,
 						"-output_" + GenericStoreCommandLineOptions.NAMESPACE_OPTION_KEY,
 						TEST_COVERAGE_NAMESPACE,
 						"-output_datastore",
 						"accumulo",
-						"-output_" + BasicAccumuloOperations.ZOOKEEPER_CONFIG_NAME,
-						zookeeper,
-						"-output_" + BasicAccumuloOperations.INSTANCE_CONFIG_NAME,
-						accumuloInstance,
-						"-output_" + BasicAccumuloOperations.USER_CONFIG_NAME,
-						accumuloUser,
-						"-output_" + BasicAccumuloOperations.PASSWORD_CONFIG_NAME,
-						accumuloPassword,
+						"-output_" + GenericStoreCommandLineOptions.CONNECTION_OPTION_KEY,
+						BasicAccumuloOperations.ZOOKEEPER_CONFIG_NAME + "=" + zookeeper + ";" + BasicAccumuloOperations.INSTANCE_CONFIG_NAME + "=" + accumuloInstance + ";" + BasicAccumuloOperations.USER_CONFIG_NAME + "=" + accumuloUser + ";" + BasicAccumuloOperations.PASSWORD_CONFIG_NAME + "=" + accumuloPassword
 					});
 		}
 
@@ -285,17 +259,24 @@ public class KDERasterResizeIT extends
 			final GeneralEnvelope queryEnvelope,
 			final Rectangle pixelDimensions,
 			double[][][] expectedResults )
-			throws IOException,
-			AccumuloException,
-			AccumuloSecurityException {
+			throws Exception {
 		final Map<String, String> options = getAccumuloConfigOptions();
+		final StringBuilder str = new StringBuilder(
+				"namespace=").append(
+				TEST_COVERAGE_NAMESPACE).append(
+				";equalizeHistogramOverride=false;interpolationOverride=").append(
+				Interpolation.INTERP_NEAREST);
+
+		for (final Entry<String, String> entry : options.entrySet()) {
+			str.append(
+					";").append(
+					entry.getKey()).append(
+					"=").append(
+					entry.getValue());
+		}
 
 		final GeoWaveRasterReader reader = new GeoWaveRasterReader(
-				GeoWaveRasterConfig.createConfig(
-						options,
-						TEST_COVERAGE_NAMESPACE,
-						false,
-						Interpolation.INTERP_NEAREST));
+				GeoWaveRasterConfig.readFromConfigParams(str.toString()));
 
 		queryEnvelope.setCoordinateReferenceSystem(GeoWaveGTRasterFormat.DEFAULT_CRS);
 		final Raster[] rasters = new Raster[numCoverages];

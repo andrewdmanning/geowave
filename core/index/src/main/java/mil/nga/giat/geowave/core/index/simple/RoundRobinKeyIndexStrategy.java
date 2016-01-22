@@ -117,12 +117,7 @@ public class RoundRobinKeyIndexStrategy implements
 	}
 
 	/**
-	 * Returns all of the insertion ids for the range. Since this index strategy
-	 * doensn't use binning, it will return the ByteArrayId of every value in
-	 * the range (i.e. if you are storing a range using this index strategy,
-	 * your data will be replicated for every integer value in the range).
-	 * 
-	 * {@inheritDoc}
+	 * Returns an insertion id selected round-robin from a predefined pool
 	 */
 	@Override
 	public List<ByteArrayId> getInsertionIds(
@@ -133,12 +128,8 @@ public class RoundRobinKeyIndexStrategy implements
 	}
 
 	/**
-	 * Returns all of the insertion ids for the range. Since this index strategy
-	 * doensn't use binning, it will return the ByteArrayId of every value in
-	 * the range (i.e. if you are storing a range using this index strategy,
-	 * your data will be replicated for every integer value in the range).
+     * Returns an insertion id selected round-robin from a predefined pool
 	 * 
-	 * {@inheritDoc}
 	 */
 	@Override
 	public List<ByteArrayId> getInsertionIds(
@@ -198,5 +189,14 @@ public class RoundRobinKeyIndexStrategy implements
 			naturalSplits.add(range.getStart());
 		}
 		return naturalSplits;
+	}
+
+	@Override
+	public int getByteOffsetFromDimensionalIndex() {
+		if ((keySet != null) && !keySet.isEmpty()) {
+			return keySet.get(
+					0).getStart().getBytes().length;
+		}
+		return 0;
 	}
 }
