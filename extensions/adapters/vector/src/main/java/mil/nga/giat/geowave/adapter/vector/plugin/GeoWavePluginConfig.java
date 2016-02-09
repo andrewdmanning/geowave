@@ -14,8 +14,30 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ServiceLoader;
 
+import mil.nga.giat.geowave.core.store.DataStore;
+import mil.nga.giat.geowave.core.store.GeoWaveStoreFinder;
+import mil.nga.giat.geowave.core.store.StoreFactoryFamilySpi;
+import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
+import mil.nga.giat.geowave.core.store.config.AbstractConfigOption;
+import mil.nga.giat.geowave.core.store.config.ConfigUtils;
+import mil.nga.giat.geowave.core.store.config.PasswordConfigOption;
+import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
+import mil.nga.giat.geowave.core.store.index.IndexStore;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.log4j.Logger;
+import org.geotools.data.DataAccessFactory.Param;
+import org.geotools.data.Parameter;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+
 import mil.nga.giat.geowave.adapter.vector.auth.AuthorizationFactorySPI;
 import mil.nga.giat.geowave.adapter.vector.auth.EmptyAuthorizationFactory;
+import mil.nga.giat.geowave.adapter.vector.index.ChooseBestMatchIndexQueryStrategy;
+import mil.nga.giat.geowave.adapter.vector.index.ChooseHeuristicMatchIndexQueryStrategy;
+import mil.nga.giat.geowave.adapter.vector.index.IndexQueryStrategySPI;
 import mil.nga.giat.geowave.adapter.vector.plugin.lock.LockingManagementFactory;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.GeoWaveStoreFinder;
@@ -28,15 +50,6 @@ import mil.nga.giat.geowave.core.store.config.PasswordConfigOption;
 import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.log4j.Logger;
-import org.geotools.data.DataAccessFactory.Param;
-import org.geotools.data.Parameter;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-
 /**
  * This class encapsulates the parameterized configuration that can be provided
  * per GeoWave data store within GeoTools. For GeoServer this configuration can
@@ -47,13 +60,14 @@ public class GeoWavePluginConfig
 {
 	private final static Logger LOGGER = Logger.getLogger(GeoWavePluginConfig.class);
 
-	protected static final String GEOWAVE_NAMESPACE_KEY = "gwNamespace";
+	public static final String GEOWAVE_NAMESPACE_KEY = "gwNamespace";
 	// name matches the workspace parameter provided to the factory
 	protected static final String FEATURE_NAMESPACE_KEY = "namespace";
 	protected static final String LOCK_MGT_KEY = "Lock Management";
 	protected static final String AUTH_MGT_KEY = "Authorization Management Provider";
 	protected static final String AUTH_URL_KEY = "Authorization Data URL";
 	protected static final String TRANSACTION_BUFFER_SIZE = "Transaction Buffer Size";
+	public static final String QUERY_INDEX_STRATEGY_KEY = "Query Index Strategy";
 
 	private static final Param GEOWAVE_NAMESPACE = new Param(
 			GEOWAVE_NAMESPACE_KEY,
@@ -95,6 +109,14 @@ public class GeoWavePluginConfig
 			"The providers data URL.",
 			false);
 
+	private static final Param QUERY_INDEX_STRATEGY = new Param(
+			QUERY_INDEX_STRATEGY_KEY,
+			String.class,
+			"Strategy to choose an index during query processing.",
+			true,
+			null,
+			getIndexQueryStrategyOptions());
+
 	private final AdapterStore adapterStore;
 	private final DataStore dataStore;
 	private final IndexStore indexStore;
@@ -105,6 +127,7 @@ public class GeoWavePluginConfig
 	private final AuthorizationFactorySPI authorizationFactory;
 	private final URL authorizationURL;
 	private final Integer transactionBufferSize;
+	private final IndexQueryStrategySPI indexQueryStrategy;
 
 	private static Map<String, List<Param>> paramMap = new HashMap<String, List<Param>>();
 
@@ -129,6 +152,7 @@ public class GeoWavePluginConfig
 			params.add(AUTH_MGT);
 			params.add(AUTH_URL);
 			params.add(TRANSACTION_BUFFER_SIZE_PARAM);
+			params.add(QUERY_INDEX_STRATEGY);
 			paramMap.put(
 					storeFactoryFamily.getName(),
 					params);
@@ -222,6 +246,11 @@ public class GeoWavePluginConfig
 
 		authorizationFactory = getAuthorizationFactory(params);
 		authorizationURL = getAuthorizationURL(params);
+		indexQueryStrategy = getIndexQueryStrategy(params);
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	public String getName() {
@@ -245,6 +274,10 @@ public class GeoWavePluginConfig
 		return authFactory;
 	}
 
+	public IndexQueryStrategySPI getIndexQueryStrategy() {
+		return indexQueryStrategy;
+	}
+
 	public AdapterStore getAdapterStore() {
 		return adapterStore;
 	}
@@ -259,6 +292,22 @@ public class GeoWavePluginConfig
 
 	public DataStatisticsStore getDataStatisticsStore() {
 		return dataStatisticsStore;
+	}
+
+	public static IndexQueryStrategySPI getIndexQueryStrategy(
+			final Map<String, Serializable> params )
+			throws GeoWavePluginException {
+		final Serializable param = params.get(QUERY_INDEX_STRATEGY_KEY);
+		if (param != null) {
+			final Iterator<IndexQueryStrategySPI> it = getInxexQueryStrategyList();
+			while (it.hasNext()) {
+				IndexQueryStrategySPI spi = it.next();
+				if (spi.toString().equals(
+						param.toString())) return spi;
+			}
+
+		}
+		return new ChooseHeuristicMatchIndexQueryStrategy();
 	}
 
 	public static URL getAuthorizationURL(
@@ -316,6 +365,20 @@ public class GeoWavePluginConfig
 		return map;
 	}
 
+	private static Map<String, List<String>> getIndexQueryStrategyOptions() {
+		final List<String> options = new ArrayList<String>();
+
+		final Iterator<IndexQueryStrategySPI> it = getInxexQueryStrategyList();
+		while (it.hasNext()) {
+			options.add(it.next().toString());
+		}
+		final Map<String, List<String>> map = new HashMap<String, List<String>>();
+		map.put(
+				Parameter.OPTIONS,
+				options);
+		return map;
+	}
+
 	private static Map<String, List<String>> getAuthSPIOptions() {
 		final List<String> options = new ArrayList<String>();
 		final Iterator<AuthorizationFactorySPI> it = getAuthorizationFactoryList();
@@ -336,6 +399,11 @@ public class GeoWavePluginConfig
 
 	private static Iterator<AuthorizationFactorySPI> getAuthorizationFactoryList() {
 		final ServiceLoader<AuthorizationFactorySPI> ldr = ServiceLoader.load(AuthorizationFactorySPI.class);
+		return ldr.iterator();
+	}
+
+	private static Iterator<IndexQueryStrategySPI> getInxexQueryStrategyList() {
+		final ServiceLoader<IndexQueryStrategySPI> ldr = ServiceLoader.load(IndexQueryStrategySPI.class);
 		return ldr.iterator();
 	}
 
@@ -387,6 +455,7 @@ public class GeoWavePluginConfig
 						String.class,
 						input.getDescription(),
 						!input.isOptional(),
+						"mypassword",
 						Collections.singletonMap(
 								Parameter.IS_PASSWORD,
 								Boolean.TRUE));

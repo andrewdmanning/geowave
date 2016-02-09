@@ -13,7 +13,7 @@ public class CqlQueryFilterIteratorTest
 	// Serializable>();
 	// params.put(
 	// "gwNamespace",
-	// "test");
+	// "test_" + getClass().getName());
 	// return new GeoWaveGTDataStoreFactory(
 	// new MemoryStoreFactoryFamily()).createNewDataStore(params);
 	// }

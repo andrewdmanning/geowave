@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.analytic.mapreduce.kmeans.runner;
 
 import mil.nga.giat.geowave.analytic.PropertyManagement;
+import mil.nga.giat.geowave.analytic.clustering.DistortionGroupManagement.DistortionDataAdapter;
 import mil.nga.giat.geowave.analytic.clustering.DistortionGroupManagement.DistortionEntry;
 import mil.nga.giat.geowave.analytic.clustering.NestedGroupCentroidAssignment;
 import mil.nga.giat.geowave.analytic.mapreduce.CountofDoubleWritable;
@@ -17,15 +18,6 @@ import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputFormat;
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputFormat;
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputKey;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-
-//@formatter:off
-/*if[ACCUMULO_1.5.2]
- else[ACCUMULO_1.5.2]*/
-/*end[ACCUMULO_1.5.2]*/
-//@formatter:on
 
 /**
  * 
@@ -83,7 +75,6 @@ public class KMeansDistortionJobRunner extends
 
 		// Required since the Mapper uses the input format parameters to lookup
 		// the adapter
-
 		GeoWaveInputFormat.setDataStoreName(
 				conf,
 				dataStoreOptions.getFactory().getName());
@@ -95,6 +86,9 @@ public class KMeansDistortionJobRunner extends
 		GeoWaveInputFormat.setGeoWaveNamespace(
 				conf,
 				dataStoreOptions.getNamespace());
+		GeoWaveOutputFormat.addDataAdapter(
+				conf,
+				new DistortionDataAdapter());
 	}
 
 	@Override
@@ -113,7 +107,8 @@ public class KMeansDistortionJobRunner extends
 		runTimeProperties.setConfig(
 				new ParameterEnum[] {
 					CentroidParameters.Centroid.EXTRACTOR_CLASS,
-					CentroidParameters.Centroid.WRAPPER_FACTORY_CLASS
+					CentroidParameters.Centroid.WRAPPER_FACTORY_CLASS,
+					GlobalParameters.Global.PARENT_BATCH_ID
 				},
 				config,
 				getScope());
@@ -126,5 +121,10 @@ public class KMeansDistortionJobRunner extends
 		return super.run(
 				config,
 				runTimeProperties);
+	}
+
+	@Override
+	protected String getJobName() {
+		return "K-Means Distortion";
 	}
 }

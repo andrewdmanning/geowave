@@ -106,7 +106,10 @@ public class ConvexHullJobRunner extends
 						runTimeProperties,
 						HullParameters.Hull.DATA_TYPE_ID,
 						HullParameters.Hull.DATA_NAMESPACE_URI));
-
+		checkIndex(
+				runTimeProperties,
+				HullParameters.Hull.INDEX_ID,
+				"hull_idx");
 		return super.run(
 				config,
 				runTimeProperties);
@@ -134,6 +137,11 @@ public class ConvexHullJobRunner extends
 			HullParameters.Hull.INDEX_ID
 		}));
 		return params;
+	}
+
+	@Override
+	protected String getJobName() {
+		return "Convex Hull";
 	}
 
 }

@@ -4,24 +4,21 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class StatsCommandLineOptions
 {
-	private final static Logger LOGGER = LoggerFactory.getLogger(StatsCommandLineOptions.class);
-	private final String typeName;
+	private final String adapterId;
 	private final String authorizations;
 
 	public StatsCommandLineOptions(
-			final String typeName,
+			final String adapterId,
 			final String authorizations ) {
-		this.typeName = typeName;
+		this.adapterId = adapterId;
 		this.authorizations = authorizations;
 	}
 
-	public String getTypeName() {
-		return typeName;
+	public String getAdapterId() {
+		return adapterId;
 	}
 
 	public String getAuthorizations() {
@@ -31,23 +28,23 @@ public class StatsCommandLineOptions
 	public static StatsCommandLineOptions parseOptions(
 			final CommandLine commandLine )
 			throws ParseException {
-		final String type = commandLine.getOptionValue("type");
+		final String adapterId = commandLine.getOptionValue("adapterId");
 		final String auth = commandLine.getOptionValue(
 				"auth",
 				"");
 		return new StatsCommandLineOptions(
-				type,
+				adapterId,
 				auth);
 	}
 
 	public static void applyOptions(
 			final Options allOptions ) {
-		final Option type = new Option(
-				"type",
+		final Option adapterIdOption = new Option(
+				"adapterId",
 				true,
-				"The name of the feature type to run stats on");
-		type.setRequired(true);
-		allOptions.addOption(type);
+				"The ID of the adapter to run stats on. The default is to use all adapters. For features this is the feature type name and for grid coverages this is coverage name.");
+		adapterIdOption.setRequired(false);
+		allOptions.addOption(adapterIdOption);
 
 		final Option auth = new Option(
 				"auth",

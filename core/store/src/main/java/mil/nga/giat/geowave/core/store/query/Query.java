@@ -39,7 +39,7 @@ public interface Query
 	 * @return A flag indicating if this query supports the index
 	 */
 	public boolean isSupported(
-			Index index );
+			Index<?, ?> index );
 
 	/**
 	 * Return a set of constraints to apply to the primary index based on the
@@ -53,6 +53,7 @@ public interface Query
 	 * @return A multi-dimensional numeric data set that represents the
 	 *         constraints for the index
 	 */
-	public MultiDimensionalNumericData getIndexConstraints(
+	public List<MultiDimensionalNumericData> getIndexConstraints(
 			NumericIndexStrategy indexStrategy );
+
 }

@@ -14,15 +14,13 @@ import mil.nga.giat.geowave.analytic.mapreduce.SequenceFileInputFormatConfigurat
 import mil.nga.giat.geowave.analytic.mapreduce.SequenceFileOutputFormatConfiguration;
 import mil.nga.giat.geowave.analytic.param.CentroidParameters;
 import mil.nga.giat.geowave.analytic.param.ClusteringParameters.Clustering;
-import mil.nga.giat.geowave.analytic.param.ClusteringParameters.Clustering;
 import mil.nga.giat.geowave.analytic.param.CommonParameters;
 import mil.nga.giat.geowave.analytic.param.ExtractParameters;
-import mil.nga.giat.geowave.analytic.param.GlobalParameters.Global;
 import mil.nga.giat.geowave.analytic.param.GlobalParameters.Global;
 import mil.nga.giat.geowave.analytic.param.HullParameters;
 import mil.nga.giat.geowave.analytic.param.MapReduceParameters;
 import mil.nga.giat.geowave.analytic.param.ParameterEnum;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -141,26 +139,18 @@ public abstract class MultiLevelClusteringJobRunner extends
 		// TODO: set out index type for extracts?
 		propertyManagement.storeIfEmpty(
 				CentroidParameters.Centroid.INDEX_ID,
-				IndexType.SPATIAL_VECTOR.getDefaultId());
+				new SpatialDimensionalityTypeProvider().createPrimaryIndex().getId().getString());
 
 		propertyManagement.storeIfEmpty(
 				HullParameters.Hull.INDEX_ID,
-				IndexType.SPATIAL_VECTOR.getDefaultId());
-
-		final FileSystem fs = FileSystem.get(config);
-
-		final Path extractPath = jobExtractRunner.getHdfsOutputPath();
-
-		if (fs.exists(extractPath)) {
-			fs.delete(
-					extractPath,
-					true);
-		}
+				new SpatialDimensionalityTypeProvider().createPrimaryIndex().getId().getString());
 
 		// first. extract data
 		int status = jobExtractRunner.run(
 				config,
 				propertyManagement);
+
+		final Path extractPath = jobExtractRunner.getHdfsOutputPath();
 
 		groupAssignmentRunner.setInputFormatConfiguration(new SequenceFileInputFormatConfiguration(
 				extractPath));
@@ -172,6 +162,8 @@ public abstract class MultiLevelClusteringJobRunner extends
 		final boolean retainGroupAssigments = propertyManagement.getPropertyAsBoolean(
 				Clustering.RETAIN_GROUP_ASSIGNMENTS,
 				false);
+
+		final FileSystem fs = FileSystem.get(config);
 
 		// run clustering for each level
 		final String outputBaseDir = propertyManagement.getPropertyAsString(

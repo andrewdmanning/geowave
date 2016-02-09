@@ -2,17 +2,21 @@ package mil.nga.giat.geowave.mapreduce.input;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.GeoWaveStoreFinder;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.mapreduce.GeoWaveConfiguratorBase;
@@ -125,9 +129,16 @@ public class GeoWaveInputFormat<T> extends
 				context);
 	}
 
+	public static DataStatisticsStore getJobContextDataStatisticsStore(
+			final JobContext context ) {
+		return GeoWaveConfiguratorBase.getDataStatisticsStore(
+				CLASS,
+				context);
+	}
+
 	public static void addIndex(
 			final Configuration config,
-			final Index index ) {
+			final PrimaryIndex index ) {
 		JobContextIndexStore.addIndex(
 				config,
 				index);
@@ -188,9 +199,10 @@ public class GeoWaveInputFormat<T> extends
 
 	protected static QueryOptions getQueryOptions(
 			final JobContext context ) {
-		return GeoWaveInputConfigurator.getQueryOptions(
+		final QueryOptions options = GeoWaveInputConfigurator.getQueryOptions(
 				CLASS,
 				context);
+		return options == null ? new QueryOptions() : options;
 	}
 
 	protected static Index[] getIndices(
@@ -253,16 +265,22 @@ public class GeoWaveInputFormat<T> extends
 				namespace);
 		final AdapterStore adapterStore = getJobContextAdapterStore(context);
 		if ((dataStore != null) && (dataStore instanceof MapReduceDataStore)) {
+			final QueryOptions queryOptions = getQueryOptions(context);
+			final QueryOptions rangeQueryOptions = new QueryOptions(
+					queryOptions);
+			// split may override these
+			rangeQueryOptions.setIndices(getIndices(context));
+			rangeQueryOptions.setAdapterIds(getAdapterIds(
+					context,
+					adapterStore));
 			return (RecordReader<GeoWaveInputKey, T>) ((MapReduceDataStore) dataStore).createRecordReader(
-					getIndices(context),
-					getAdapterIds(
-							context,
-							adapterStore),
 					getQuery(context),
-					getQueryOptions(context),
+					rangeQueryOptions,
 					adapterStore,
+					getJobContextDataStatisticsStore(context),
 					getJobContextIndexStore(context),
-					isOutputWritable(context),
+					isOutputWritable(
+							context).booleanValue(),
 					getAuthorizations(context),
 					split);
 		}
@@ -381,35 +399,43 @@ public class GeoWaveInputFormat<T> extends
 	 * @param adapterStore
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public static List<ByteArrayId> getAdapterIds(
 			final JobContext context,
 			final AdapterStore adapterStore ) {
 		final DataAdapter<?>[] userAdapters = GeoWaveConfiguratorBase.getDataAdapters(
 				CLASS,
 				context);
+		List<ByteArrayId> retVal = null;
 		if ((userAdapters == null) || (userAdapters.length <= 0)) {
-			return IteratorUtils.toList(IteratorUtils.transformedIterator(
-					adapterStore.getAdapters(),
-					new Transformer() {
+			try (CloseableIterator<DataAdapter<?>> adapters = adapterStore.getAdapters()) {
+				final Iterator<?> transformed = IteratorUtils.transformedIterator(
+						adapters,
+						new Transformer() {
 
-						@Override
-						public Object transform(
-								final Object input ) {
-							if (input instanceof DataAdapter) {
-								return ((DataAdapter) input).getAdapterId();
+							@Override
+							public Object transform(
+									final Object input ) {
+								if (input instanceof DataAdapter) {
+									return ((DataAdapter<?>) input).getAdapterId();
+								}
+								return input;
 							}
-							return input;
-						}
-					}));
+						});
+				retVal = IteratorUtils.toList(transformed);
+			}
+			catch (final IOException e) {
+				LOGGER.warn("Unable to close iterator" + e);
+			}
 		}
 		else {
-			final List<ByteArrayId> retVal = new ArrayList<ByteArrayId>(
+			retVal = new ArrayList<ByteArrayId>(
 					userAdapters.length);
 			for (final DataAdapter<?> adapter : userAdapters) {
 				retVal.add(adapter.getAdapterId());
 			}
-			return retVal;
 		}
+		return retVal;
 	}
 
 	@Override
@@ -424,14 +450,18 @@ public class GeoWaveInputFormat<T> extends
 				namespace);
 		final AdapterStore adapterStore = getJobContextAdapterStore(context);
 		if ((dataStore != null) && (dataStore instanceof MapReduceDataStore)) {
+			final QueryOptions queryOptions = getQueryOptions(context);
+			final QueryOptions rangeQueryOptions = new QueryOptions(
+					queryOptions);
+			rangeQueryOptions.setIndices(getIndices(context));
+			rangeQueryOptions.setAdapterIds(getAdapterIds(
+					context,
+					adapterStore));
 			return ((MapReduceDataStore) dataStore).getSplits(
-					getIndices(context),
-					getAdapterIds(
-							context,
-							adapterStore),
 					getQuery(context),
-					getQueryOptions(context),
+					rangeQueryOptions,
 					adapterStore,
+					getJobContextDataStatisticsStore(context),
 					getJobContextIndexStore(context),
 					getAuthorizations(context),
 					getMinimumSplitCount(context),

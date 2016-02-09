@@ -21,6 +21,8 @@ public class RasterTileRowTransform<T extends Persistable> implements
 {
 	public static final String MERGE_STRATEGY_KEY = "MERGE_STRATEGY";
 	private RootMergeStrategy<T> mergeStrategy;
+	// this priority is fairly arbitrary at the moment
+	private static final int RASTER_TILE_PRIORITY = 4;
 
 	public Mergeable transform(
 			final ByteArrayId adapterId,
@@ -80,4 +82,14 @@ public class RasterTileRowTransform<T extends Persistable> implements
 	@Override
 	public void fromBinary(
 			final byte[] bytes ) {}
+
+	@Override
+	public String getTransformName() {
+		return "RasterTile";
+	}
+
+	@Override
+	public int getBaseTransformPriority() {
+		return RASTER_TILE_PRIORITY;
+	}
 }

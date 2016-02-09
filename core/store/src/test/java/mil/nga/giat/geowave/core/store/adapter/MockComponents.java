@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.core.store.adapter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -12,10 +13,10 @@ import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericData;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericRange;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericValue;
+import mil.nga.giat.geowave.core.store.EntryVisibilityHandler;
 import mil.nga.giat.geowave.core.store.adapter.NativeFieldHandler.RowBuilder;
 import mil.nga.giat.geowave.core.store.adapter.statistics.CountDataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
-import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsVisibilityHandler;
 import mil.nga.giat.geowave.core.store.adapter.statistics.FieldIdStatisticVisibility;
 import mil.nga.giat.geowave.core.store.adapter.statistics.NumericRangeDataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticalDataAdapter;
@@ -23,7 +24,7 @@ import mil.nga.giat.geowave.core.store.data.PersistentValue;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
 import mil.nga.giat.geowave.core.store.data.field.FieldUtils;
 import mil.nga.giat.geowave.core.store.data.field.FieldWriter;
-import mil.nga.giat.geowave.core.store.dimension.DimensionField;
+import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 
@@ -38,7 +39,7 @@ public class MockComponents
 
 		public MockAbstractDataAdapter() {
 			super();
-			List<IndexFieldHandler<Integer, TestIndexFieldType, Object>> handlers = new ArrayList<IndexFieldHandler<Integer, TestIndexFieldType, Object>>();
+			final List<IndexFieldHandler<Integer, TestIndexFieldType, Object>> handlers = new ArrayList<IndexFieldHandler<Integer, TestIndexFieldType, Object>>();
 			handlers.add(new IndexFieldHandler<Integer, TestIndexFieldType, Object>() {
 
 				@Override
@@ -50,14 +51,14 @@ public class MockComponents
 
 				@Override
 				public TestIndexFieldType toIndexValue(
-						Integer row ) {
+						final Integer row ) {
 					return new TestIndexFieldType(
 							row);
 				}
 
 				@Override
 				public PersistentValue<Object>[] toNativeValues(
-						TestIndexFieldType indexValue ) {
+						final TestIndexFieldType indexValue ) {
 					return new PersistentValue[] {
 						new PersistentValue<Integer>(
 								INTEGER,
@@ -191,24 +192,26 @@ public class MockComponents
 			return new ByteArrayId[] {
 				CountDataStatistics.STATS_ID,
 				new IntegerRangeDataStatistics(
-						this.getAdapterId(),
-						this.getAdapterId()).getStatisticsId()
+						getAdapterId(),
+						getAdapterId()).getStatisticsId()
 			};
 		}
 
 		@Override
 		public DataStatistics<Integer> createDataStatistics(
-				ByteArrayId statisticsId ) {
-			if (statisticsId == CountDataStatistics.STATS_ID) return new CountDataStatistics<Integer>(
-					this.getAdapterId());
+				final ByteArrayId statisticsId ) {
+			if (statisticsId == CountDataStatistics.STATS_ID) {
+				return new CountDataStatistics<Integer>(
+						getAdapterId());
+			}
 			return new IntegerRangeDataStatistics(
-					this.getAdapterId(),
-					this.getAdapterId());
+					getAdapterId(),
+					getAdapterId());
 		}
 
 		@Override
-		public DataStatisticsVisibilityHandler<Integer> getVisibilityHandler(
-				ByteArrayId statisticsId ) {
+		public EntryVisibilityHandler<Integer> getVisibilityHandler(
+				final ByteArrayId statisticsId ) {
 			return new FieldIdStatisticVisibility<Integer>(
 					new TestDimensionField().fieldId);
 		}
@@ -224,8 +227,8 @@ public class MockComponents
 		}
 
 		public IntegerRangeDataStatistics(
-				ByteArrayId dataAdapterId,
-				ByteArrayId statisticsId ) {
+				final ByteArrayId dataAdapterId,
+				final ByteArrayId statisticsId ) {
 			super(
 					dataAdapterId,
 					statisticsId);
@@ -233,7 +236,7 @@ public class MockComponents
 
 		@Override
 		protected NumericRange getRange(
-				Integer entry ) {
+				final Integer entry ) {
 			return new NumericRange(
 					entry.doubleValue(),
 					entry.doubleValue());
@@ -267,9 +270,9 @@ public class MockComponents
 
 		@Override
 		public boolean overlaps(
-				final DimensionField[] dimensions,
+				final NumericDimensionField[] dimensions,
 				final NumericData[] rangeData ) {
-			return rangeData[0].getMin() <= indexValue && rangeData[0].getMax() >= indexValue;
+			return (rangeData[0].getMin() <= indexValue) && (rangeData[0].getMax() >= indexValue);
 		}
 
 	}
@@ -440,7 +443,7 @@ public class MockComponents
 	//
 	// *************************************************************************
 	public static class TestDimensionField implements
-			DimensionField<TestIndexFieldType>
+			NumericDimensionField<TestIndexFieldType>
 	{
 		final ByteArrayId fieldId;
 
@@ -485,12 +488,12 @@ public class MockComponents
 
 		@Override
 		public FieldWriter<Object, TestIndexFieldType> getWriter() {
-			return (FieldWriter<Object, TestIndexFieldType>) new IntegerAdapter();
+			return new IntegerAdapter();
 		}
 
 		@Override
 		public FieldReader<TestIndexFieldType> getReader() {
-			return (FieldReader<TestIndexFieldType>) new IntegerAdapter();
+			return new IntegerAdapter();
 		}
 
 		@Override
@@ -536,7 +539,6 @@ public class MockComponents
 				NumericDimensionDefinition otherDimensionDefinition ) {
 			return false;
 		}
-
 	}
 
 	public static class MockIndexStrategy implements
@@ -550,30 +552,30 @@ public class MockComponents
 
 		@Override
 		public void fromBinary(
-				byte[] bytes ) {
+				final byte[] bytes ) {
 
 		}
 
 		@Override
 		public List<ByteArrayRange> getQueryRanges(
-				MultiDimensionalNumericData indexedRange ) {
+				final MultiDimensionalNumericData indexedRange ) {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public List<ByteArrayRange> getQueryRanges(
-				MultiDimensionalNumericData indexedRange,
-				int maxEstimatedRangeDecomposition ) {
+				final MultiDimensionalNumericData indexedRange,
+				final int maxEstimatedRangeDecomposition ) {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public List<ByteArrayId> getInsertionIds(
-				MultiDimensionalNumericData indexedData ) {
-			List<ByteArrayId> ids = new ArrayList<ByteArrayId>();
-			for (NumericData data : indexedData.getDataPerDimension()) {
+				final MultiDimensionalNumericData indexedData ) {
+			final List<ByteArrayId> ids = new ArrayList<ByteArrayId>();
+			for (final NumericData data : indexedData.getDataPerDimension()) {
 				ids.add(new ByteArrayId(
 						Double.toString(
 								data.getCentroid()).getBytes()));
@@ -583,21 +585,21 @@ public class MockComponents
 
 		@Override
 		public List<ByteArrayId> getInsertionIds(
-				MultiDimensionalNumericData indexedData,
-				int maxEstimatedDuplicateIds ) {
+				final MultiDimensionalNumericData indexedData,
+				final int maxEstimatedDuplicateIds ) {
 			return this.getInsertionIds(indexedData);
 		}
 
 		@Override
 		public MultiDimensionalNumericData getRangeForId(
-				ByteArrayId insertionId ) {
+				final ByteArrayId insertionId ) {
 			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public long[] getCoordinatesPerDimension(
-				ByteArrayId insertionId ) {
+				final ByteArrayId insertionId ) {
 			// TODO Auto-generated method stub
 			return null;
 		}
@@ -618,6 +620,18 @@ public class MockComponents
 			return new double[] {
 				Integer.MAX_VALUE
 			};
+		}
+
+		@Override
+		public Set<ByteArrayId> getNaturalSplits() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		@Override
+		public int getByteOffsetFromDimensionalIndex() {
+			// TODO Auto-generated method stub
+			return 0;
 		}
 
 	}
@@ -642,14 +656,14 @@ public class MockComponents
 		@Override
 		public FieldReader<CommonIndexValue> getReader(
 				final ByteArrayId fieldId ) {
-			FieldReader<?> reader = dimensionFields[0].getReader();
+			final FieldReader<?> reader = dimensionFields[0].getReader();
 			return (FieldReader<CommonIndexValue>) reader;
 		}
 
 		@Override
 		public FieldWriter<Object, CommonIndexValue> getWriter(
 				final ByteArrayId fieldId ) {
-			FieldWriter<?, ?> writer = dimensionFields[0].getWriter();
+			final FieldWriter<?, ?> writer = dimensionFields[0].getWriter();
 			return (FieldWriter<Object, CommonIndexValue>) writer;
 		}
 
@@ -681,22 +695,22 @@ public class MockComponents
 
 		@Override
 		public byte[] getVisibility(
-				Object rowValue,
-				ByteArrayId fieldId,
-				TestIndexFieldType fieldValue ) {
+				final Object rowValue,
+				final ByteArrayId fieldId,
+				final TestIndexFieldType fieldValue ) {
 			return fieldValue.getVisibility();
 		}
 
 		@Override
 		public byte[] writeField(
-				TestIndexFieldType fieldValue ) {
+				final TestIndexFieldType fieldValue ) {
 			return Integer.toString(
 					fieldValue.indexValue).getBytes();
 		}
 
 		@Override
 		public TestIndexFieldType readField(
-				byte[] fieldData ) {
+				final byte[] fieldData ) {
 			return new TestIndexFieldType(
 					Integer.parseInt(new String(
 							fieldData)));

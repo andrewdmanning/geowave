@@ -9,6 +9,7 @@ import org.geotools.data.Transaction;
 import org.geotools.factory.Hints;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.filter.Filter;
 
 /**
  * Commit changes immediately
@@ -16,16 +17,16 @@ import org.opengis.feature.simple.SimpleFeature;
  * @source $URL$
  */
 
-public class GeoWaveEmptyTransaction implements
+public class GeoWaveEmptyTransaction extends
+		AbstractTransactionManagement implements
 		GeoWaveTransaction
 {
-
-	private final GeoWaveDataStoreComponents components;
 
 	/** Create an empty Diff */
 	public GeoWaveEmptyTransaction(
 			GeoWaveDataStoreComponents components ) {
-		this.components = components;
+		super(
+				components);
 	}
 
 	/**
@@ -64,12 +65,14 @@ public class GeoWaveEmptyTransaction implements
 					this);
 			this.components.writeCommit(
 					updated,
-					this);
+					new GeoWaveEmptyTransaction(
+							components));
 		}
 		else {
 			this.components.writeCommit(
 					updated,
-					this);
+					new GeoWaveEmptyTransaction(
+							components));
 		}
 
 		ReferencedEnvelope bounds = new ReferencedEnvelope();
@@ -133,7 +136,9 @@ public class GeoWaveEmptyTransaction implements
 	}
 
 	public CloseableIterator<SimpleFeature> interweaveTransaction(
-			CloseableIterator<SimpleFeature> it ) {
+			final Integer limit,
+			final Filter filter,
+			final CloseableIterator<SimpleFeature> it ) {
 		return it;
 	}
 

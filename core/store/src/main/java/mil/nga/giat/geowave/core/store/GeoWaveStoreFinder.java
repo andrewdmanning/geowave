@@ -20,6 +20,8 @@ import mil.nga.giat.geowave.core.store.config.ConfigUtils;
 import mil.nga.giat.geowave.core.store.config.StringConfigOption;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.IndexStoreFactorySpi;
+import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStore;
+import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataStoreFactorySpi;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,7 @@ public class GeoWaveStoreFinder
 	private static Map<String, AdapterStoreFactorySpi> registeredAdapterStoreFactories = null;
 	private static Map<String, DataStatisticsStoreFactorySpi> registeredDataStatisticsStoreFactories = null;
 	private static Map<String, IndexStoreFactorySpi> registeredIndexStoreFactories = null;
+	private static Map<String, SecondaryIndexDataStoreFactorySpi> registeredSecondaryIndexDataStoreFactories = null;
 
 	public static DataStatisticsStore createDataStatisticsStore(
 			final Map<String, Object> configOptions,
@@ -87,6 +90,18 @@ public class GeoWaveStoreFinder
 				namespace);
 	}
 
+	public static SecondaryIndexDataStore createSecondaryIndexDataStore(
+			final Map<String, Object> configOptions,
+			final String namespace ) {
+		final SecondaryIndexDataStoreFactorySpi factory = findSecondaryIndexDataStoreFactory(configOptions);
+		if (factory == null) {
+			return null;
+		}
+		return factory.createStore(
+				configOptions,
+				namespace);
+	}
+
 	private static List<String> getMissingRequiredOptions(
 			final GenericStoreFactory<?> factory,
 			final Map<String, Object> configOptions ) {
@@ -116,6 +131,15 @@ public class GeoWaveStoreFinder
 				factories,
 				configOptions,
 				"index");
+	}
+
+	public static SecondaryIndexDataStoreFactorySpi findSecondaryIndexDataStoreFactory(
+			final Map<String, Object> configOptions ) {
+		final Map<String, SecondaryIndexDataStoreFactorySpi> factories = getRegisteredSecondaryIndexDataStoreFactories();
+		return findStore(
+				factories,
+				configOptions,
+				"secondary index");
 	}
 
 	public static AdapterStoreFactorySpi findAdapterStoreFactory(
@@ -225,6 +249,13 @@ public class GeoWaveStoreFinder
 				AdapterStoreFactorySpi.class,
 				registeredAdapterStoreFactories);
 		return registeredAdapterStoreFactories;
+	}
+
+	public static synchronized Map<String, SecondaryIndexDataStoreFactorySpi> getRegisteredSecondaryIndexDataStoreFactories() {
+		registeredSecondaryIndexDataStoreFactories = getRegisteredFactories(
+				SecondaryIndexDataStoreFactorySpi.class,
+				registeredSecondaryIndexDataStoreFactories);
+		return registeredSecondaryIndexDataStoreFactories;
 	}
 
 	public static synchronized Map<String, IndexStoreFactorySpi> getRegisteredIndexStoreFactories() {

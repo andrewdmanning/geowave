@@ -26,7 +26,8 @@ public class MemoryDataStoreFactory extends
 			store = new MemoryDataStore(
 					MemoryAdapterStoreFactory.createStore(namespace),
 					MemoryIndexStoreFactory.createStore(namespace),
-					MemoryDataStatisticsStoreFactory.createStore(namespace));
+					MemoryDataStatisticsStoreFactory.createStore(namespace),
+					MemorySecondaryIndexStoreFactory.createStore(namespace));
 			DATA_STORE_CACHE.put(
 					namespace,
 					store);

@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
@@ -11,15 +12,17 @@ import mil.nga.giat.geowave.analytic.AnalyticFeature;
 import mil.nga.giat.geowave.analytic.SimpleFeatureItemWrapperFactory;
 import mil.nga.giat.geowave.analytic.distance.FeatureCentroidDistanceFn;
 import mil.nga.giat.geowave.analytic.kmeans.AssociationNotification;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.DataStore;
+import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.StoreFactoryFamilySpi;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
-import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
-import mil.nga.giat.geowave.core.store.memory.MemoryAdapterStore;
-import mil.nga.giat.geowave.core.store.memory.MemoryDataStore;
-import mil.nga.giat.geowave.core.store.memory.MemoryIndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
+import mil.nga.giat.geowave.core.store.memory.MemoryStoreFactoryFamily;
 
 import org.geotools.feature.type.BasicFeatureTypes;
 import org.junit.Test;
@@ -31,6 +34,22 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 
 public class NestedGroupCentroidAssignmentTest
 {
+
+	private <T> void ingest(
+			final DataStore dataStore,
+			final WritableDataAdapter<T> adapter,
+			final PrimaryIndex index,
+			final T entry )
+			throws IOException {
+		try (IndexWriter writer = dataStore.createIndexWriter(
+				index,
+				DataStoreUtils.DEFAULT_VISIBILITY)) {
+			writer.write(
+					adapter,
+					entry);
+			writer.close();
+		}
+	}
 
 	@Test
 	public void test()
@@ -66,14 +85,22 @@ public class NestedGroupCentroidAssignmentTest
 				1,
 				0);
 
-		final Index index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 		final FeatureDataAdapter adapter = new FeatureDataAdapter(
 				ftype);
-
-		final DataStore dataStore = new MemoryDataStore();
-		final IndexStore indexStore = new MemoryIndexStore();
-		final AdapterStore adapterStore = new MemoryAdapterStore();
-		dataStore.ingest(
+		final String namespace = "test_" + getClass().getName();
+		final StoreFactoryFamilySpi storeFamily = new MemoryStoreFactoryFamily();
+		final DataStore dataStore = storeFamily.getDataStoreFactory().createStore(
+				new HashMap<String, Object>(),
+				namespace);
+		final IndexStore indexStore = storeFamily.getIndexStoreFactory().createStore(
+				new HashMap<String, Object>(),
+				namespace);
+		final AdapterStore adapterStore = storeFamily.getAdapterStoreFactory().createStore(
+				new HashMap<String, Object>(),
+				namespace);
+		ingest(
+				dataStore,
 				adapter,
 				index,
 				level1b1G1Feature);
@@ -97,7 +124,8 @@ public class NestedGroupCentroidAssignmentTest
 				1,
 				1,
 				0);
-		dataStore.ingest(
+		ingest(
+				dataStore,
 				adapter,
 				index,
 				level1b1G2Feature);
@@ -121,7 +149,8 @@ public class NestedGroupCentroidAssignmentTest
 				2,
 				1,
 				0);
-		dataStore.ingest(
+		ingest(
+				dataStore,
 				adapter,
 				index,
 				level2b1G1Feature);
@@ -145,7 +174,8 @@ public class NestedGroupCentroidAssignmentTest
 				2,
 				1,
 				0);
-		dataStore.ingest(
+		ingest(
+				dataStore,
 				adapter,
 				index,
 				level2b1G2Feature);
@@ -170,7 +200,8 @@ public class NestedGroupCentroidAssignmentTest
 				2,
 				1,
 				0);
-		dataStore.ingest(
+		ingest(
+				dataStore,
 				adapter,
 				index,
 				level2B2G1Feature);

@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import mil.nga.giat.geowave.core.cli.CommandLineResult;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.ingest.GeoWaveData;
 import mil.nga.giat.geowave.core.ingest.IngestCommandLineOptions;
 import mil.nga.giat.geowave.core.ingest.IngestFormatPluginProviderSpi;
 import mil.nga.giat.geowave.core.ingest.IngestUtils;
@@ -40,11 +40,20 @@ public class LocalFileIngestDriver extends
 
 	@Override
 	protected void parseOptionsInternal(
-			final CommandLine commandLine )
+			final Options options,
+			CommandLine commandLine )
 			throws ParseException {
-		dataStoreOptions = DataStoreCommandLineOptions.parseOptions(commandLine);
+		final CommandLineResult<DataStoreCommandLineOptions> dataStoreOptionsResult = DataStoreCommandLineOptions.parseOptions(
+				options,
+				commandLine);
+		dataStoreOptions = dataStoreOptionsResult.getResult();
+		if (dataStoreOptionsResult.isCommandLineChange()) {
+			commandLine = dataStoreOptionsResult.getCommandLine();
+		}
 		ingestOptions = IngestCommandLineOptions.parseOptions(commandLine);
-		super.parseOptionsInternal(commandLine);
+		super.parseOptionsInternal(
+				options,
+				commandLine);
 	}
 
 	@Override
@@ -56,7 +65,7 @@ public class LocalFileIngestDriver extends
 	}
 
 	@Override
-	protected void runInternal(
+	protected boolean runInternal(
 			final String[] args,
 			final List<IngestFormatPluginProviderSpi<?, ?>> pluginProviders ) {
 		// first collect the local file ingest plugins
@@ -78,9 +87,12 @@ public class LocalFileIngestDriver extends
 						e);
 				continue;
 			}
-			final boolean indexSupported = (ingestOptions.getIndex(localFileIngestPlugin.getSupportedIndices()) != null);
+			final boolean indexSupported = (IngestUtils.isSupported(
+					localFileIngestPlugin,
+					args,
+					ingestOptions.getDimensionalityTypes()));
 			if (!indexSupported) {
-				LOGGER.warn("Local file ingest plugin for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support dimensionality type '" + ingestOptions.getDimensionalityType() + "'");
+				LOGGER.warn("Local file ingest plugin for ingest type '" + pluginProvider.getIngestFormatName() + "' does not support dimensionality type '" + ingestOptions.getDimensionalityTypeArgument() + "'");
 				continue;
 			}
 			localFileIngestPlugins.put(
@@ -92,7 +104,8 @@ public class LocalFileIngestDriver extends
 		final DataStore dataStore = dataStoreOptions.createStore();
 		try (IngestRunData runData = new IngestRunData(
 				adapters,
-				dataStore)) {
+				dataStore,
+				args)) {
 			processInput(
 					localFileIngestPlugins,
 					runData);
@@ -101,7 +114,9 @@ public class LocalFileIngestDriver extends
 			LOGGER.fatal(
 					"Unexpected I/O exception when reading input files",
 					e);
+			return false;
 		}
+		return true;
 	}
 
 	@Override

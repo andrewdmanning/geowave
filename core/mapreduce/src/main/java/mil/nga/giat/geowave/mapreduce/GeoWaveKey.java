@@ -14,8 +14,13 @@ import org.apache.hadoop.io.WritableComparator;
  * responsible for persisting the adapter ID
  */
 public abstract class GeoWaveKey implements
-		WritableComparable<GeoWaveKey>
+		WritableComparable<GeoWaveKey>,
+		java.io.Serializable
 {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
 	protected ByteArrayId adapterId;
 
 	protected GeoWaveKey() {}
@@ -30,7 +35,7 @@ public abstract class GeoWaveKey implements
 	}
 
 	public void setAdapterId(
-			ByteArrayId adapterId ) {
+			final ByteArrayId adapterId ) {
 		this.adapterId = adapterId;
 	}
 
@@ -44,6 +49,28 @@ public abstract class GeoWaveKey implements
 				o.adapterId.getBytes(),
 				0,
 				o.adapterId.getBytes().length);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((adapterId == null) ? 0 : adapterId.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(
+			Object obj ) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		GeoWaveKey other = (GeoWaveKey) obj;
+		if (adapterId == null) {
+			if (other.adapterId != null) return false;
+		}
+		else if (!adapterId.equals(other.adapterId)) return false;
+		return true;
 	}
 
 	@Override

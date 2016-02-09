@@ -7,5 +7,6 @@ target
 dependency-reduced-pom.xml
 *.imls
 *.iml
-bin
 .idea/
+.DS_Store
+bin

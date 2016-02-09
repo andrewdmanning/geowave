@@ -7,9 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.google.common.collect.Interner;
-import com.google.common.collect.Interners;
-
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
 import mil.nga.giat.geowave.core.geotime.store.dimension.GeometryWrapper;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -17,13 +14,20 @@ import mil.nga.giat.geowave.core.index.sfc.data.BasicNumericDataset;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericData;
 import mil.nga.giat.geowave.core.store.data.IndexedPersistenceEncoding;
-import mil.nga.giat.geowave.core.store.dimension.DimensionField;
+import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.filter.BasicQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
+import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
 import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
+import com.vividsolutions.jts.geom.prep.PreparedPoint;
+import com.vividsolutions.jts.geom.prep.PreparedPolygon;
 
 /**
  * This filter can perform fine-grained acceptance testing (intersection test
@@ -38,6 +42,61 @@ public class SpatialQueryFilter extends
 	public static final PreparedGeometryFactory FACTORY = new PreparedGeometryFactory();
 	private GeometryImage preparedGeometryImage;
 
+	protected interface SpatialQueryCompareOp
+	{
+		public boolean compare(
+				final Geometry dataGeometry,
+				final PreparedGeometry constraintGeometry );
+
+		public BasicQueryCompareOperation getBaseCompareOp();
+	}
+
+	public enum CompareOperation
+			implements
+			SpatialQueryCompareOp {
+		OVERLAPS {
+
+			@Override
+			public boolean compare(
+					Geometry dataGeometry,
+					PreparedGeometry constraintGeometry ) {
+				// GEOWAVE-564 - Temporary fix to prevent intersects method
+				// from returning false when used with linestrings in a
+				// multi-threaded environment.
+				boolean doesIntersect = false;
+				if ((dataGeometry instanceof Point || dataGeometry instanceof Polygon) && (constraintGeometry instanceof PreparedPoint || constraintGeometry instanceof PreparedPolygon)) {
+					doesIntersect = constraintGeometry.intersects(dataGeometry);
+				}
+				else {
+					synchronized (constraintGeometry) {
+						doesIntersect = constraintGeometry.intersects(dataGeometry);
+					}
+				}
+				return doesIntersect;
+			}
+
+			@Override
+			public BasicQueryCompareOperation getBaseCompareOp() {
+				return BasicQueryCompareOperation.OVERLAPS;
+			}
+		},
+		CONTAINS {
+			@Override
+			public boolean compare(
+					Geometry dataGeometry,
+					PreparedGeometry constraintGeometry ) {
+				return constraintGeometry.contains(dataGeometry);
+			}
+
+			@Override
+			public BasicQueryCompareOperation getBaseCompareOp() {
+				return BasicQueryCompareOperation.CONTAINS;
+			}
+		}
+	};
+
+	private CompareOperation compareOp = CompareOperation.OVERLAPS;
+
 	private Set<ByteArrayId> geometryFieldIds;
 
 	protected SpatialQueryFilter() {
@@ -46,36 +105,40 @@ public class SpatialQueryFilter extends
 
 	public SpatialQueryFilter(
 			final MultiDimensionalNumericData query,
-			final DimensionField<?>[] dimensionDefinitions,
-			final Geometry queryGeometry ) {
+			final NumericDimensionField<?>[] dimensionDefinitions,
+			final Geometry queryGeometry,
+			final CompareOperation compareOp ) {
 		this(
 				stripGeometry(
 						query,
 						dimensionDefinitions),
-				queryGeometry);
-
+				queryGeometry,
+				compareOp);
 	}
 
 	private SpatialQueryFilter(
 			final StrippedGeometry strippedGeometry,
-			final Geometry queryGeometry ) {
+			final Geometry queryGeometry,
+			CompareOperation compareOp ) {
 		super(
 				strippedGeometry.strippedQuery,
-				strippedGeometry.strippedDimensionDefinitions);
+				strippedGeometry.strippedDimensionDefinitions,
+				compareOp.getBaseCompareOp());
 		preparedGeometryImage = new GeometryImage(
 				FACTORY.create(queryGeometry));
 		geometryFieldIds = strippedGeometry.geometryFieldIds;
+		this.compareOp = compareOp;
 	}
 
 	private static class StrippedGeometry
 	{
 		private final MultiDimensionalNumericData strippedQuery;
-		private final DimensionField<?>[] strippedDimensionDefinitions;
+		private final NumericDimensionField<?>[] strippedDimensionDefinitions;
 		private final Set<ByteArrayId> geometryFieldIds;
 
 		public StrippedGeometry(
 				final MultiDimensionalNumericData strippedQuery,
-				final DimensionField<?>[] strippedDimensionDefinitions,
+				final NumericDimensionField<?>[] strippedDimensionDefinitions,
 				final Set<ByteArrayId> geometryFieldIds ) {
 			this.strippedQuery = strippedQuery;
 			this.strippedDimensionDefinitions = strippedDimensionDefinitions;
@@ -85,10 +148,10 @@ public class SpatialQueryFilter extends
 
 	private static StrippedGeometry stripGeometry(
 			final MultiDimensionalNumericData query,
-			final DimensionField<?>[] dimensionDefinitions ) {
+			final NumericDimensionField<?>[] dimensionDefinitions ) {
 		final Set<ByteArrayId> geometryFieldIds = new HashSet<ByteArrayId>();
 		final List<NumericData> numericDataPerDimension = new ArrayList<NumericData>();
-		final List<DimensionField<?>> fields = new ArrayList<DimensionField<?>>();
+		final List<NumericDimensionField<?>> fields = new ArrayList<NumericDimensionField<?>>();
 		final NumericData[] data = query.getDataPerDimension();
 		for (int d = 0; d < dimensionDefinitions.length; d++) {
 			// if the type on the generic is assignable to geometry then save
@@ -104,21 +167,22 @@ public class SpatialQueryFilter extends
 		return new StrippedGeometry(
 				new BasicNumericDataset(
 						numericDataPerDimension.toArray(new NumericData[numericDataPerDimension.size()])),
-				fields.toArray(new DimensionField<?>[fields.size()]),
+				fields.toArray(new NumericDimensionField<?>[fields.size()]),
 				geometryFieldIds);
 	}
 
 	public static boolean isSpatial(
-			final DimensionField<?> d ) {
+			final NumericDimensionField<?> d ) {
 		final Class<?> commonIndexType = GenericTypeResolver.resolveTypeArgument(
 				d.getClass(),
-				DimensionField.class);
+				NumericDimensionField.class);
 		return GeometryWrapper.class.isAssignableFrom(commonIndexType);
 	}
 
 	@Override
 	public boolean accept(
-			final IndexedPersistenceEncoding persistenceEncoding ) {
+			final CommonIndexModel indexModel,
+			final IndexedPersistenceEncoding<?> persistenceEncoding ) {
 		if (preparedGeometryImage == null) {
 			return true;
 		}
@@ -145,7 +209,9 @@ public class SpatialQueryFilter extends
 		}
 		// otherwise, if the geometry passes, and there are other dimensions,
 		// check the other dimensions
-		return super.accept(persistenceEncoding);
+		return super.accept(
+				indexModel,
+				persistenceEncoding);
 	}
 
 	private boolean geometryPasses(
@@ -154,7 +220,9 @@ public class SpatialQueryFilter extends
 			return false;
 		}
 		if (preparedGeometryImage != null) {
-			return preparedGeometryImage.preparedGeometry.intersects(dataGeometry);
+			return compareOp.compare(
+					dataGeometry,
+					preparedGeometryImage.preparedGeometry);
 		}
 		return false;
 	}
@@ -177,7 +245,8 @@ public class SpatialQueryFilter extends
 			geometryFieldIdBuffer.put(id.getBytes());
 		}
 		final byte[] theRest = super.toBinary();
-		final ByteBuffer buf = ByteBuffer.allocate(8 + geometryBinary.length + geometryFieldIdByteSize + theRest.length);
+		final ByteBuffer buf = ByteBuffer.allocate(12 + geometryBinary.length + geometryFieldIdByteSize + theRest.length);
+		buf.putInt(compareOp.ordinal());
 		buf.putInt(geometryBinary.length);
 		buf.putInt(geometryFieldIdByteSize);
 		buf.put(geometryBinary);
@@ -190,8 +259,9 @@ public class SpatialQueryFilter extends
 	public void fromBinary(
 			final byte[] bytes ) {
 		final ByteBuffer buf = ByteBuffer.wrap(bytes);
+		compareOp = CompareOperation.values()[buf.getInt()];
 		final byte[] geometryBinary = new byte[buf.getInt()];
-		final byte[] theRest = new byte[bytes.length - geometryBinary.length - buf.getInt() - 8];
+		final byte[] theRest = new byte[bytes.length - geometryBinary.length - buf.getInt() - 12];
 		buf.get(geometryBinary);
 		final int fieldIdSize = buf.getInt();
 		geometryFieldIds = new HashSet<ByteArrayId>(
@@ -239,20 +309,22 @@ public class SpatialQueryFilter extends
 		PreparedGeometry preparedGeometry = null;
 
 		public GeometryImage(
-				PreparedGeometry preparedGeometry ) {
+				final PreparedGeometry preparedGeometry ) {
 			super();
 			this.preparedGeometry = preparedGeometry;
 			geometryBinary = GeometryUtils.geometryToBinary(preparedGeometry.getGeometry());
 		}
 
 		public GeometryImage(
-				byte[] geometryBinary ) {
+				final byte[] geometryBinary ) {
 			super();
 			this.geometryBinary = geometryBinary;
 		}
 
 		public synchronized void init() {
-			if (preparedGeometry == null) preparedGeometry = FACTORY.create(GeometryUtils.geometryFromBinary(geometryBinary));
+			if (preparedGeometry == null) {
+				preparedGeometry = FACTORY.create(GeometryUtils.geometryFromBinary(geometryBinary));
+			}
 		}
 
 		public PreparedGeometry getGeometry() {
@@ -263,20 +335,28 @@ public class SpatialQueryFilter extends
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + Arrays.hashCode(geometryBinary);
+			result = (prime * result) + Arrays.hashCode(geometryBinary);
 			return result;
 		}
 
 		@Override
 		public boolean equals(
-				Object obj ) {
-			if (this == obj) return true;
-			if (obj == null) return false;
-			if (getClass() != obj.getClass()) return false;
-			GeometryImage other = (GeometryImage) obj;
+				final Object obj ) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (getClass() != obj.getClass()) {
+				return false;
+			}
+			final GeometryImage other = (GeometryImage) obj;
 			if (!Arrays.equals(
 					geometryBinary,
-					other.geometryBinary)) return false;
+					other.geometryBinary)) {
+				return false;
+			}
 			return true;
 		}
 

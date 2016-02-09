@@ -2,15 +2,19 @@ package mil.nga.giat.geowave.adapter.vector.plugin;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.io.Serializable;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import mil.nga.giat.geowave.core.store.memory.MemoryStoreFactoryFamily;
+import mil.nga.giat.geowave.adapter.vector.BaseDataStoreTest;
+import mil.nga.giat.geowave.adapter.vector.stats.FeatureHyperLogLogStatistics;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 
 import org.geotools.data.DataStore;
 import org.geotools.data.DataUtilities;
@@ -31,7 +35,8 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.PrecisionModel;
 
-public class WFSTransactionTest
+public class WFSTransactionTest extends
+		BaseDataStoreTest
 {
 	DataStore dataStore;
 	SimpleFeatureType schema;
@@ -55,7 +60,8 @@ public class WFSTransactionTest
 	public void setup()
 			throws SchemaException,
 			CQLException,
-			IOException {
+			IOException,
+			GeoWavePluginException {
 		dataStore = createDataStore();
 		type = DataUtilities.createType(
 				"geostuff",
@@ -139,6 +145,15 @@ public class WFSTransactionTest
 		reader.close();
 		transaction2.commit();
 		transaction2.close();
+
+		// stats check
+		final Transaction transaction3 = new DefaultTransaction();
+		reader = ((GeoWaveFeatureSource) ((GeoWaveGTDataStore) dataStore).getFeatureSource(
+				"geostuff",
+				transaction3)).getReaderInternal(query);
+		Map<ByteArrayId, DataStatistics<SimpleFeature>> transStats = ((GeoWaveFeatureReader) reader).getTransaction().getDataStatistics();
+		assertNotNull(transStats.get(FeatureHyperLogLogStatistics.composeId("pid")));
+		transaction3.close();
 
 	}
 

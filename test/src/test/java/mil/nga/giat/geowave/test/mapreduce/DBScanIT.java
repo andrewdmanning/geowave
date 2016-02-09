@@ -5,6 +5,19 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.cli.Options;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
+import org.geotools.referencing.CRS;
+import org.junit.Assert;
+import org.junit.Test;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.referencing.FactoryException;
+
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.Point;
+
 import mil.nga.giat.geowave.analytic.AnalyticItemWrapper;
 import mil.nga.giat.geowave.analytic.GeometryDataSetGenerator;
 import mil.nga.giat.geowave.analytic.PropertyManagement;
@@ -31,6 +44,7 @@ import mil.nga.giat.geowave.analytic.store.PersistableDataStore;
 import mil.nga.giat.geowave.analytic.store.PersistableIndexStore;
 import mil.nga.giat.geowave.core.cli.AdapterStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.CommandLineOptions.OptionMapWrapper;
+import mil.nga.giat.geowave.core.cli.CommandLineResult;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.IndexStoreCommandLineOptions;
@@ -40,18 +54,6 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-
-import org.geotools.feature.simple.SimpleFeatureBuilder;
-import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.geotools.referencing.CRS;
-import org.junit.Assert;
-import org.junit.Test;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.referencing.FactoryException;
-
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.Point;
 
 public class DBScanIT extends
 		MapReduceTestEnvironment
@@ -97,20 +99,28 @@ public class DBScanIT extends
 		options.put(
 				GenericStoreCommandLineOptions.NAMESPACE_OPTION_KEY,
 				TEST_NAMESPACE);
-		final DataStoreCommandLineOptions dataStoreOptions = DataStoreCommandLineOptions.parseOptions(new OptionMapWrapper(
-				options));
-		final IndexStoreCommandLineOptions indexStoreOptions = IndexStoreCommandLineOptions.parseOptions(new OptionMapWrapper(
-				options));
-		final AdapterStoreCommandLineOptions adapterStoreOptions = AdapterStoreCommandLineOptions.parseOptions(new OptionMapWrapper(
-				options));
+		final Options nsOptions = new Options();
+		DataStoreCommandLineOptions.applyOptions(nsOptions);
+		final CommandLineResult<DataStoreCommandLineOptions> dataStoreOptions = DataStoreCommandLineOptions.parseOptions(
+				nsOptions,
+				new OptionMapWrapper(
+						options));
+		final CommandLineResult<IndexStoreCommandLineOptions> indexStoreOptions = IndexStoreCommandLineOptions.parseOptions(
+				nsOptions,
+				new OptionMapWrapper(
+						options));
+		final CommandLineResult<AdapterStoreCommandLineOptions> adapterStoreOptions = AdapterStoreCommandLineOptions.parseOptions(
+				nsOptions,
+				new OptionMapWrapper(
+						options));
 		dataGenerator.setIncludePolygons(false);
-		ingest(dataStoreOptions.createStore());
+		ingest(dataStoreOptions.getResult().createStore());
 		runScan(
 				new SpatialQuery(
 						dataGenerator.getBoundingRegion()),
-				dataStoreOptions,
-				indexStoreOptions,
-				adapterStoreOptions);
+				dataStoreOptions.getResult(),
+				indexStoreOptions.getResult(),
+				adapterStoreOptions.getResult());
 	}
 
 	private void runScan(
@@ -139,15 +149,16 @@ public class DBScanIT extends
 							MapReduceParameters.MRConfig.HDFS_BASE_DIR,
 							OutputParameters.Output.REDUCER_COUNT,
 							InputParameters.Input.INPUT_FORMAT,
-							GlobalParameters.Global.BATCH_ID
+							GlobalParameters.Global.BATCH_ID,
+							PartitionParameters.Partition.PARTITION_DECREASE_RATE,
+							PartitionParameters.Partition.PARTITION_PRECISION
 						},
 						new Object[] {
 							query,
-							new QueryOptions(
-									"geom"),
+							new QueryOptions(),
 							Integer.toString(MIN_INPUT_SPLITS),
 							Integer.toString(MAX_INPUT_SPLITS),
-							10000,
+							10000.0,
 							OrthodromicDistancePartitioner.class,
 							10,
 							new PersistableDataStore(
@@ -159,7 +170,9 @@ public class DBScanIT extends
 							hdfsBaseDirectory + "/t1",
 							2,
 							GeoWaveInputFormatConfiguration.class,
-							"bx5"
+							"bx5",
+							0.15,
+							0.95
 						}));
 
 		Assert.assertEquals(

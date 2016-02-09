@@ -1,16 +1,15 @@
 package mil.nga.giat.geowave.core.store.data.field;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.ServiceLoader;
-
-import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
+import mil.nga.giat.geowave.core.store.spi.SPIServiceRegistry;
 
 /**
  * This class has a set of convenience methods to determine the appropriate
@@ -40,8 +39,8 @@ public class FieldUtils
 	private static synchronized void initRegistry() {
 		fieldReaderRegistry = new HashMap<Class<?>, FieldReader<?>>();
 		fieldWriterRegistry = new HashMap<Class<?>, FieldWriter<?, ?>>();
-		final Iterator<FieldSerializationProviderSpi> serializationProviders = ServiceLoader.load(
-				FieldSerializationProviderSpi.class).iterator();
+		final Iterator<FieldSerializationProviderSpi> serializationProviders = new SPIServiceRegistry(
+				FieldSerializationProviderSpi.class).load(FieldSerializationProviderSpi.class);
 		while (serializationProviders.hasNext()) {
 			final FieldSerializationProviderSpi<?> serializationProvider = serializationProviders.next();
 			if (serializationProvider != null) {
@@ -97,7 +96,7 @@ public class FieldUtils
 		final FieldWriter<?, T> writer = (FieldWriter<?, T>) internalFieldWriters.get(myClass);
 		if (writer != null) {
 			return writer;
-		}// if the concrete class lookup failed, try inheritance
+		} // if the concrete class lookup failed, try inheritance
 		return (FieldWriter<?, T>) getAssignableValueFromClassMap(
 				myClass,
 				internalFieldWriters);

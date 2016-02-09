@@ -26,6 +26,7 @@ public class FeatureTimeRangeHandler implements
 	private final FeatureAttributeHandler nativeStartTimeHandler;
 	private final FeatureAttributeHandler nativeEndTimeHandler;
 	private final FieldVisibilityHandler<SimpleFeature, Object> visibilityHandler;
+	private final ByteArrayId[] nativeFieldIds;
 
 	public FeatureTimeRangeHandler(
 			final FeatureAttributeHandler nativeStartTimeHandler,
@@ -43,14 +44,15 @@ public class FeatureTimeRangeHandler implements
 		this.nativeStartTimeHandler = nativeStartTimeHandler;
 		this.nativeEndTimeHandler = nativeEndTimeHandler;
 		this.visibilityHandler = visibilityHandler;
+		nativeFieldIds = new ByteArrayId[] {
+			nativeStartTimeHandler.getFieldId(),
+			nativeEndTimeHandler.getFieldId()
+		};
 	}
 
 	@Override
 	public ByteArrayId[] getNativeFieldIds() {
-		return new ByteArrayId[] {
-			nativeStartTimeHandler.getFieldId(),
-			nativeEndTimeHandler.getFieldId()
-		};
+		return nativeFieldIds;
 	}
 
 	@Override

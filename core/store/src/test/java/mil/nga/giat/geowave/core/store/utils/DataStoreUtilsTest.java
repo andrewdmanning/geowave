@@ -8,19 +8,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.DataStoreEntryInfo;
+import mil.nga.giat.geowave.core.store.EntryVisibilityHandler;
 import mil.nga.giat.geowave.core.store.IngestCallback;
 import mil.nga.giat.geowave.core.store.adapter.AbstractDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.MockComponents;
 import mil.nga.giat.geowave.core.store.adapter.NativeFieldHandler.RowBuilder;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
-import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsVisibilityHandler;
 import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticalDataAdapter;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
 import mil.nga.giat.geowave.core.store.data.field.FieldVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.field.FieldWriter;
 import mil.nga.giat.geowave.core.store.data.visibility.GlobalVisibilityHandler;
-import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.memory.EntryRow;
 
@@ -34,7 +34,7 @@ public class DataStoreUtilsTest
 				0);
 		List<EntryRow> entryRows = DataStoreUtils.entryToRows(
 				new MockComponents.MockAbstractDataAdapter(),
-				new Index(
+				new PrimaryIndex(
 						new MockComponents.MockIndexStrategy(),
 						new MockComponents.TestIndexModel()),
 				new Integer(
@@ -156,42 +156,35 @@ public class DataStoreUtilsTest
 		@Override
 		public FieldReader<Object> getReader(
 				ByteArrayId fieldId ) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public FieldWriter<String, Object> getWriter(
 				ByteArrayId fieldId ) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public ByteArrayId[] getSupportedStatisticsIds() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		public DataStatistics<String> createDataStatistics(
 				ByteArrayId statisticsId ) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
-		public DataStatisticsVisibilityHandler<String> getVisibilityHandler(
+		public EntryVisibilityHandler<String> getVisibilityHandler(
 				ByteArrayId statisticsId ) {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
 		@Override
 		protected RowBuilder<String, Object> newBuilder() {
-			// TODO Auto-generated method stub
 			return null;
 		}
-
 	}
 }

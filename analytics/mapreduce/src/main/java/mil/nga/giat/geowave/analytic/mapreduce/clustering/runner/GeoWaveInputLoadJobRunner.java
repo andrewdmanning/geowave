@@ -109,4 +109,8 @@ public class GeoWaveInputLoadJobRunner extends
 		params.addAll(MapReduceParameters.getParameters());
 		return params;
 	}
+	@Override
+	protected String getJobName() {
+		return "Input Load";
+	}
 }

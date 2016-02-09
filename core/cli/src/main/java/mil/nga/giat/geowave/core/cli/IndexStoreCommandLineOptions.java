@@ -14,6 +14,8 @@ import org.apache.commons.cli.ParseException;
 public class IndexStoreCommandLineOptions extends
 		GenericStoreCommandLineOptions<IndexStore>
 {
+	public static final String INDEX_STORE_NAME_KEY = "indexstore";
+
 	public IndexStoreCommandLineOptions(
 			final GenericStoreFactory<IndexStore> factory,
 			final Map<String, Object> configOptions,
@@ -40,47 +42,58 @@ public class IndexStoreCommandLineOptions extends
 				new IndexStoreCommandLineHelper());
 	}
 
-	public static IndexStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<IndexStoreCommandLineOptions> parseOptions(
+			final Options options,
 			final CommandLine commandLine )
 			throws ParseException {
 		return parseOptions(
 				null,
+				options,
 				commandLine);
 	}
 
-	public static IndexStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<IndexStoreCommandLineOptions> parseOptions(
 			final String prefix,
+			final Options options,
 			final CommandLine commandLine )
 			throws ParseException {
-		return (IndexStoreCommandLineOptions) parseOptions(
+		return (CommandLineResult) parseOptions(
 				prefix,
+				options,
 				commandLine,
 				new IndexStoreCommandLineHelper());
 	}
 
-	public static IndexStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<IndexStoreCommandLineOptions> parseOptions(
+			final Options options,
 			final CommandLineOptions commandLine )
 			throws ParseException {
 		return parseOptions(
 				null,
+				options,
 				commandLine);
 	}
 
-	public static IndexStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<IndexStoreCommandLineOptions> parseOptions(
 			final String prefix,
+			final Options options,
 			final CommandLineOptions commandLine )
 			throws ParseException {
-		return (IndexStoreCommandLineOptions) parseOptions(
+		return (CommandLineResult) parseOptions(
 				prefix,
+				options,
 				commandLine,
 				new IndexStoreCommandLineHelper());
 	}
 
-	@Override
-	public IndexStore createStore() {
-		return GeoWaveStoreFinder.createIndexStore(
-				configOptions,
-				namespace);
+	public static IndexStoreFactorySpi getSelectedStore(
+			final CommandLineOptions commandLine )
+			throws ParseException {
+		final IndexStoreCommandLineHelper helper = new IndexStoreCommandLineHelper();
+		return getSelectedStore(
+				helper.getOptionName(),
+				commandLine,
+				helper);
 	}
 
 	private static class IndexStoreCommandLineHelper implements
@@ -93,7 +106,7 @@ public class IndexStoreCommandLineOptions extends
 
 		@Override
 		public String getOptionName() {
-			return "indexstore";
+			return INDEX_STORE_NAME_KEY;
 		}
 
 		@Override

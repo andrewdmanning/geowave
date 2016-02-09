@@ -71,6 +71,7 @@ abstract public class PersistableStore<T> implements
 		for (final byte[] strOption : strOptionsBinary) {
 			buf.put(strOption);
 		}
+
 		return buf.array();
 	}
 
@@ -78,8 +79,6 @@ abstract public class PersistableStore<T> implements
 	public void fromBinary(
 			final byte[] bytes ) {
 		final ByteBuffer buf = ByteBuffer.wrap(bytes);
-		final byte[] classnameBinary = new byte[buf.getInt()];
-		buf.get(classnameBinary);
 		final byte[] namespaceBinary = new byte[buf.getInt()];
 		buf.get(namespaceBinary);
 		final byte[] factoryNameBinary = new byte[buf.getInt()];
@@ -100,16 +99,17 @@ abstract public class PersistableStore<T> implements
 		}
 		final String factoryName = StringUtils.stringFromBinary(factoryNameBinary);
 		final String namespace = StringUtils.stringFromBinary(namespaceBinary);
-		setCLIOptions(
+		cliOptions = getCLIOptions(
 				configOptions,
 				namespace,
 				factoryName);
 	}
 
-	abstract protected GenericStoreCommandLineOptions<T> setCLIOptions(
+	abstract protected GenericStoreCommandLineOptions<T> getCLIOptions(
 			Map<String, String> configOptions,
 			String namespace,
 			String factoryName );
+}
 
 	protected static CommandLine getCommandLineFromConfigOptions(
 			final Map<String, String> configOptions,

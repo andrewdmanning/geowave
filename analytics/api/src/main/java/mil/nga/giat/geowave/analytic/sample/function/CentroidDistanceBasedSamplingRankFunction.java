@@ -103,7 +103,7 @@ public class CentroidDistanceBasedSamplingRankFunction<T> implements
 			final Logger logger )
 			throws IOException {
 		final ScopedJobConfiguration config = new ScopedJobConfiguration(
-				context,
+				context.getConfiguration(),
 				scope);
 		try {
 			sampleProbabilityFn = config.getInstance(

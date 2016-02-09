@@ -11,10 +11,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import mil.nga.giat.geowave.core.index.PersistenceUtils;
-import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.datastore.accumulo.mapreduce.input.RangeLocationPair;
 
-import org.apache.accumulo.core.data.Range;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;
 
@@ -26,27 +25,27 @@ public class GeoWaveAccumuloInputSplit extends
 		InputSplit implements
 		Writable
 {
-	private Map<Index, List<Range>> ranges;
+	private Map<PrimaryIndex, List<RangeLocationPair>> ranges;
 	private String[] locations;
 
 	protected GeoWaveAccumuloInputSplit() {
-		ranges = new HashMap<Index, List<Range>>();
+		ranges = new HashMap<PrimaryIndex, List<RangeLocationPair>>();
 		locations = new String[] {};
 	}
 
 	protected GeoWaveAccumuloInputSplit(
-			final Map<Index, List<Range>> ranges,
+			final Map<PrimaryIndex, List<RangeLocationPair>> ranges,
 			final String[] locations ) {
 		this.ranges = ranges;
 		this.locations = locations;
 	}
 
-	public Set<Index> getIndices() {
+	public Set<PrimaryIndex> getIndices() {
 		return ranges.keySet();
 	}
 
-	public List<Range> getRanges(
-			final Index index ) {
+	public List<RangeLocationPair> getRanges(
+			final PrimaryIndex index ) {
 		return ranges.get(index);
 	}
 
@@ -58,35 +57,12 @@ public class GeoWaveAccumuloInputSplit extends
 	public long getLength()
 			throws IOException {
 		long diff = 0;
-		for (final Entry<Index, List<Range>> indexEntry : ranges.entrySet()) {
-			for (final Range range : indexEntry.getValue()) {
-				final Text startRow = range.isInfiniteStartKey() ? new Text(
-						new byte[] {
-							Byte.MIN_VALUE
-						}) : range.getStartKey().getRow();
-				final Text stopRow = range.isInfiniteStopKey() ? new Text(
-						new byte[] {
-							Byte.MAX_VALUE
-						}) : range.getEndKey().getRow();
-				final int maxCommon = Math.min(
-						7,
-						Math.min(
-								startRow.getLength(),
-								stopRow.getLength()));
-
-				final byte[] start = startRow.getBytes();
-				final byte[] stop = stopRow.getBytes();
-				for (int i = 0; i < maxCommon; ++i) {
-					diff |= 0xff & (start[i] ^ stop[i]);
-					diff <<= Byte.SIZE;
-				}
-
-				if (startRow.getLength() != stopRow.getLength()) {
-					diff |= 0xff;
-				}
+		for (final Entry<PrimaryIndex, List<RangeLocationPair>> indexEntry : ranges.entrySet()) {
+			for (final RangeLocationPair range : indexEntry.getValue()) {
+				diff += (long) range.getCardinality();
 			}
 		}
-		return diff + 1;
+		return diff;
 	}
 
 	@Override
@@ -100,22 +76,22 @@ public class GeoWaveAccumuloInputSplit extends
 			final DataInput in )
 			throws IOException {
 		final int numIndices = in.readInt();
-		ranges = new HashMap<Index, List<Range>>(
+		ranges = new HashMap<PrimaryIndex, List<RangeLocationPair>>(
 				numIndices);
 		for (int i = 0; i < numIndices; i++) {
 			final int indexLength = in.readInt();
 			final byte[] indexBytes = new byte[indexLength];
 			in.readFully(indexBytes);
-			final Index index = PersistenceUtils.fromBinary(
+			final PrimaryIndex index = PersistenceUtils.fromBinary(
 					indexBytes,
-					Index.class);
+					PrimaryIndex.class);
 			final int numRanges = in.readInt();
-			final List<Range> rangeList = new ArrayList<Range>(
+			final List<RangeLocationPair> rangeList = new ArrayList<RangeLocationPair>(
 					numRanges);
 
 			for (int j = 0; j < numRanges; j++) {
 				try {
-					final Range range = Range.class.newInstance();
+					final RangeLocationPair range = new RangeLocationPair();
 					range.readFields(in);
 					rangeList.add(range);
 				}
@@ -141,13 +117,13 @@ public class GeoWaveAccumuloInputSplit extends
 			final DataOutput out )
 			throws IOException {
 		out.writeInt(ranges.size());
-		for (final Entry<Index, List<Range>> range : ranges.entrySet()) {
+		for (final Entry<PrimaryIndex, List<RangeLocationPair>> range : ranges.entrySet()) {
 			final byte[] indexBytes = PersistenceUtils.toBinary(range.getKey());
 			out.writeInt(indexBytes.length);
 			out.write(indexBytes);
-			final List<Range> rangeList = range.getValue();
+			final List<RangeLocationPair> rangeList = range.getValue();
 			out.writeInt(rangeList.size());
-			for (final Range r : rangeList) {
+			for (final RangeLocationPair r : rangeList) {
 				r.write(out);
 			}
 		}

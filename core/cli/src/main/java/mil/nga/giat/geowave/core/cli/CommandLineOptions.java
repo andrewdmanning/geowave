@@ -3,6 +3,7 @@ package mil.nga.giat.geowave.core.cli;
 import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 
 public interface CommandLineOptions
 {
@@ -17,6 +18,8 @@ public interface CommandLineOptions
 			String optionName );
 
 	public String[] getArgs();
+
+	public Option[] getOptions();
 
 	public static class CommandLineWrapper implements
 			CommandLineOptions
@@ -41,6 +44,11 @@ public interface CommandLineOptions
 			return commandLine.getOptionValue(
 					optionName,
 					defaultValue);
+		}
+
+		@Override
+		public Option[] getOptions() {
+			return commandLine.getOptions();
 		}
 
 		@Override
@@ -89,8 +97,18 @@ public interface CommandLineOptions
 
 		@Override
 		public String[] getArgs() {
-			return optionMap.keySet().toArray(
-					new String[] {});
+			final String[] args = new String[optionMap.size() * 2];
+			int i = 0;
+			for (Map.Entry<String, String> entry : optionMap.entrySet()) {
+				args[i++] = "-" + entry.getKey();
+				args[i++] = entry.getValue();
+			}
+			return args;
+		}
+
+		@Override
+		public Option[] getOptions() {
+			return new Option[] {};
 		}
 	}
 }

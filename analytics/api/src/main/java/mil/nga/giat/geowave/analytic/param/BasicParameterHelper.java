@@ -2,11 +2,13 @@ package mil.nga.giat.geowave.analytic.param;
 
 import mil.nga.giat.geowave.analytic.PropertyManagement;
 import mil.nga.giat.geowave.analytic.ScopedJobConfiguration;
+import mil.nga.giat.geowave.core.cli.CommandLineResult;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.mapreduce.GeoWaveConfiguratorBase;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.slf4j.Logger;
@@ -144,13 +146,12 @@ public class BasicParameterHelper implements
 			final Class<?> scope,
 			final Object defaultValue ) {
 		final ScopedJobConfiguration scopedConfig = new ScopedJobConfiguration(
-				context,
+				context.getConfiguration(),
 				scope);
 		if (baseClass.isAssignableFrom(Integer.class)) {
-			return new Integer(
-					scopedConfig.getInt(
-							parent.self(),
-							((Integer) defaultValue).intValue()));
+			return Integer.valueOf(scopedConfig.getInt(
+					parent.self(),
+					((Integer) defaultValue).intValue()));
 		}
 		else if (baseClass.isAssignableFrom(String.class)) {
 			return scopedConfig.getString(
@@ -165,13 +166,39 @@ public class BasicParameterHelper implements
 		else if (baseClass.isAssignableFrom(byte[].class)) {
 			return scopedConfig.getBytes(parent.self());
 		}
+		else if ((defaultValue == null) || (defaultValue instanceof Class)) {
+			try {
+				return scopedConfig.getInstance(
+						parent.self(),
+						baseClass,
+						(Class) defaultValue);
+			}
+			catch (InstantiationException | IllegalAccessException e) {
+				LOGGER.error(
+						"Unable to get instance from job context",
+						e);
+			}
+		}
 		return null;
 	}
 
 	@Override
-	public Object getValue(
+	public CommandLineResult<Object> getValue(
+			final Options allOptions,
 			final CommandLine commandline ) {
-		final String optionValueStr = commandline.getOptionValue(options[0].getArgName());
+		return new CommandLineResult<Object>(
+				getValueInternal(
+						allOptions,
+						commandline));
+	}
+
+	private Object getValueInternal(
+			final Options allOptions,
+			final CommandLine commandline ) {
+		if (baseClass.isAssignableFrom(Boolean.class)) {
+			return commandline.hasOption(options[0].getOpt());
+		}
+		final String optionValueStr = commandline.getOptionValue(options[0].getOpt());
 		if (optionValueStr == null) {
 			return null;
 		}

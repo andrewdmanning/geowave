@@ -23,7 +23,11 @@ public class StatsOperationCLIProvider implements
 			new CLIOperation(
 					"stats",
 					"Calculate the statistics of an existing GeoWave dataset",
-					new StatsOperation())
+					new StatsOperation()),
+			new CLIOperation(
+					"statsdump",
+					"Print statistics of an existing GeoWave dataset to standard output",
+					new DumpStatsOperation())
 		};
 	}
 }

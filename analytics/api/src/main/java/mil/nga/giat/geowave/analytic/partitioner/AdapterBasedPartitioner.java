@@ -11,7 +11,7 @@ import mil.nga.giat.geowave.analytic.SerializableAdapterStore;
 import mil.nga.giat.geowave.analytic.param.ParameterEnum;
 import mil.nga.giat.geowave.analytic.param.StoreParameters;
 import mil.nga.giat.geowave.analytic.partitioner.AdapterBasedPartitioner.AdapterDataEntry;
-import mil.nga.giat.geowave.core.cli.AdapterStoreCommandLineOptions;
+import mil.nga.giat.geowave.analytic.store.PersistableAdapterStore;
 import mil.nga.giat.geowave.core.geotime.index.dimension.LongitudeDefinition;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.dimension.NumericDimensionDefinition;
@@ -43,7 +43,8 @@ import org.slf4j.LoggerFactory;
  * This class depends on an AdapterStore. Since an AdapterStore is not
  * Serializable, the dependency is transient requiring initialization after
  * serialization
- * {@link AdapterBasedPartitioner#initialize(ConfigurationWrapper)
+ * {@link AdapterBasedPartitioner#initialize(ConfigurationWrapper)
+
  * 
  * 
  */
@@ -136,10 +137,10 @@ public class AdapterBasedPartitioner extends
 				context,
 				scope);
 		adapterStore = new SerializableAdapterStore(
-				((AdapterStoreCommandLineOptions) StoreParameters.StoreParam.ADAPTER_STORE.getHelper().getValue(
+				((PersistableAdapterStore) StoreParameters.StoreParam.ADAPTER_STORE.getHelper().getValue(
 						context,
 						scope,
-						null)).createStore());
+						null)).getCliOptions().createStore());
 
 		init();
 	}

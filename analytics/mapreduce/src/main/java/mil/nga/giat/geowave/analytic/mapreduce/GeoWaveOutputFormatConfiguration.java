@@ -32,15 +32,15 @@ public class GeoWaveOutputFormatConfiguration implements
 			final Configuration configuration )
 			throws Exception {
 		final GenericStoreCommandLineOptions<DataStore> dataStoreOptions = ((PersistableDataStore) runTimeProperties.getProperty(StoreParam.DATA_STORE)).getCliOptions();
-		GeoWaveInputFormat.setDataStoreName(
+		GeoWaveOutputFormat.setDataStoreName(
 				configuration,
 				dataStoreOptions.getFactory().getName());
-		GeoWaveInputFormat.setStoreConfigOptions(
+		GeoWaveOutputFormat.setStoreConfigOptions(
 				configuration,
 				ConfigUtils.valuesToStrings(
 						dataStoreOptions.getConfigOptions(),
 						dataStoreOptions.getFactory().getOptions()));
-		GeoWaveInputFormat.setGeoWaveNamespace(
+		GeoWaveOutputFormat.setGeoWaveNamespace(
 				configuration,
 				dataStoreOptions.getNamespace());
 

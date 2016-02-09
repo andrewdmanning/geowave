@@ -14,6 +14,8 @@ import org.apache.commons.cli.ParseException;
 public class DataStatisticsStoreCommandLineOptions extends
 		GenericStoreCommandLineOptions<DataStatisticsStore>
 {
+	public static final String DATA_STATISTICS_STORE_NAME_KEY = "statstore";
+
 	public DataStatisticsStoreCommandLineOptions(
 			final GenericStoreFactory<DataStatisticsStore> factory,
 			final Map<String, Object> configOptions,
@@ -40,47 +42,58 @@ public class DataStatisticsStoreCommandLineOptions extends
 				new DataStatisticsStoreCommandLineHelper());
 	}
 
-	public static DataStatisticsStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<DataStatisticsStoreCommandLineOptions> parseOptions(
+			final Options options,
 			final CommandLine commandLine )
 			throws ParseException {
 		return parseOptions(
 				null,
+				options,
 				commandLine);
 	}
 
-	public static DataStatisticsStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<DataStatisticsStoreCommandLineOptions> parseOptions(
 			final String prefix,
+			final Options options,
 			final CommandLine commandLine )
 			throws ParseException {
-		return (DataStatisticsStoreCommandLineOptions) parseOptions(
+		return (CommandLineResult) parseOptions(
 				prefix,
+				options,
 				commandLine,
 				new DataStatisticsStoreCommandLineHelper());
 	}
 
-	public static DataStatisticsStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<DataStatisticsStoreCommandLineOptions> parseOptions(
+			final Options options,
 			final CommandLineOptions commandLine )
 			throws ParseException {
 		return parseOptions(
 				null,
+				options,
 				commandLine);
 	}
 
-	public static DataStatisticsStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<DataStatisticsStoreCommandLineOptions> parseOptions(
 			final String prefix,
+			final Options options,
 			final CommandLineOptions commandLine )
 			throws ParseException {
-		return (DataStatisticsStoreCommandLineOptions) parseOptions(
+		return (CommandLineResult) parseOptions(
 				prefix,
+				options,
 				commandLine,
 				new DataStatisticsStoreCommandLineHelper());
 	}
 
-	@Override
-	public DataStatisticsStore createStore() {
-		return GeoWaveStoreFinder.createDataStatisticsStore(
-				configOptions,
-				namespace);
+	public static DataStatisticsStoreFactorySpi getSelectedStore(
+			final CommandLineOptions commandLine )
+			throws ParseException {
+		final DataStatisticsStoreCommandLineHelper helper = new DataStatisticsStoreCommandLineHelper();
+		return getSelectedStore(
+				helper.getOptionName(),
+				commandLine,
+				helper);
 	}
 
 	private static class DataStatisticsStoreCommandLineHelper implements
@@ -93,7 +106,7 @@ public class DataStatisticsStoreCommandLineOptions extends
 
 		@Override
 		public String getOptionName() {
-			return "statstore";
+			return DATA_STATISTICS_STORE_NAME_KEY;
 		}
 
 		@Override

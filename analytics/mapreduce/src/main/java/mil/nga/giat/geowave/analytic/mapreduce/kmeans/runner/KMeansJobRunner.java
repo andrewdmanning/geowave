@@ -85,4 +85,9 @@ public class KMeansJobRunner extends
 				configuration,
 				runTimeProperties);
 	}
+
+	@Override
+	protected String getJobName() {
+		return "K-Means";
+	}
 }

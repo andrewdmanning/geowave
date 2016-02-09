@@ -18,9 +18,15 @@ import mil.nga.giat.geowave.analytic.param.PartitionParameters.Partition;
 import mil.nga.giat.geowave.analytic.param.StoreParameters.StoreParam;
 import mil.nga.giat.geowave.analytic.partitioner.OrthodromicDistancePartitioner;
 import mil.nga.giat.geowave.analytic.partitioner.Partitioner;
+import mil.nga.giat.geowave.analytic.store.PersistableAdapterStore;
 import mil.nga.giat.geowave.analytic.store.PersistableDataStore;
+import mil.nga.giat.geowave.analytic.store.PersistableIndexStore;
+import mil.nga.giat.geowave.core.cli.AdapterStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
+import mil.nga.giat.geowave.core.cli.IndexStoreCommandLineOptions;
+import mil.nga.giat.geowave.core.store.memory.MemoryAdapterStoreFactory;
 import mil.nga.giat.geowave.core.store.memory.MemoryDataStoreFactory;
+import mil.nga.giat.geowave.core.store.memory.MemoryIndexStoreFactory;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -28,6 +34,7 @@ import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,12 +55,10 @@ public class NNJobRunnerTest
 					final GeoWaveAnalyticJobRunner tool )
 					throws Exception {
 				tool.setConf(configuration);
-				((ParameterHelper<Object>) StoreParam.ADAPTER_STORE.getHelper()).setValue(
+				return ToolRunner.run(
 						configuration,
-						NNMapReduce.class,
-						StoreParam.ADAPTER_STORE.getHelper().getValue(
-								runTimeProperties));
-				return tool.run(runTimeProperties.toGeoWaveRunnerArguments());
+						tool,
+						new String[] {});
 			}
 
 			@Override
@@ -70,7 +75,7 @@ public class NNJobRunnerTest
 						10,
 						job.getNumReduceTasks());
 				final ScopedJobConfiguration configWrapper = new ScopedJobConfiguration(
-						job,
+						job.getConfiguration(),
 						NNMapReduce.class);
 				Assert.assertEquals(
 						"file://foo/bin",
@@ -100,6 +105,15 @@ public class NNJobRunnerTest
 					Assert.assertEquals(
 							OrthodromicDistancePartitioner.class,
 							wrapper.getClass());
+
+					final Partitioner<?> secondary = configWrapper.getInstance(
+							Partition.SECONDARY_PARTITIONER_CLASS,
+							Partitioner.class,
+							null);
+
+					Assert.assertEquals(
+							OrthodromicDistancePartitioner.class,
+							secondary.getClass());
 
 					final DistanceFn<?> distancFn = configWrapper.getInstance(
 							CommonParameters.Common.DISTANCE_FUNCTION_CLASS,
@@ -136,6 +150,13 @@ public class NNJobRunnerTest
 				return new Job(
 						tool.getConf());
 			}
+
+			@Override
+			public Configuration getConfiguration(
+					final PropertyManagement runTimeProperties )
+					throws IOException {
+				return new Configuration();
+			}
 		});
 
 		jjJobRunner.setInputFormatConfiguration(new SequenceFileInputFormatConfiguration(
@@ -156,11 +177,31 @@ public class NNJobRunnerTest
 								TEST_NAMESPACE)));
 
 		runTimeProperties.store(
+				StoreParam.ADAPTER_STORE,
+				new PersistableAdapterStore(
+						new AdapterStoreCommandLineOptions(
+								new MemoryAdapterStoreFactory(),
+								new HashMap<String, Object>(),
+								TEST_NAMESPACE)));
+
+		runTimeProperties.store(
+				StoreParam.INDEX_STORE,
+				new PersistableIndexStore(
+						new IndexStoreCommandLineOptions(
+								new MemoryIndexStoreFactory(),
+								new HashMap<String, Object>(),
+								TEST_NAMESPACE)));
+
+		runTimeProperties.store(
 				CommonParameters.Common.DISTANCE_FUNCTION_CLASS,
 				FeatureCentroidDistanceFn.class);
 
 		runTimeProperties.store(
 				Partition.PARTITIONER_CLASS,
+				OrthodromicDistancePartitioner.class);
+
+		runTimeProperties.store(
+				Partition.SECONDARY_PARTITIONER_CLASS,
 				OrthodromicDistancePartitioner.class);
 
 		runTimeProperties.store(

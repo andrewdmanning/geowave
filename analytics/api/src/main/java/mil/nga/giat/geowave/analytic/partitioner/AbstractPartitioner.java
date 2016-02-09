@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.analytic.partitioner;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -18,13 +19,14 @@ import mil.nga.giat.geowave.analytic.param.CommonParameters;
 import mil.nga.giat.geowave.analytic.param.ParameterEnum;
 import mil.nga.giat.geowave.analytic.param.PartitionParameters.Partition;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.PersistenceUtils;
 import mil.nga.giat.geowave.core.index.sfc.SFCFactory.SFCType;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexFactory;
 import mil.nga.giat.geowave.core.index.sfc.tiered.TieredSFCIndexStrategy;
-import mil.nga.giat.geowave.core.store.dimension.DimensionField;
+import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
-import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -37,14 +39,15 @@ import org.apache.hadoop.mapreduce.JobContext;
 public abstract class AbstractPartitioner<T> implements
 		Partitioner<T>
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private transient PrimaryIndex index = null;
+	private double[] distancePerDimension = null;
+	private double precisionFactor = 1.0;
 
-	private transient Index index = null;
-	private transient double[] distancePerDimension = null;
-	private transient double precisionFactor = 1.0;
-
-	public AbstractPartitioner() {
-		distancePerDimension = new double[0];
-	}
+	public AbstractPartitioner() {}
 
 	public AbstractPartitioner(
 			final CommonIndexModel indexModel,
@@ -67,7 +70,7 @@ public abstract class AbstractPartitioner<T> implements
 		return distancePerDimension;
 	}
 
-	protected Index getIndex() {
+	protected PrimaryIndex getIndex() {
 		return index;
 	}
 
@@ -150,11 +153,7 @@ public abstract class AbstractPartitioner<T> implements
 	}
 
 	private static double[] getDistances(
-			final JobContext context,
-			final Class<?> scope ) {
-		final ScopedJobConfiguration config = new ScopedJobConfiguration(
-				context,
-				scope);
+			final ScopedJobConfiguration config ) {
 		final String distances = config.getString(
 				ClusteringParameters.Clustering.DISTANCE_THRESHOLDS,
 				"0.000001");
@@ -175,13 +174,16 @@ public abstract class AbstractPartitioner<T> implements
 			final JobContext context,
 			final Class<?> scope )
 			throws IOException {
+		initialize(new ScopedJobConfiguration(
+				context.getConfiguration(),
+				scope));
+	}
 
-		final ScopedJobConfiguration config = new ScopedJobConfiguration(
-				context,
-				scope);
-		distancePerDimension = getDistances(
-				context,
-				this.getClass());
+	public void initialize(
+			final ScopedJobConfiguration config )
+			throws IOException {
+
+		distancePerDimension = getDistances(config);
 
 		this.precisionFactor = config.getDouble(
 				Partition.PARTITION_PRECISION,
@@ -227,7 +229,8 @@ public abstract class AbstractPartitioner<T> implements
 			final Configuration configuration ) {
 		final ParameterEnum[] params = new ParameterEnum[] {
 			CommonParameters.Common.INDEX_MODEL_BUILDER_CLASS,
-			ClusteringParameters.Clustering.DISTANCE_THRESHOLDS
+			ClusteringParameters.Clustering.DISTANCE_THRESHOLDS,
+			Partition.PARTITION_PRECISION
 		};
 		runTimeProperties.setConfig(
 				params,
@@ -240,7 +243,7 @@ public abstract class AbstractPartitioner<T> implements
 			final double[] distancePerDimensionForIndex ) {
 
 		// truncating to lower precision
-		final DimensionField<?>[] dimensions = indexModel.getDimensions();
+		final NumericDimensionField<?>[] dimensions = indexModel.getDimensions();
 
 		int totalRequestedPrecision = 0;
 		final int[] dimensionPrecision = new int[indexModel.getDimensions().length];
@@ -270,7 +273,7 @@ public abstract class AbstractPartitioner<T> implements
 				dimensions.length,
 				2));
 
-		index = new Index(
+		index = new PrimaryIndex(
 				indexStrategy,
 				indexModel);
 
@@ -280,9 +283,68 @@ public abstract class AbstractPartitioner<T> implements
 	public Collection<ParameterEnum<?>> getParameters() {
 		return Arrays.asList(new ParameterEnum<?>[] {
 			CommonParameters.Common.INDEX_MODEL_BUILDER_CLASS,
-			ClusteringParameters.Clustering.DISTANCE_THRESHOLDS
+			ClusteringParameters.Clustering.DISTANCE_THRESHOLDS,
+			Partition.PARTITION_PRECISION
 		});
 
+	}
+
+	private void writeObject(
+			ObjectOutputStream stream )
+			throws IOException {
+		final byte[] indexData = PersistenceUtils.toBinary(this.index);
+		stream.writeInt(indexData.length);
+		stream.write(indexData);
+		stream.writeDouble(precisionFactor);
+		stream.writeInt(distancePerDimension.length);
+		for (double v : distancePerDimension)
+			stream.writeDouble(v);
+	}
+
+	private void readObject(
+			java.io.ObjectInputStream stream )
+			throws IOException,
+			ClassNotFoundException {
+		final byte[] indexData = new byte[stream.readInt()];
+		stream.readFully(indexData);
+		index = PersistenceUtils.fromBinary(
+				indexData,
+				PrimaryIndex.class);
+		precisionFactor = stream.readDouble();
+		distancePerDimension = new double[stream.readInt()];
+		for (int i = 0; i < distancePerDimension.length; i++) {
+			distancePerDimension[i] = stream.readDouble();
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + Arrays.hashCode(distancePerDimension);
+		result = prime * result + ((index == null) ? 0 : index.hashCode());
+		long temp;
+		temp = Double.doubleToLongBits(precisionFactor);
+		result = prime * result + (int) (temp ^ (temp >>> 32));
+		return result;
+	}
+
+	@Override
+	public boolean equals(
+			Object obj ) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		AbstractPartitioner other = (AbstractPartitioner) obj;
+		if (!Arrays.equals(
+				distancePerDimension,
+				other.distancePerDimension)) return false;
+		if (index == null) {
+			if (other.index != null) return false;
+		}
+		else if (!index.equals(other.index)) return false;
+		if (Double.doubleToLongBits(precisionFactor) != Double.doubleToLongBits(other.precisionFactor)) return false;
+		return true;
 	}
 
 }

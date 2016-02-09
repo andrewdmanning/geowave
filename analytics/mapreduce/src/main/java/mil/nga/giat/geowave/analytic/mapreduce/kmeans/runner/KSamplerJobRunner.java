@@ -14,12 +14,12 @@ import mil.nga.giat.geowave.analytic.param.ParameterEnum;
 import mil.nga.giat.geowave.analytic.param.SampleParameters;
 import mil.nga.giat.geowave.analytic.sample.function.RandomSamplingRankFunction;
 import mil.nga.giat.geowave.analytic.sample.function.SamplingRankFunction;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialTemporalDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputKey;
 
@@ -89,12 +89,12 @@ public class KSamplerJobRunner extends
 						"sample")));
 	}
 
-	private Index getIndex(
+	private PrimaryIndex getIndex(
 			final PropertyManagement runTimeProperties )
 			throws Exception {
 		final IndexStore indexStore = super.getIndexStore(runTimeProperties);
 
-		return indexStore.getIndex(new ByteArrayId(
+		return (PrimaryIndex) indexStore.getIndex(new ByteArrayId(
 				runTimeProperties.getPropertyAsString(
 						SampleParameters.Sample.INDEX_ID,
 						"index")));
@@ -120,7 +120,7 @@ public class KSamplerJobRunner extends
 
 		runTimeProperties.storeIfEmpty(
 				SampleParameters.Sample.INDEX_ID,
-				IndexType.SPATIAL_TEMPORAL_VECTOR.getDefaultId());
+				new SpatialTemporalDimensionalityTypeProvider().createPrimaryIndex().getId());
 		runTimeProperties.setConfig(
 				new ParameterEnum[] {
 					GlobalParameters.Global.BATCH_ID,
@@ -158,4 +158,8 @@ public class KSamplerJobRunner extends
 
 	}
 
+	@Override
+	protected String getJobName() {
+		return "K-Sampler";
+	}
 }

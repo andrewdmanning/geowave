@@ -23,7 +23,7 @@ public class PersistableDataStatisticsStore extends
 	}
 
 	@Override
-	protected GenericStoreCommandLineOptions<DataStatisticsStore> setCLIOptions(
+	protected GenericStoreCommandLineOptions<DataStatisticsStore> getCLIOptions(
 			final Map<String, String> configOptions,
 			final String namespace,
 			final String factoryName ) {

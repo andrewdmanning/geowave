@@ -18,7 +18,7 @@ import mil.nga.giat.geowave.analytic.clustering.CentroidManagerGeoWave;
 import mil.nga.giat.geowave.analytic.clustering.ClusteringUtils;
 import mil.nga.giat.geowave.analytic.clustering.NestedGroupCentroidAssignment;
 import mil.nga.giat.geowave.analytic.param.HullParameters;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.mapreduce.GeoWaveWritableInputMapper;
@@ -111,6 +111,7 @@ public class ConvexHullMapReduce
 			outputKey.setAdapterId(key.getAdapterId());
 			outputKey.setDataId(new ByteArrayId(
 					StringUtils.stringToBinary(nestedGroupCentroidAssigner.getGroupForLevel(wrapper))));
+			outputKey.setInsertionId(key.getInsertionId());
 			context.write(
 					outputKey,
 					currentValue);
@@ -125,7 +126,7 @@ public class ConvexHullMapReduce
 			super.setup(context);
 
 			final ScopedJobConfiguration config = new ScopedJobConfiguration(
-					context,
+					context.getConfiguration(),
 					ConvexHullMapReduce.class,
 					ConvexHullMapReduce.LOGGER);
 			try {
@@ -163,7 +164,7 @@ public class ConvexHullMapReduce
 	{
 
 		private CentroidManager<T> centroidManager;
-		private ByteArrayId indexId;
+		private List<ByteArrayId> indexIds;
 		private FeatureDataAdapter outputAdapter;
 		private Projection<T> projectionFunction;
 		/*
@@ -236,7 +237,7 @@ public class ConvexHullMapReduce
 			context.write(
 					new GeoWaveOutputKey(
 							outputAdapter.getAdapterId(),
-							indexId),
+							indexIds),
 					newPolygonFeature);
 		}
 
@@ -268,7 +269,7 @@ public class ConvexHullMapReduce
 				InterruptedException {
 
 			final ScopedJobConfiguration config = new ScopedJobConfiguration(
-					context,
+					context.getConfiguration(),
 					ConvexHullMapReduce.class,
 					ConvexHullMapReduce.LOGGER);
 			super.setup(context);
@@ -313,10 +314,11 @@ public class ConvexHullMapReduce
 							BasicFeatureTypes.DEFAULT_NAMESPACE),
 					ClusteringUtils.CLUSTERING_CRS);
 
-			indexId = new ByteArrayId(
+			indexIds = new ArrayList<ByteArrayId>();
+			indexIds.add(new ByteArrayId(
 					StringUtils.stringToBinary(config.getString(
 							HullParameters.Hull.INDEX_ID,
-							IndexType.SPATIAL_VECTOR.getDefaultId())));
+							new SpatialDimensionalityTypeProvider.SpatialIndexBuilder().createIndex().getId().getString()))));
 
 		}
 	}

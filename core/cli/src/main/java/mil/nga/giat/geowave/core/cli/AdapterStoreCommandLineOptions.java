@@ -14,6 +14,8 @@ import org.apache.commons.cli.ParseException;
 public class AdapterStoreCommandLineOptions extends
 		GenericStoreCommandLineOptions<AdapterStore>
 {
+	public static final String ADAPTER_STORE_NAME_KEY = "adapterstore";
+
 	public AdapterStoreCommandLineOptions(
 			final GenericStoreFactory<AdapterStore> factory,
 			final Map<String, Object> configOptions,
@@ -40,47 +42,58 @@ public class AdapterStoreCommandLineOptions extends
 				new AdapterStoreCommandLineHelper());
 	}
 
-	public static AdapterStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<AdapterStoreCommandLineOptions> parseOptions(
+			final Options options,
 			final CommandLine commandLine )
 			throws ParseException {
 		return parseOptions(
 				null,
+				options,
 				commandLine);
 	}
 
-	public static AdapterStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<AdapterStoreCommandLineOptions> parseOptions(
 			final String prefix,
+			final Options options,
 			final CommandLine commandLine )
 			throws ParseException {
-		return (AdapterStoreCommandLineOptions) parseOptions(
+		return (CommandLineResult) parseOptions(
 				prefix,
+				options,
 				commandLine,
 				new AdapterStoreCommandLineHelper());
 	}
 
-	public static AdapterStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<AdapterStoreCommandLineOptions> parseOptions(
+			final Options options,
 			final CommandLineOptions commandLine )
 			throws ParseException {
 		return parseOptions(
 				null,
+				options,
 				commandLine);
 	}
 
-	public static AdapterStoreCommandLineOptions parseOptions(
+	public static CommandLineResult<AdapterStoreCommandLineOptions> parseOptions(
 			final String prefix,
+			final Options options,
 			final CommandLineOptions commandLine )
 			throws ParseException {
-		return (AdapterStoreCommandLineOptions) parseOptions(
+		return (CommandLineResult) parseOptions(
 				prefix,
+				options,
 				commandLine,
 				new AdapterStoreCommandLineHelper());
 	}
 
-	@Override
-	public AdapterStore createStore() {
-		return GeoWaveStoreFinder.createAdapterStore(
-				configOptions,
-				namespace);
+	public static AdapterStoreFactorySpi getSelectedStore(
+			final CommandLineOptions commandLine )
+			throws ParseException {
+		final AdapterStoreCommandLineHelper helper = new AdapterStoreCommandLineHelper();
+		return getSelectedStore(
+				helper.getOptionName(),
+				commandLine,
+				helper);
 	}
 
 	private static class AdapterStoreCommandLineHelper implements
@@ -93,7 +106,7 @@ public class AdapterStoreCommandLineOptions extends
 
 		@Override
 		public String getOptionName() {
-			return "adapterstore";
+			return ADAPTER_STORE_NAME_KEY;
 		}
 
 		@Override

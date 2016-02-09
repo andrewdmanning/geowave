@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.analytic.mapreduce.dbscan;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,7 +16,9 @@ import mil.nga.giat.geowave.analytic.mapreduce.MapReduceJobRunner;
 import mil.nga.giat.geowave.analytic.mapreduce.SequenceFileInputFormatConfiguration;
 import mil.nga.giat.geowave.analytic.mapreduce.SequenceFileOutputFormatConfiguration;
 import mil.nga.giat.geowave.analytic.mapreduce.clustering.runner.GeoWaveInputLoadJobRunner;
+import mil.nga.giat.geowave.analytic.mapreduce.nn.NNMapReduce.PassthruPartitioner;
 import mil.nga.giat.geowave.analytic.param.ClusteringParameters;
+import mil.nga.giat.geowave.analytic.param.ClusteringParameters.Clustering;
 import mil.nga.giat.geowave.analytic.param.FormatConfiguration;
 import mil.nga.giat.geowave.analytic.param.GlobalParameters;
 import mil.nga.giat.geowave.analytic.param.HullParameters;
@@ -105,8 +108,59 @@ public class DBScanIterationsJobRunner implements
 					true);
 		}
 		((ParameterHelper<Integer>) Partition.PARTITION_DISTANCE.getHelper()).setValue(
-				runTimeProperties,
+		runTimeProperties.storeIfEmpty(
+				Partition.PARTITIONER_CLASS,
+				OrthodromicDistancePartitioner.class);
+
+		final double maxDistance = runTimeProperties.getPropertyAsDouble(
+				Partition.PARTITION_DISTANCE,
 				10);
+
+		final double precisionDecreaseRate = runTimeProperties.getPropertyAsDouble(
+				Partition.PARTITION_DECREASE_RATE,
+				0.15);
+
+		double precisionFactor = runTimeProperties.getPropertyAsDouble(
+				Partition.PARTITION_PRECISION,
+				1.0);
+
+		runTimeProperties.storeIfEmpty(
+				Clustering.DISTANCE_THRESHOLDS,
+				Double.toString(maxDistance));
+
+		final boolean overrideSecondary = runTimeProperties.hasProperty(Partition.SECONDARY_PARTITIONER_CLASS);
+
+		if (!overrideSecondary) {
+			final Serializable distances = runTimeProperties.get(ClusteringParameters.Clustering.DISTANCE_THRESHOLDS);
+			String dstStr;
+			if (distances == null) {
+				dstStr = "0.000001";
+			}
+			else {
+				dstStr = distances.toString();
+			}
+			final String distancesArray[] = dstStr.split(",");
+			final double[] distancePerDimension = new double[distancesArray.length];
+			{
+				int i = 0;
+				for (final String eachDistance : distancesArray) {
+					distancePerDimension[i++] = Double.valueOf(eachDistance);
+				}
+			}
+			boolean secondary = precisionFactor < 1.0;
+			double total = 1.0;
+			for (final double dist : distancePerDimension) {
+				total *= dist;
+			}
+			secondary |= (total >= (Math.pow(
+					maxDistance,
+					distancePerDimension.length) * 2.0));
+			if (secondary) {
+				runTimeProperties.copy(
+						Partition.PARTITIONER_CLASS,
+						Partition.SECONDARY_PARTITIONER_CLASS);
+			}
+		}
 
 		jobRunner.setInputFormatConfiguration(inputFormatConfiguration);
 		jobRunner.setOutputFormatConfiguration(new SequenceFileOutputFormatConfiguration(
@@ -114,9 +168,7 @@ public class DBScanIterationsJobRunner implements
 
 		LOGGER.info(
 				"Running with partition distance {}",
-				runTimeProperties.getPropertyAsDouble(
-						Partition.PARTITION_DISTANCE,
-						10.0));
+				maxDistance);
 		final int initialStatus = jobRunner.run(
 				config,
 				runTimeProperties);
@@ -125,14 +177,16 @@ public class DBScanIterationsJobRunner implements
 			return initialStatus;
 		}
 
+		precisionFactor = precisionFactor - precisionDecreaseRate;
+
 		int maxIterationCount = runTimeProperties.getPropertyAsInt(
 				ClusteringParameters.Clustering.MAX_ITERATIONS,
 				15);
 
 		int iteration = 2;
 		long lastRecordCount = 0;
-		double precisionFactor = 0.9;
-		while (maxIterationCount > 0) {
+
+		while ((maxIterationCount > 0) && (precisionFactor > 0)) {
 
 			// context does not mater in this case
 
@@ -160,6 +214,21 @@ public class DBScanIterationsJobRunner implements
 
 			final PropertyManagement localScopeProperties = new PropertyManagement(
 					runTimeProperties);
+
+			/**
+			 * Re-partitioning the fat geometries can force a large number of
+			 * partitions. The geometries end up being represented in multiple
+			 * partitions. Better to skip secondary partitioning. 0.9 is a bit
+			 * of a magic number. Ideally, it is based on the area of the max
+			 * distance cube divided by the area as defined by threshold
+			 * distances. However, looking up the partition dimension space or
+			 * assuming only two dimensions were both undesirable.
+			 */
+			if ((precisionFactor <= 0.9) && !overrideSecondary) {
+				localScopeProperties.store(
+						Partition.SECONDARY_PARTITIONER_CLASS,
+						PassthruPartitioner.class);
+			}
 
 			localScopeProperties.store(
 					Partition.PARTITION_PRECISION,
@@ -216,7 +285,7 @@ public class DBScanIterationsJobRunner implements
 			lastRecordCount = currentOutputCount;
 			startPath = nextPath;
 			maxIterationCount--;
-			precisionFactor -= 0.1;
+			precisionFactor -= precisionDecreaseRate;
 			iteration++;
 		}
 		final PropertyManagement localScopeProperties = new PropertyManagement(
@@ -249,6 +318,9 @@ public class DBScanIterationsJobRunner implements
 		final Set<ParameterEnum<?>> params = new HashSet<ParameterEnum<?>>();
 		params.addAll(jobRunner.getParameters());
 		params.addAll(inputLoadRunner.getParameters());
+		params.add(Clustering.MAX_ITERATIONS);
+		params.add(Partition.PARTITION_DECREASE_RATE);
+		params.add(Partition.PARTITION_PRECISION);
 		return params;
 	}
 

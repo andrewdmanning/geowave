@@ -23,7 +23,7 @@ public class PersistableDataStore extends
 	}
 
 	@Override
-	protected GenericStoreCommandLineOptions<DataStore> setCLIOptions(
+	protected GenericStoreCommandLineOptions<DataStore> getCLIOptions(
 			final Map<String, String> configOptions,
 			final String namespace,
 			final String factoryName ) {

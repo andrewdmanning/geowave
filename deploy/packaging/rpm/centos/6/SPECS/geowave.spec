@@ -5,7 +5,7 @@
 %define name                %{base_name}-%{vendor_version}
 %define versioned_app_name  %{base_name}-%{version}-%{vendor_version}
 %define buildroot           %{_topdir}/BUILDROOT/%{versioned_app_name}-root
-%define installpriority     %{_priority} # Used by alternatives for concurrents version installs
+%define installpriority     %{_priority} # Used by alternatives for concurrent version installs
 %define __jar_repack        %{nil}
 %define _rpmfilename        %%{ARCH}/%%{NAME}.%%{RELEASE}.%%{ARCH}.rpm
 
@@ -45,6 +45,7 @@ Source11:       site.tar.gz
 Source12:       puppet-scripts.tar.gz
 Source13:       manpages.tar.gz
 Source14:       plugins.tar.gz
+Source15:       geowave-analytic-mapreduce.jar
 BuildRequires:  unzip
 BuildRequires:  zip
 BuildRequires:  xmlto
@@ -117,6 +118,8 @@ popd
 mv %{buildroot}%{geowave_tools_home}/build.properties %{buildroot}%{geowave_tools_home}/geowave-tools-build.properties
 unzip -p %{SOURCE10} geowave-tools.sh > %{buildroot}%{geowave_tools_home}/geowave-tools.sh
 tar xzf %{SOURCE14} -C %{buildroot}%{geowave_plugins_home}
+
+cp %{SOURCE15} %{buildroot}%{geowave_tools_home}
 
 mkdir -p %{buildroot}/etc/bash_completion.d
 unzip -p %{SOURCE10} geowave-tools-cmd-completion.sh > %{buildroot}/etc/bash_completion.d/geowave-tools-cmd-completion.sh
@@ -204,18 +207,18 @@ fi
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-%package        docs
+%package -n     %{versioned_app_name}-docs
 Summary:        GeoWave Documentation
 Group:          Applications/Internet
 Provides:       %{versioned_app_name}-docs = %{version}
 Requires:       %{versioned_app_name}-tools = %{version}
 Requires:       core
 
-%description docs
+%description -n %{versioned_app_name}-docs
 GeoWave provides geospatial and temporal indexing on top of Accumulo.
 This package installs the GeoWave documentation into the GeoWave directory
 
-%files docs
+%files -n       %{versioned_app_name}-docs
 %defattr(644, geowave, geowave, 755)
 %doc %{geowave_docs_home}
 

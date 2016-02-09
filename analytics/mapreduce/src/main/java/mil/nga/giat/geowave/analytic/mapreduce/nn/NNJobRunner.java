@@ -9,6 +9,7 @@ import mil.nga.giat.geowave.analytic.AdapterWithObjectWritable;
 import mil.nga.giat.geowave.analytic.PropertyManagement;
 import mil.nga.giat.geowave.analytic.mapreduce.GeoWaveAnalyticJobRunner;
 import mil.nga.giat.geowave.analytic.mapreduce.nn.NNMapReduce.PartitionDataWritable;
+import mil.nga.giat.geowave.analytic.mapreduce.nn.NNMapReduce.PassthruPartitioner;
 import mil.nga.giat.geowave.analytic.param.CommonParameters;
 import mil.nga.giat.geowave.analytic.param.ParameterEnum;
 import mil.nga.giat.geowave.analytic.param.PartitionParameters.Partition;
@@ -52,13 +53,26 @@ public class NNJobRunner extends
 				Partitioner.class,
 				OrthodromicDistancePartitioner.class);
 
+		final Partitioner<?> secondaryPartitioner = runTimeProperties.getClassInstance(
+				Partition.SECONDARY_PARTITIONER_CLASS,
+				Partitioner.class,
+				PassthruPartitioner.class);
+
 		partitioner.setup(
 				runTimeProperties,
 				getScope(),
 				config);
+		if (secondaryPartitioner.getClass() != partitioner.getClass()) {
+			secondaryPartitioner.setup(
+					runTimeProperties,
+					getScope(),
+					config);
+		}
+
 		runTimeProperties.setConfig(
 				new ParameterEnum[] {
 					Partition.PARTITIONER_CLASS,
+					Partition.SECONDARY_PARTITIONER_CLASS,
 					Partition.PARTITION_DISTANCE,
 					Partition.MAX_MEMBER_SELECTION,
 					CommonParameters.Common.DISTANCE_FUNCTION_CLASS
@@ -79,10 +93,15 @@ public class NNJobRunner extends
 		params.addAll(Arrays.asList(new ParameterEnum<?>[] {
 			Partition.PARTITIONER_CLASS,
 			Partition.PARTITION_DISTANCE,
+			Partition.SECONDARY_PARTITIONER_CLASS,
 			Partition.MAX_MEMBER_SELECTION,
 			CommonParameters.Common.DISTANCE_FUNCTION_CLASS
 		}));
 		return params;
 	}
 
+	@Override
+	protected String getJobName() {
+		return "Nearest Neighbors";
+	}
 }

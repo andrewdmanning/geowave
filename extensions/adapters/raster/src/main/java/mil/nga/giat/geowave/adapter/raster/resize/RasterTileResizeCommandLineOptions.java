@@ -7,14 +7,14 @@ import org.apache.commons.cli.ParseException;
 
 public class RasterTileResizeCommandLineOptions
 {
-	private static final String INPUT_COVERAGE_NAME_KEY = "inputCoverageName";
-	private static final String OUTPUT_COVERAGE_NAME_KEY = "outputCoverageName";
-	private static final String MIN_SPLITS_KEY = "minSplits";
-	private static final String MAX_SPLITS_KEY = "maxSplits";
-	private static final String HDFS_HOST_PORT_KEY = "hdfsHostPort";
-	private static final String JOB_TRACKER_HOST_PORT_KEY = "jobSubmissionHostPort";
-	private static final String INDEX_ID_KEY = "indexId";
-	private static final String TILE_SIZE_KEY = "outputTileSize";
+	public static final String INPUT_COVERAGE_NAME_KEY = "inputCoverageName";
+	public static final String OUTPUT_COVERAGE_NAME_KEY = "outputCoverageName";
+	public static final String MIN_SPLITS_KEY = "minSplits";
+	public static final String MAX_SPLITS_KEY = "maxSplits";
+	public static final String HDFS_HOST_PORT_KEY = "hdfsHostPort";
+	public static final String JOB_TRACKER_HOST_PORT_KEY = "jobSubmissionHostPort";
+	public static final String INDEX_ID_KEY = "indexId";
+	public static final String TILE_SIZE_KEY = "outputTileSize";
 	private final String inputCoverageName;
 	private final String outputCoverageName;
 	private final Integer minSplits;

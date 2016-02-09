@@ -15,6 +15,8 @@ import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.mapreduce.GeoWaveConfiguratorBase;
 import mil.nga.giat.geowave.mapreduce.JobContextAdapterStore;
 import mil.nga.giat.geowave.mapreduce.JobContextIndexStore;
@@ -141,7 +143,7 @@ public class GeoWaveOutputFormat extends
 
 	public static void addIndex(
 			final Configuration config,
-			final Index index ) {
+			final PrimaryIndex index ) {
 		JobContextIndexStore.addIndex(
 				config,
 				index);
@@ -311,14 +313,16 @@ public class GeoWaveOutputFormat extends
 				throws IOException {
 			final DataAdapter<?> adapter = adapterStore.getAdapter(ingestKey.getAdapterId());
 			if (adapter instanceof WritableDataAdapter) {
-				final IndexWriter indexWriter = getIndexWriter(ingestKey.getIndexId());
-				if (indexWriter != null) {
-					indexWriter.write(
-							(WritableDataAdapter) adapter,
-							object);
-				}
-				else {
-					LOGGER.warn("Cannot write to index '" + StringUtils.stringFromBinary(ingestKey.getAdapterId().getBytes()) + "'");
+				for (final ByteArrayId indexId : ingestKey.getIndexIds()) {
+					final IndexWriter indexWriter = getIndexWriter(indexId);
+					if (indexWriter != null) {
+						indexWriter.write(
+								(WritableDataAdapter) adapter,
+								object);
+					}
+					else {
+						LOGGER.warn("Cannot write to index '" + StringUtils.stringFromBinary(ingestKey.getAdapterId().getBytes()) + "'");
+					}
 				}
 			}
 			else {
@@ -329,10 +333,12 @@ public class GeoWaveOutputFormat extends
 		private synchronized IndexWriter getIndexWriter(
 				final ByteArrayId indexId ) {
 			if (!indexWriterCache.containsKey(indexId)) {
-				final Index index = indexStore.getIndex(indexId);
+				final PrimaryIndex index = (PrimaryIndex) indexStore.getIndex(indexId);
 				IndexWriter writer = null;
 				if (index != null) {
-					writer = dataStore.createIndexWriter(index);
+					writer = dataStore.createIndexWriter(
+							index,
+							DataStoreUtils.DEFAULT_VISIBILITY);
 				}
 				else {
 					LOGGER.warn("Index '" + StringUtils.stringFromBinary(indexId.getBytes()) + "' does not exist");

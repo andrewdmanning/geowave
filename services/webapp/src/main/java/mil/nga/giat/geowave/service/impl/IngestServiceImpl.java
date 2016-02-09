@@ -23,8 +23,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.GeoWaveMain;
 import mil.nga.giat.geowave.service.IngestService;
+import mil.nga.giat.geowave.service.ServiceUtils;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -61,9 +63,16 @@ public class IngestServiceImpl implements
 		additionalParams = new HashMap<String, String>();
 		// TODO what about getting values from system properties?
 		for (final Entry<Object, Object> e : props.entrySet()) {
-			additionalParams.put(
-					e.getKey().toString(),
-					e.getValue().toString());
+			if (!(e.getKey().equals(
+					"hdfs") || e.getKey().equals(
+					"hdfsBase") || e.getKey().equals(
+					"jobTracker") || e.getKey().toString().startsWith(
+					"geoserver."))) {
+				additionalParams.put(
+						e.getKey().toString(),
+						e.getValue().toString());
+
+			}
 		}
 	}
 
@@ -185,7 +194,7 @@ public class IngestServiceImpl implements
 		args.add(ingestType);
 		args.add("-b");
 		args.add(baseDir.getAbsolutePath());
-		args.add("-n");
+		args.add("-" + GenericStoreCommandLineOptions.NAMESPACE_OPTION_KEY);
 		args.add(namespace);
 		args.add("-dim");
 		args.add(dimType);
@@ -211,8 +220,15 @@ public class IngestServiceImpl implements
 			args.add("-jobtracker");
 			args.add(jobTracker);
 		}
+		for (final Entry<String, String> e : additionalParams.entrySet()) {
+			args.add("-" + e.getKey());
+			args.add(e.getValue());
+		}
 
-		GeoWaveMain.main(args.toArray(new String[] {}));
-		return Response.ok().build();
+		final int retVal = GeoWaveMain.run(args.toArray(new String[] {}));
+		if (retVal == 0) {
+			return Response.ok().build();
+		}
+		return Response.serverError().build();
 	}
 }

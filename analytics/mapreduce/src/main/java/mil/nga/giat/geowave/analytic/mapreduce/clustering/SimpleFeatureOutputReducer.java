@@ -120,7 +120,7 @@ public class SimpleFeatureOutputReducer extends
 			InterruptedException {
 		super.setup(context);
 		final ScopedJobConfiguration config = new ScopedJobConfiguration(
-				context,
+				context.getConfiguration(),
 				SimpleFeatureOutputReducer.class);
 
 		outputDataTypeID = config.getString(

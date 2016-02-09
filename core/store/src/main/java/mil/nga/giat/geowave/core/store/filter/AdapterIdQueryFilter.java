@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.core.store.filter;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.data.IndexedPersistenceEncoding;
+import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 
 public class AdapterIdQueryFilter implements
 		DistributableQueryFilter
@@ -17,6 +18,7 @@ public class AdapterIdQueryFilter implements
 
 	@Override
 	public boolean accept(
+			final CommonIndexModel indexModel,
 			final IndexedPersistenceEncoding persistenceEncoding ) {
 		return (adapterId == null) || adapterId.equals(persistenceEncoding.getAdapterId());
 	}

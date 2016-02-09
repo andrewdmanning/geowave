@@ -4,6 +4,7 @@ import java.util.Map;
 
 import mil.nga.giat.geowave.analytic.PropertyManagement;
 import mil.nga.giat.geowave.analytic.store.PersistableDataStore;
+import mil.nga.giat.geowave.core.cli.CommandLineResult;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.store.DataStore;
@@ -40,11 +41,18 @@ public class DataStoreParameterHelper implements
 	}
 
 	@Override
-	public PersistableDataStore getValue(
+	public CommandLineResult<PersistableDataStore> getValue(
+			final Options allOptions,
 			final CommandLine commandLine )
 			throws ParseException {
-		return new PersistableDataStore(
-				DataStoreCommandLineOptions.parseOptions(commandLine));
+		final CommandLineResult<DataStoreCommandLineOptions> retVal = DataStoreCommandLineOptions.parseOptions(
+				allOptions,
+				commandLine);
+		return new CommandLineResult<PersistableDataStore>(
+				new PersistableDataStore(
+						retVal.getResult()),
+				retVal.isCommandLineChange(),
+				retVal.getCommandLine());
 	}
 
 	@Override
@@ -86,7 +94,7 @@ public class DataStoreParameterHelper implements
 							geowaveNamespace));
 		}
 		else {
-			return null;
+			return defaultValue;
 		}
 
 	}

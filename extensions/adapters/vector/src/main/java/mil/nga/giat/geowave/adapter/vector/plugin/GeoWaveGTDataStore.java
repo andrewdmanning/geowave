@@ -3,12 +3,16 @@ package mil.nga.giat.geowave.adapter.vector.plugin;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.auth.AuthorizationSPI;
+import mil.nga.giat.geowave.adapter.vector.index.IndexQueryStrategySPI;
+import mil.nga.giat.geowave.adapter.vector.index.SimpleFeaturePrimaryIndexConfiguration;
 import mil.nga.giat.geowave.adapter.vector.plugin.lock.LockingManagement;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveAutoCommitTransactionState;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveTransactionManagementState;
@@ -17,7 +21,7 @@ import mil.nga.giat.geowave.adapter.vector.plugin.transaction.MemoryTransactions
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.TransactionsAllocator;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.ColumnVisibilityManagement;
 import mil.nga.giat.geowave.adapter.vector.plugin.visibility.VisibilityManagementHelper;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LatitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.LongitudeField;
 import mil.nga.giat.geowave.core.geotime.store.dimension.TimeField;
@@ -28,10 +32,12 @@ import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
-import mil.nga.giat.geowave.core.store.dimension.DimensionField;
+import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.AdapterIdQuery;
+import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
 import org.apache.log4j.Logger;
 import org.geotools.data.FeatureListenerManager;
@@ -76,9 +82,11 @@ public class GeoWaveGTDataStore extends
 	protected IndexStore indexStore;
 	protected DataStatisticsStore dataStatisticsStore;
 	protected DataStore dataStore;
-	private final Map<String, Index> preferredIndexes = new ConcurrentHashMap<String, Index>();
+	private final Map<String, List<PrimaryIndex>> preferredIndexes = new ConcurrentHashMap<String, List<PrimaryIndex>>();
+
 	private final ColumnVisibilityManagement<SimpleFeature> visibilityManagement = VisibilityManagementHelper.loadVisibilityManagement();
 	private final AuthorizationSPI authorizationSPI;
+	private final IndexQueryStrategySPI indexQueryStrategy;
 	private final URI featureNameSpaceURI;
 	private int transactionBufferSize = 10000;
 	private final TransactionsAllocator transactionsAllocator;
@@ -93,9 +101,18 @@ public class GeoWaveGTDataStore extends
 				config.getAuthorizationURL());
 		init(config);
 		featureNameSpaceURI = config.getFeatureNamespace();
+		indexQueryStrategy = config.getIndexQueryStrategy();
 		transactionBufferSize = config.getTransactionBufferSize();
 		transactionsAllocator = new MemoryTransactionsAllocator();
 
+	}
+
+	public void init(
+			final GeoWavePluginConfig config ) {
+		dataStore = config.getDataStore();
+		dataStatisticsStore = config.getDataStatisticsStore();
+		indexStore = config.getIndexStore();
+		adapterStore = config.getAdapterStore();
 	}
 
 	public void init(
@@ -114,6 +131,10 @@ public class GeoWaveGTDataStore extends
 		return listenerManager;
 	}
 
+	public IndexQueryStrategySPI getIndexQueryStrategy() {
+		return indexQueryStrategy;
+	}
+
 	public DataStore getDataStore() {
 		return dataStore;
 	}
@@ -130,9 +151,12 @@ public class GeoWaveGTDataStore extends
 		return dataStatisticsStore;
 	}
 
-	protected Index getIndex(
-			final FeatureDataAdapter adapter ) {
-		return getPreferredIndex(adapter);
+	protected List<PrimaryIndex> getWriteIndices(
+			final GeotoolsFeatureDataAdapter adapter ) {
+		if (adapter instanceof FeatureDataAdapter) {
+			return getPreferredIndex((FeatureDataAdapter) adapter);
+		}
+		return Arrays.asList(new SpatialDimensionalityTypeProvider().createPrimaryIndex());
 	}
 
 	@Override
@@ -153,17 +177,19 @@ public class GeoWaveGTDataStore extends
 		getPreferredIndex(adapter);
 	}
 
-	private FeatureDataAdapter getAdapter(
+	private GeotoolsFeatureDataAdapter getAdapter(
 			final String typeName ) {
-		final FeatureDataAdapter featureAdapter;
+		final GeotoolsFeatureDataAdapter featureAdapter;
 		final DataAdapter<?> adapter = adapterStore.getAdapter(new ByteArrayId(
 				StringUtils.stringToBinary(typeName)));
-		if ((adapter == null) || !(adapter instanceof FeatureDataAdapter)) {
+		if ((adapter == null) || !(adapter instanceof GeotoolsFeatureDataAdapter)) {
 			return null;
 		}
-		featureAdapter = (FeatureDataAdapter) adapter;
+		featureAdapter = (GeotoolsFeatureDataAdapter) adapter;
 		if (featureNameSpaceURI != null) {
-			featureAdapter.setNamespace(featureNameSpaceURI.toString());
+			if (adapter instanceof FeatureDataAdapter) {
+				((FeatureDataAdapter) featureAdapter).setNamespace(featureNameSpaceURI.toString());
+			}
 		}
 		return featureAdapter;
 	}
@@ -175,9 +201,9 @@ public class GeoWaveGTDataStore extends
 		final CloseableIterator<DataAdapter<?>> adapters = adapterStore.getAdapters();
 		while (adapters.hasNext()) {
 			final DataAdapter<?> adapter = adapters.next();
-			if (adapter instanceof FeatureDataAdapter) {
+			if (adapter instanceof GeotoolsFeatureDataAdapter) {
 				names.add(new NameImpl(
-						((FeatureDataAdapter) adapter).getType().getTypeName()));
+						((GeotoolsFeatureDataAdapter) adapter).getType().getTypeName()));
 			}
 		}
 		adapters.close();
@@ -252,10 +278,13 @@ public class GeoWaveGTDataStore extends
 		if (adapter != null) {
 			final String[] authorizations = getAuthorizationSPI().getAuthorizations();
 			dataStore.delete(
+					new QueryOptions(
+							adapter,
+							(PrimaryIndex) null,
+							authorizations),
 					new AdapterIdQuery(
-							adapter.getAdapterId()),
-					authorizations);
-			// TODO don't we want to delete the adapter from the adapter store?
+							adapter.getAdapterId()));
+			// TODO do we want to delete the adapter from the adapter store?
 		}
 	}
 
@@ -295,26 +324,34 @@ public class GeoWaveGTDataStore extends
 		}
 	}
 
-	private Index getPreferredIndex(
+	private List<PrimaryIndex> getPreferredIndex(
 			final FeatureDataAdapter adapter ) {
 
-		Index currentSelection = preferredIndexes.get(adapter.getType().getName().toString());
-		if (currentSelection != null) {
-			return currentSelection;
+		List<PrimaryIndex> currentSelections = preferredIndexes.get(adapter.getType().getName().toString());
+		if (currentSelections != null) {
+			return currentSelections;
 		}
 
+		currentSelections = new ArrayList<PrimaryIndex>(
+				2);
+		final List<String> indexNames = SimpleFeaturePrimaryIndexConfiguration.getIndexNames(adapter.getType());
+		PrimaryIndex bestSelection = null;
 		final boolean needTime = adapter.hasTemporalConstraints();
 
-		try (CloseableIterator<Index> indices = indexStore.getIndices()) {
+		try (CloseableIterator<Index<?, ?>> indices = indexStore.getIndices()) {
 			boolean currentSelectionHasTime = false;
 			while (indices.hasNext()) {
-				final Index index = indices.next();
+				final PrimaryIndex index = (PrimaryIndex) indices.next();
+
+				if (!indexNames.isEmpty() && indexNames.contains(index.getId().getString())) {
+					currentSelections.add(index);
+				}
 				@SuppressWarnings("rawtypes")
-				final DimensionField[] dims = index.getIndexModel().getDimensions();
+				final NumericDimensionField[] dims = index.getIndexModel().getDimensions();
 				boolean hasLat = false;
 				boolean hasLong = false;
 				boolean hasTime = false;
-				for (final DimensionField<?> dim : dims) {
+				for (final NumericDimensionField<?> dim : dims) {
 					hasLat |= dim instanceof LatitudeField;
 					hasLong |= dim instanceof LongitudeField;
 					hasTime |= dim instanceof TimeField;
@@ -323,8 +360,8 @@ public class GeoWaveGTDataStore extends
 				// pick the first matching one or
 				// pick the one does not match the required time constraints
 				if (hasLat && hasLong) {
-					if ((currentSelection == null) || (currentSelectionHasTime != needTime)) {
-						currentSelection = index;
+					if ((bestSelection == null) || (currentSelectionHasTime != needTime)) {
+						bestSelection = index;
 						currentSelectionHasTime = hasTime;
 					}
 				}
@@ -333,8 +370,8 @@ public class GeoWaveGTDataStore extends
 			// only select the index if one has not been found or
 			// the current selection. Not using temporal at this point.
 			// temporal index should only be used if explicitly requested.
-			if (currentSelection == null) {
-				currentSelection = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+			if (bestSelection == null) {
+				bestSelection = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 			}
 		}
 		catch (final IOException ex) {
@@ -343,9 +380,11 @@ public class GeoWaveGTDataStore extends
 					ex);
 		}
 
+		if (currentSelections.isEmpty() && bestSelection != null) currentSelections.add(bestSelection);
+
 		preferredIndexes.put(
 				adapter.getType().getName().toString(),
-				currentSelection);
-		return currentSelection;
+				currentSelections);
+		return currentSelections;
 	}
 }

@@ -368,7 +368,7 @@ public class FeatureNumericHistogramStaticticsTest
 		assertEquals(
 				0.5,
 				stat.cdf(0),
-				0.05);
+				0.1);
 
 		assertEquals(
 				0.0,
@@ -381,7 +381,7 @@ public class FeatureNumericHistogramStaticticsTest
 				0.00001);
 
 		assertEquals(
-				325,
+				297,
 				sum(stat.count(10)));
 
 	}

@@ -13,8 +13,10 @@ import mil.nga.giat.geowave.core.index.sfc.data.BinnedNumericDataset;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericData;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericRange;
+import mil.nga.giat.geowave.core.store.data.CommonIndexedPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.data.IndexedPersistenceEncoding;
-import mil.nga.giat.geowave.core.store.dimension.DimensionField;
+import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
+import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 
 /**
  * This filter can perform fine-grained acceptance testing on generic
@@ -25,24 +27,70 @@ import mil.nga.giat.geowave.core.store.dimension.DimensionField;
 public class BasicQueryFilter implements
 		DistributableQueryFilter
 {
+
+	protected interface BasicQueryCompareOp
+	{
+		public boolean compare(
+				double dataMin,
+				double dataMax,
+				double queryMin,
+				double queryMax );
+	}
+
+	public enum BasicQueryCompareOperation
+			implements
+			BasicQueryCompareOp {
+		CONTAINS {
+			@Override
+			public boolean compare(
+					double dataMin,
+					double dataMax,
+					double queryMin,
+					double queryMax ) {
+				return !((dataMin < queryMin) || (dataMax > queryMax));
+			}
+		},
+		OVERLAPS {
+			@Override
+			public boolean compare(
+					double dataMin,
+					double dataMax,
+					double queryMin,
+					double queryMax ) {
+				return !((dataMax < queryMin) || (dataMin > queryMax));
+			}
+		}
+	};
+
 	protected Map<ByteArrayId, List<MultiDimensionalNumericData>> binnedConstraints;
-	protected DimensionField<?>[] dimensionFields;
+	protected NumericDimensionField<?>[] dimensionFields;
 	// this is referenced for serialization purposes only
 	protected MultiDimensionalNumericData constraints;
+	protected BasicQueryCompareOperation compareOp = BasicQueryCompareOperation.OVERLAPS;
 
 	protected BasicQueryFilter() {}
 
 	public BasicQueryFilter(
 			final MultiDimensionalNumericData constraints,
-			final DimensionField<?>[] dimensionFields ) {
+			final NumericDimensionField<?>[] dimensionFields ) {
 		init(
 				constraints,
 				dimensionFields);
 	}
 
+	public BasicQueryFilter(
+			final MultiDimensionalNumericData constraints,
+			final NumericDimensionField<?>[] dimensionFields,
+			final BasicQueryCompareOperation compareOp ) {
+		init(
+				constraints,
+				dimensionFields);
+		this.compareOp = compareOp;
+	}
+
 	private void init(
 			final MultiDimensionalNumericData constraints,
-			final DimensionField<?>[] dimensionFields ) {
+			final NumericDimensionField<?>[] dimensionFields ) {
 		this.dimensionFields = dimensionFields;
 
 		binnedConstraints = new HashMap<ByteArrayId, List<MultiDimensionalNumericData>>();
@@ -64,25 +112,31 @@ public class BasicQueryFilter implements
 		}
 	}
 
-	protected boolean overlaps(
+	protected boolean validateConstraints(
+			final BasicQueryCompareOp op,
 			final MultiDimensionalNumericData queryRange,
 			final MultiDimensionalNumericData dataRange ) {
 		final NumericData[] queryRangePerDimension = queryRange.getDataPerDimension();
 		final double[] minPerDimension = dataRange.getMinValuesPerDimension();
 		final double[] maxPerDimension = dataRange.getMaxValuesPerDimension();
-		for (int d = 0; d < dimensionFields.length; d++) {
-			if ((maxPerDimension[d] < queryRangePerDimension[d].getMin()) || (minPerDimension[d] > queryRangePerDimension[d].getMax())) {
-				return false;
-			}
+		boolean ok = true;
+		for (int d = 0; d < dimensionFields.length && ok; d++) {
+			ok &= op.compare(
+					minPerDimension[d],
+					maxPerDimension[d],
+					queryRangePerDimension[d].getMin(),
+					queryRangePerDimension[d].getMax());
 		}
-		return true;
+		return ok;
 	}
 
 	@Override
 	public boolean accept(
-			final IndexedPersistenceEncoding persistenceEncoding ) {
+			final CommonIndexModel indexModel,
+			final IndexedPersistenceEncoding<?> persistenceEncoding ) {
+		if (!(persistenceEncoding instanceof CommonIndexedPersistenceEncoding)) return false;
 		final BinnedNumericDataset[] dataRanges = BinnedNumericDataset.applyBins(
-				persistenceEncoding.getNumericData(dimensionFields),
+				((CommonIndexedPersistenceEncoding) persistenceEncoding).getNumericData(dimensionFields),
 				dimensionFields);
 		// check that at least one data range overlaps at least one query range
 		for (final BinnedNumericDataset dataRange : dataRanges) {
@@ -90,7 +144,8 @@ public class BasicQueryFilter implements
 					dataRange.getBinId()));
 			if (queries != null) {
 				for (final MultiDimensionalNumericData query : queries) {
-					if ((query != null) && overlaps(
+					if ((query != null) && validateConstraints(
+							compareOp,
 							query,
 							dataRange)) {
 						return true;
@@ -103,7 +158,7 @@ public class BasicQueryFilter implements
 
 	@Override
 	public byte[] toBinary() {
-		int byteBufferLength = 4;
+		int byteBufferLength = 8;
 		final int dimensions = Math.min(
 				constraints.getDimensionCount(),
 				dimensionFields.length);
@@ -111,7 +166,7 @@ public class BasicQueryFilter implements
 				dimensions);
 		final NumericData[] dataPerDimension = constraints.getDataPerDimension();
 		for (int d = 0; d < dimensions; d++) {
-			final DimensionField<?> dimension = dimensionFields[d];
+			final NumericDimensionField<?> dimension = dimensionFields[d];
 			final NumericData data = dataPerDimension[d];
 			final byte[] dimensionBinary = PersistenceUtils.toBinary(dimension);
 			final int currentDimensionByteBufferLength = (20 + dimensionBinary.length);
@@ -125,6 +180,7 @@ public class BasicQueryFilter implements
 			lengthDimensionAndQueryBinaries.add(buf.array());
 		}
 		final ByteBuffer buf = ByteBuffer.allocate(byteBufferLength);
+		buf.putInt(this.compareOp.ordinal());
 		buf.putInt(dimensions);
 		for (final byte[] binary : lengthDimensionAndQueryBinaries) {
 			buf.put(binary);
@@ -136,8 +192,9 @@ public class BasicQueryFilter implements
 	public void fromBinary(
 			final byte[] bytes ) {
 		final ByteBuffer buf = ByteBuffer.wrap(bytes);
+		this.compareOp = BasicQueryCompareOperation.values()[buf.getInt()];
 		final int numDimensions = buf.getInt();
-		dimensionFields = new DimensionField<?>[numDimensions];
+		dimensionFields = new NumericDimensionField<?>[numDimensions];
 		final NumericData[] data = new NumericData[numDimensions];
 		for (int d = 0; d < numDimensions; d++) {
 			final byte[] field = new byte[buf.getInt()];
@@ -147,7 +204,7 @@ public class BasicQueryFilter implements
 			buf.get(field);
 			dimensionFields[d] = PersistenceUtils.fromBinary(
 					field,
-					DimensionField.class);
+					NumericDimensionField.class);
 		}
 		constraints = new BasicNumericDataset(
 				data);

@@ -1,7 +1,11 @@
 package mil.nga.giat.geowave.analytic.mapreduce.clustering.runner;
 
 import java.io.IOException;
+import java.security.AccessControlContext;
+import java.security.AccessController;
 import java.util.HashMap;
+
+import javax.security.auth.Subject;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.analytic.AnalyticFeature;
@@ -75,7 +79,7 @@ public class GroupAssigmentJobRunnerTest
 						GroupAssignmentMapReduce.class,
 						StoreParam.ADAPTER_STORE.getHelper().getValue(
 								runTimeProperties));
-				return tool.run(runTimeProperties.toGeoWaveRunnerArguments());
+				return tool.run(new String[] {});
 			}
 
 			@Override
@@ -92,7 +96,7 @@ public class GroupAssigmentJobRunnerTest
 						10,
 						job.getNumReduceTasks());
 				final ScopedJobConfiguration configWrapper = new ScopedJobConfiguration(
-						job,
+						job.getConfiguration(),
 						GroupAssignmentMapReduce.class);
 				Assert.assertEquals(
 						"file://foo/bin",
@@ -146,10 +150,6 @@ public class GroupAssigmentJobRunnerTest
 							e);
 				}
 
-				Assert.assertEquals(
-						10,
-						job.getNumReduceTasks());
-
 				return new Counters();
 			}
 
@@ -159,6 +159,13 @@ public class GroupAssigmentJobRunnerTest
 					throws IOException {
 				return new Job(
 						tool.getConf());
+			}
+
+			@Override
+			public Configuration getConfiguration(
+					final PropertyManagement runTimeProperties )
+					throws IOException {
+				return new Configuration();
 			}
 		});
 		runner.setInputFormatConfiguration(new SequenceFileInputFormatConfiguration(

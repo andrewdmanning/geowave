@@ -23,7 +23,7 @@ public class PersistableIndexStore extends
 	}
 
 	@Override
-	protected GenericStoreCommandLineOptions<IndexStore> setCLIOptions(
+	protected GenericStoreCommandLineOptions<IndexStore> getCLIOptions(
 			final Map<String, String> configOptions,
 			final String namespace,
 			final String factoryName ) {

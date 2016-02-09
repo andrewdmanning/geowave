@@ -5,6 +5,8 @@ import java.io.IOException;
 import mil.nga.giat.geowave.adapter.raster.adapter.RasterDataAdapter;
 import mil.nga.giat.geowave.adapter.raster.adapter.merge.nodata.NoDataMergeStrategy;
 import mil.nga.giat.geowave.core.cli.AdapterStoreCommandLineOptions;
+import mil.nga.giat.geowave.core.cli.CLIOperationDriver;
+import mil.nga.giat.geowave.core.cli.CommandLineResult;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.IndexStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -15,6 +17,8 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.mapreduce.GeoWaveConfiguratorBase;
 import mil.nga.giat.geowave.mapreduce.JobContextAdapterStore;
 import mil.nga.giat.geowave.mapreduce.JobContextIndexStore;
@@ -25,7 +29,9 @@ import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputKey;
 
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.io.ObjectWritable;
@@ -37,7 +43,8 @@ import org.opengis.coverage.grid.GridCoverage;
 
 public class RasterTileResizeJobRunner extends
 		Configured implements
-		Tool
+		Tool,
+		CLIOperationDriver
 {
 	private static final Logger LOGGER = Logger.getLogger(RasterTileResizeJobRunner.class);
 
@@ -59,7 +66,11 @@ public class RasterTileResizeJobRunner extends
 	 */
 	public int runJob()
 			throws Exception {
-		final Configuration conf = super.getConf();
+		Configuration conf = super.getConf();
+		if (conf == null) {
+			conf = new Configuration();
+			setConf(conf);
+		}
 		GeoWaveConfiguratorBase.setRemoteInvocationParams(
 				rasterResizeOptions.getHdfsHostPort(),
 				rasterResizeOptions.getJobTrackerOrResourceManHostPort(),
@@ -126,15 +137,15 @@ public class RasterTileResizeJobRunner extends
 		JobContextAdapterStore.addDataAdapter(
 				job.getConfiguration(),
 				newAdapter);
-		Index index = null;
+		PrimaryIndex index = null;
 		final IndexStore indexStore = inputIndexStoreOptions.createStore();
 		if (rasterResizeOptions.getIndexId() != null) {
-			index = indexStore.getIndex(new ByteArrayId(
+			index = (PrimaryIndex) indexStore.getIndex(new ByteArrayId(
 					rasterResizeOptions.getIndexId()));
 		}
 		if (index == null) {
-			try (CloseableIterator<Index> indices = indexStore.getIndices()) {
-				index = indices.next();
+			try (CloseableIterator<Index<?, ?>> indices = indexStore.getIndices()) {
+				index = (PrimaryIndex) indices.next();
 			}
 			if (index == null) {
 				throw new IllegalArgumentException(
@@ -156,7 +167,9 @@ public class RasterTileResizeJobRunner extends
 				job.getConfiguration(),
 				index);
 		final DataStore store = outputDataStoreOptions.createStore();
-		final IndexWriter writer = store.createIndexWriter(index);
+		final IndexWriter writer = store.createIndexWriter(
+				index,
+				DataStoreUtils.DEFAULT_VISIBILITY);
 		writer.setupAdapter(newAdapter);
 		boolean retVal = false;
 		try {
@@ -202,24 +215,125 @@ public class RasterTileResizeJobRunner extends
 				allOptions);
 
 		RasterTileResizeCommandLineOptions.applyOptions(allOptions);
+		Exception exception = null;
 		final BasicParser parser = new BasicParser();
-		final CommandLine commandLine = parser.parse(
+		CommandLine commandLine = parser.parse(
 				allOptions,
-				args);
-		inputDataStoreOptions = DataStoreCommandLineOptions.parseOptions(
-				"input_",
-				commandLine);
-		outputDataStoreOptions = DataStoreCommandLineOptions.parseOptions(
-				"output_",
-				commandLine);
-		inputAdapterStoreOptions = AdapterStoreCommandLineOptions.parseOptions(
-				"input_",
-				commandLine);
-		inputIndexStoreOptions = IndexStoreCommandLineOptions.parseOptions(
-				"input_",
-				commandLine);
-		rasterResizeOptions = RasterTileResizeCommandLineOptions.parseOptions(commandLine);
+				args,
+				true);
+		CommandLineResult<DataStoreCommandLineOptions> inputDataStoreOptionsResult = null;
+		CommandLineResult<DataStoreCommandLineOptions> outputDataStoreOptionsResult = null;
+		CommandLineResult<AdapterStoreCommandLineOptions> inputAdapterStoreOptionsResult = null;
+		CommandLineResult<IndexStoreCommandLineOptions> inputIndexStoreOptionsResult = null;
+		boolean newCommandLine = false;
+		do {
+			newCommandLine = false;
+			inputDataStoreOptionsResult = null;
+			outputDataStoreOptionsResult = null;
+			inputAdapterStoreOptionsResult = null;
+			inputIndexStoreOptionsResult = null;
+			exception = null;
+			rasterResizeOptions = RasterTileResizeCommandLineOptions.parseOptions(commandLine);
+			try {
+				inputDataStoreOptionsResult = DataStoreCommandLineOptions.parseOptions(
+						"input_",
+						allOptions,
+						commandLine);
+			}
+			catch (final Exception e) {
+				exception = e;
+			}
+			if ((inputDataStoreOptionsResult != null) && inputDataStoreOptionsResult.isCommandLineChange()) {
+				// commandLine = inputDataStoreOptionsResult.getCommandLine();
+				for (final Option o : commandLine.getOptions()) {
+					final Option optClone = ((Option) o.clone());
+					optClone.setRequired(false);
+					allOptions.addOption(optClone);
+				}
+			}
+
+			try {
+				inputAdapterStoreOptionsResult = AdapterStoreCommandLineOptions.parseOptions(
+						"input_",
+						allOptions,
+						commandLine);
+			}
+			catch (final Exception e) {
+				exception = e;
+			}
+			if ((inputAdapterStoreOptionsResult != null) && inputAdapterStoreOptionsResult.isCommandLineChange()) {
+				// commandLine =
+				// inputAdapterStoreOptionsResult.getCommandLine();
+				for (final Option o : commandLine.getOptions()) {
+					final Option optClone = ((Option) o.clone());
+					optClone.setRequired(false);
+					allOptions.addOption(optClone);
+				}
+				// newCommandLine = true;
+				// continue;
+			}
+			try {
+				inputIndexStoreOptionsResult = IndexStoreCommandLineOptions.parseOptions(
+						"input_",
+						allOptions,
+						commandLine);
+			}
+			catch (final Exception e) {
+				exception = e;
+			}
+			if ((inputIndexStoreOptionsResult != null) && inputIndexStoreOptionsResult.isCommandLineChange()) {
+				commandLine = inputIndexStoreOptionsResult.getCommandLine();
+				for (final Option o : commandLine.getOptions()) {
+					final Option optClone = ((Option) o.clone());
+					optClone.setRequired(false);
+					allOptions.addOption(optClone);
+				}
+				// newCommandLine = true;
+				// continue;
+			}
+			try {
+				outputDataStoreOptionsResult = DataStoreCommandLineOptions.parseOptions(
+						"output_",
+						allOptions,
+						commandLine);
+			}
+			catch (final Exception e) {
+				exception = e;
+			}
+			if ((outputDataStoreOptionsResult != null) && outputDataStoreOptionsResult.isCommandLineChange()) {
+				// commandLine = outputDataStoreOptionsResult.getCommandLine();
+				for (final Option o : commandLine.getOptions()) {
+					final Option optClone = ((Option) o.clone());
+					optClone.setRequired(false);
+					allOptions.addOption(optClone);
+				}
+				// newCommandLine = true;
+				// continue;
+			}
+		}
+		while (newCommandLine);
+		if (exception != null) {
+			throw exception;
+		}
+		inputDataStoreOptions = inputDataStoreOptionsResult.getResult();
+		inputAdapterStoreOptions = inputAdapterStoreOptionsResult.getResult();
+		inputIndexStoreOptions = inputIndexStoreOptionsResult.getResult();
+		outputDataStoreOptions = outputDataStoreOptionsResult.getResult();
 		return runJob();
 	}
 
+	@Override
+	public boolean runOperation(
+			final String[] args )
+			throws ParseException {
+		try {
+			return run(args) == 0;
+		}
+		catch (final Exception e) {
+			LOGGER.warn(
+					"Unable to run operation",
+					e);
+			return false;
+		}
+	}
 }

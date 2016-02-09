@@ -49,7 +49,7 @@ public class SampleParameters
 				"The rank function used when sampling the first N highest rank items.",
 				true);
 
-		private final ParameterHelper<?> helper;
+		private transient final ParameterHelper<?> helper;
 
 		private Sample(
 				final Class baseClass,

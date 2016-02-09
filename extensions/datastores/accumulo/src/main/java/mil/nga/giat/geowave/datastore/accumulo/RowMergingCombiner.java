@@ -17,7 +17,6 @@ import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 public class RowMergingCombiner extends
 		MergingCombiner
 {
-	public static final String ROW_TRANSFORM_KEY = "ROW_TRANSFORM";
 	private RowTransform<Mergeable> rowTransform;
 
 	@Override
@@ -48,7 +47,7 @@ public class RowMergingCombiner extends
 				source,
 				options,
 				env);
-		final String rowTransformStr = options.get(ROW_TRANSFORM_KEY);
+		final String rowTransformStr = options.get(RowMergingAdapterOptionProvider.ROW_TRANSFORM_KEY);
 		final byte[] rowTransformBytes = ByteArrayUtils.byteArrayFromString(rowTransformStr);
 		rowTransform = PersistenceUtils.fromBinary(
 				rowTransformBytes,

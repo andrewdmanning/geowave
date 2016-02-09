@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.test.mapreduce;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -26,10 +27,10 @@ import mil.nga.giat.geowave.analytic.store.PersistableDataStore;
 import mil.nga.giat.geowave.analytic.store.PersistableIndexStore;
 import mil.nga.giat.geowave.core.cli.AdapterStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.CommandLineOptions.OptionMapWrapper;
+import mil.nga.giat.geowave.core.cli.CommandLineResult;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.IndexStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.index.sfc.data.NumericRange;
 import mil.nga.giat.geowave.core.store.DataStore;
@@ -39,6 +40,7 @@ import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.commons.cli.Options;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -136,23 +138,33 @@ public class GeoWaveKMeansIT extends
 		options.put(
 				GenericStoreCommandLineOptions.NAMESPACE_OPTION_KEY,
 				TEST_NAMESPACE);
-		final DataStoreCommandLineOptions dataStoreOptions = DataStoreCommandLineOptions.parseOptions(new OptionMapWrapper(
-				options));
-		final IndexStoreCommandLineOptions indexStoreOptions = IndexStoreCommandLineOptions.parseOptions(new OptionMapWrapper(
-				options));
-		final AdapterStoreCommandLineOptions adapterStoreOptions = AdapterStoreCommandLineOptions.parseOptions(new OptionMapWrapper(
-				options));
-		testIngest(dataStoreOptions.createStore());
+		final Options nsOptions = new Options();
+		DataStoreCommandLineOptions.applyOptions(nsOptions);
+		final CommandLineResult<DataStoreCommandLineOptions> dataStoreOptions = DataStoreCommandLineOptions.parseOptions(
+				nsOptions,
+				new OptionMapWrapper(
+						options));
+		final CommandLineResult<IndexStoreCommandLineOptions> indexStoreOptions = IndexStoreCommandLineOptions.parseOptions(
+				nsOptions,
+				new OptionMapWrapper(
+						options));
+		final CommandLineResult<AdapterStoreCommandLineOptions> adapterStoreOptions = AdapterStoreCommandLineOptions.parseOptions(
+				nsOptions,
+				new OptionMapWrapper(
+						options));
+		testIngest(dataStoreOptions.getResult().createStore());
 
 		runKPlusPlus(
 				new SpatialQuery(
 						dataGenerator.getBoundingRegion()),
+				dataStoreOptions.getResult(),
+				indexStoreOptions.getResult(),
+				adapterStoreOptions.getResult());
+
+						dataGenerator.getBoundingRegion()),
 				dataStoreOptions,
 				indexStoreOptions,
 				adapterStoreOptions);
-		// runKJumpPlusPlus(new SpatialQuery(
-		// dataGenerator.getBoundingRegion()));
-		// GeoWaveTestEnvironment.accumuloOperations.deleteAll();
 	}
 
 	private void runKPlusPlus(
@@ -184,9 +196,9 @@ public class GeoWaveKMeansIT extends
 						},
 						new Object[] {
 							query,
-							Integer.toString(MIN_INPUT_SPLITS),
-							Integer.toString(MAX_INPUT_SPLITS),
-							"2",
+							MIN_INPUT_SPLITS,
+							MAX_INPUT_SPLITS,
+							2,
 							2,
 							false,
 							"centroid",
@@ -256,9 +268,9 @@ public class GeoWaveKMeansIT extends
 						},
 						new Object[] {
 							query,
-							Integer.toString(MIN_INPUT_SPLITS),
-							Integer.toString(MAX_INPUT_SPLITS),
-							"2",
+							MIN_INPUT_SPLITS,
+							MAX_INPUT_SPLITS,
+							2,
 							"centroid",
 							new PersistableDataStore(
 									dataStoreOptions),
@@ -296,6 +308,7 @@ public class GeoWaveKMeansIT extends
 				"bx2",
 				2,
 				jumpRresultCounLevel1);
+		Assert.assertTrue(jumpRresultCounLevel1 >= 2);
 		Assert.assertTrue(jumpRresultCounLevel2 >= 2);
 		// for travis-ci to run, we want to limit the memory consumption
 		System.gc();
@@ -318,7 +331,7 @@ public class GeoWaveKMeansIT extends
 				adapterStore,
 				new SimpleFeatureItemWrapperFactory(),
 				"centroid",
-				IndexType.SPATIAL_VECTOR.getDefaultId(),
+				DEFAULT_SPATIAL_INDEX.getId().getString(),
 				batchID,
 				level);
 
@@ -328,7 +341,7 @@ public class GeoWaveKMeansIT extends
 				adapterStore,
 				new SimpleFeatureItemWrapperFactory(),
 				"convex_hull",
-				IndexType.SPATIAL_VECTOR.getDefaultId(),
+				DEFAULT_SPATIAL_INDEX.getId().getString(),
 				batchID,
 				level);
 
@@ -337,6 +350,7 @@ public class GeoWaveKMeansIT extends
 		for (final String grp : centroidManager.getAllCentroidGroups()) {
 			final List<AnalyticItemWrapper<SimpleFeature>> centroids = centroidManager.getCentroidsForGroup(grp);
 			final List<AnalyticItemWrapper<SimpleFeature>> hulls = hullManager.getCentroidsForGroup(grp);
+
 			for (final AnalyticItemWrapper<SimpleFeature> centroid : centroids) {
 				if (centroid.getAssociationCount() == 0) {
 					continue;
@@ -344,11 +358,14 @@ public class GeoWaveKMeansIT extends
 				Assert.assertTrue(centroid.getGeometry() != null);
 				Assert.assertTrue(centroid.getBatchID() != null);
 				boolean found = false;
+				final List<SimpleFeature> features = new ArrayList<SimpleFeature>();
 				for (final AnalyticItemWrapper<SimpleFeature> hull : hulls) {
 					found |= (hull.getName().equals(centroid.getName()));
 					Assert.assertTrue(hull.getGeometry() != null);
 					Assert.assertTrue(hull.getBatchID() != null);
+					features.add(hull.getWrappedItem());
 				}
+				System.out.println(features);
 				Assert.assertTrue(
 						grp,
 						found);

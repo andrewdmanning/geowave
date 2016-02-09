@@ -26,12 +26,21 @@ import mil.nga.giat.geowave.analytic.param.CentroidParameters;
 import mil.nga.giat.geowave.analytic.param.CommonParameters;
 import mil.nga.giat.geowave.analytic.param.GlobalParameters;
 import mil.nga.giat.geowave.analytic.param.StoreParameters.StoreParam;
+import mil.nga.giat.geowave.analytic.store.PersistableAdapterStore;
 import mil.nga.giat.geowave.analytic.store.PersistableDataStore;
+import mil.nga.giat.geowave.analytic.store.PersistableIndexStore;
+import mil.nga.giat.geowave.core.cli.AdapterStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.cli.IndexStoreCommandLineOptions;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.DataStore;
+import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
+import mil.nga.giat.geowave.core.store.memory.MemoryAdapterStoreFactory;
 import mil.nga.giat.geowave.core.store.memory.MemoryDataStoreFactory;
+import mil.nga.giat.geowave.core.store.memory.MemoryIndexStoreFactory;
 import mil.nga.giat.geowave.mapreduce.GeoWaveConfiguratorBase;
 import mil.nga.giat.geowave.mapreduce.JobContextAdapterStore;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
@@ -70,7 +79,7 @@ public class KMeansDistortionMapReduceTest
 
 	private static final List<Object> capturedObjects = new ArrayList<Object>();
 
-	final Index index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+	final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 
 	final GeometryFactory factory = new GeometryFactory();
 	final String grp1 = "g1";
@@ -101,7 +110,7 @@ public class KMeansDistortionMapReduceTest
 		final PropertyManagement propManagement = new PropertyManagement();
 		propManagement.store(
 				CentroidParameters.Centroid.INDEX_ID,
-				IndexType.SPATIAL_VECTOR.getDefaultId());
+				new SpatialDimensionalityTypeProvider().createPrimaryIndex().getId().getString());
 		propManagement.store(
 				CentroidParameters.Centroid.DATA_TYPE_ID,
 				ftype.getTypeName());
@@ -118,11 +127,27 @@ public class KMeansDistortionMapReduceTest
 		propManagement.store(
 				CentroidParameters.Centroid.WRAPPER_FACTORY_CLASS,
 				SimpleFeatureItemWrapperFactory.class);
-
-		NestedGroupCentroidAssignment.setParameters(
-				reduceDriver.getConfiguration(),
-				KMeansDistortionMapReduce.class,
-				propManagement);
+		propManagement.store(
+				StoreParam.DATA_STORE,
+				new PersistableDataStore(
+						new DataStoreCommandLineOptions(
+								new MemoryDataStoreFactory(),
+								new HashMap<String, Object>(),
+								TEST_NAMESPACE)));
+		propManagement.store(
+				StoreParam.INDEX_STORE,
+				new PersistableIndexStore(
+						new IndexStoreCommandLineOptions(
+								new MemoryIndexStoreFactory(),
+								new HashMap<String, Object>(),
+								TEST_NAMESPACE)));
+		propManagement.store(
+				StoreParam.ADAPTER_STORE,
+				new PersistableAdapterStore(
+						new AdapterStoreCommandLineOptions(
+								new MemoryAdapterStoreFactory(),
+								new HashMap<String, Object>(),
+								TEST_NAMESPACE)));
 		NestedGroupCentroidAssignment.setParameters(
 				mapDriver.getConfiguration(),
 				KMeansDistortionMapReduce.class,
@@ -163,9 +188,10 @@ public class KMeansDistortionMapReduceTest
 								dataStoreFactory,
 								new HashMap<String, Object>(),
 								TEST_NAMESPACE)));
-		dataStoreFactory.createStore(
-				new HashMap<String, Object>(),
-				TEST_NAMESPACE).ingest(
+		ingest(
+				dataStoreFactory.createStore(
+						new HashMap<String, Object>(),
+						TEST_NAMESPACE),
 				testObjectAdapter,
 				index,
 				feature);
@@ -174,6 +200,22 @@ public class KMeansDistortionMapReduceTest
 				reduceDriver.getConfiguration(),
 				KMeansDistortionMapReduce.class,
 				propManagement);
+	}
+
+	private void ingest(
+			final DataStore dataStore,
+			final FeatureDataAdapter adapter,
+			final PrimaryIndex index,
+			final SimpleFeature feature )
+			throws IOException {
+		try (IndexWriter writer = dataStore.createIndexWriter(
+				index,
+				DataStoreUtils.DEFAULT_VISIBILITY)) {
+			writer.write(
+					adapter,
+					feature);
+			writer.close();
+		}
 	}
 
 	private void serializations() {
@@ -280,7 +322,7 @@ public class KMeansDistortionMapReduceTest
 
 		assertTrue(results.get(
 				0).getSecond().getGroupId().equals(
-				"dt"));
+				"g1"));
 		assertTrue(results.get(
 				0).getSecond().getClusterCount().equals(
 				1));

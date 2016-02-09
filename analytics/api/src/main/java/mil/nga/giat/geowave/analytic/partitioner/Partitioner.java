@@ -31,7 +31,8 @@ import org.apache.hadoop.mapreduce.JobContext;
  * 
  * @param <T>
  */
-public interface Partitioner<T>
+public interface Partitioner<T> extends
+		Serializable
 {
 
 	public void initialize(
@@ -61,6 +62,13 @@ public interface Partitioner<T>
 				throws Exception;
 	}
 
+	/**
+	 * Represents a partition associated with a specific item. The partition is
+	 * marked as primary or secondary. A secondary partition is a neighboring
+	 * partition to an item. The intent is inspect neighbor partitions to handle
+	 * edge cases.
+	 * 
+	 */
 	public static class PartitionData implements
 			Serializable,
 			Writable
@@ -178,6 +186,11 @@ public interface Partitioner<T>
 
 			dOutput.writeBoolean(isPrimary);
 
+		}
+
+		public void setPrimary(
+				boolean isPrimary ) {
+			this.isPrimary = isPrimary;
 		}
 	}
 

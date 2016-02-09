@@ -150,8 +150,13 @@ public class KMeansJumpJobRunner extends
 					currentBatchId);
 
 			final GenericStoreCommandLineOptions<DataStore> dataStoreOptions = ((PersistableDataStore) propertyManagement.getProperty(StoreParam.DATA_STORE)).getCliOptions();
-			final GenericStoreCommandLineOptions<IndexStore> indexStoreOptions = ((PersistableIndexStore) propertyManagement.getProperty(StoreParam.ADAPTER_STORE)).getCliOptions();
-			final GenericStoreCommandLineOptions<AdapterStore> adapterStoreOptions = ((PersistableAdapterStore) propertyManagement.getProperty(StoreParam.DATA_STORE)).getCliOptions();
+			final GenericStoreCommandLineOptions<IndexStore> indexStoreOptions = ((PersistableIndexStore) propertyManagement.getProperty(StoreParam.INDEX_STORE)).getCliOptions();
+			final GenericStoreCommandLineOptions<AdapterStore> adapterStoreOptions = ((PersistableAdapterStore) propertyManagement.getProperty(StoreParam.ADAPTER_STORE)).getCliOptions();
+
+			final DistortionGroupManagement distortionGroupManagement = new DistortionGroupManagement(
+					dataStoreOptions.createStore(),
+					indexStoreOptions.createStore(),
+					adapterStoreOptions.createStore());
 
 			for (int k = (int) Math.max(
 					2,
@@ -196,7 +201,7 @@ public class KMeansJumpJobRunner extends
 			 * Associate the batch id with the best set of groups so the caller
 			 * can find the clusters for the given batch
 			 */
-			final int result = DistortionGroupManagement.retainBestGroups(
+			final int result = distortionGroupManagement.retainBestGroups(
 					dataStoreOptions.createStore(),
 					indexStoreOptions.createStore(),
 					adapterStoreOptions.createStore(),

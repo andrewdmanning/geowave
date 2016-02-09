@@ -65,7 +65,7 @@ public class ExtractParameters
 				"Input Data Type ID",
 				true);
 
-		private final ParameterHelper<?> helper;
+		private transient final ParameterHelper<?> helper;
 
 		private Extract(
 				final Class baseClass,

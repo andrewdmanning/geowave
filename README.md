@@ -37,7 +37,8 @@ Basically, GeoWave is working to bridge geospatial software with distributed com
 ## Community
 
 * [GeoWave](https://wiki.eclipse.org/Google_Summer_of_Code_2015_Ideas) is on the project list for the [Google Summer of Code](https://www.google-melange.com/gsoc/homepage/google/gsoc2015).
-* Geowave is currently in the process of moving to a permanent home under [LocationTech and the Eclipse Foundation](https://locationtech.org/proposals/geowave)
+* GeoWave is currently in the process of moving to a permanent home under [LocationTech and the Eclipse Foundation](https://locationtech.org/proposals/geowave).
+* Community support is available on [chat](https://gitter.im/ngageoint/geowave) and on [our mailing list](mailto:geowave-dev@locationtech.org).
 
 ## Some GeoWave rendered eye candy
 
@@ -72,8 +73,9 @@ GeoWave was developed at the National Geospatial-Intelligence Agency (NGA) in co
 ## Contributing
 
 All pull request contributions to this project will be released under the Apache 2.0 or compatible license.
-Software source code previously released under an open source license and then modified by NGA staff is considered a "joint work" (see *17 USC  101*); it is partially copyrighted, partially public domain, and as a whole is protected by the copyrights of the non-government authors and must be released according to the terms of the original open source license.
+Software source code previously released under an open source license and then modified by NGA staff is considered a "joint work" (see 17 USC § 101); it is partially copyrighted, partially public domain, and as a whole is protected by the copyrights of the non-government authors and must be released according to the terms of the original open source license.
 
 ## Everything else
+Check out our talk at the [2015 Accumulo Summit](http://accumulosummit.com/program/talks/geowave-geospatial-and-geotemporal-data-storage-and-retrieval-in-accumulo/).
 
 Did I mention our [documentation!](http://ngageoint.github.io/geowave/)

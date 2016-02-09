@@ -3,7 +3,7 @@ package mil.nga.giat.geowave.analytic;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.mapreduce.GeoWaveConfiguratorBase;
 
-import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,25 +11,25 @@ public class ScopedJobConfiguration
 {
 	protected static final Logger LOGGER = LoggerFactory.getLogger(ScopedJobConfiguration.class);
 
-	private final JobContext context;
+	private final Configuration jobConfiguration;
 
 	private final Class<?> scope;
 	private Logger logger = LOGGER;
 
 	public ScopedJobConfiguration(
-			final JobContext context,
+			final Configuration jobConfiguration,
 			final Class<?> scope ) {
 		super();
-		this.context = context;
+		this.jobConfiguration = jobConfiguration;
 		this.scope = scope;
 	}
 
 	public ScopedJobConfiguration(
-			final JobContext context,
+			final Configuration jobConfiguration,
 			final Class<?> scope,
 			final Logger logger ) {
 		super();
-		this.context = context;
+		this.jobConfiguration = jobConfiguration;
 		this.scope = scope;
 		this.logger = logger;
 	}
@@ -40,11 +40,10 @@ public class ScopedJobConfiguration
 		final String propName = GeoWaveConfiguratorBase.enumToConfKey(
 				scope,
 				property);
-		if (context.getConfiguration().getRaw(
-				propName) == null) {
+		if (jobConfiguration.getRaw(propName) == null) {
 			logger.warn("Using default for property " + propName);
 		}
-		final int v = context.getConfiguration().getInt(
+		final int v = jobConfiguration.getInt(
 				propName,
 				defaultValue);
 		return v;
@@ -56,11 +55,10 @@ public class ScopedJobConfiguration
 		final String propName = GeoWaveConfiguratorBase.enumToConfKey(
 				scope,
 				property);
-		if (context.getConfiguration().getRaw(
-				propName) == null) {
+		if (jobConfiguration.getRaw(propName) == null) {
 			logger.warn("Using default for property " + propName);
 		}
-		return context.getConfiguration().get(
+		return jobConfiguration.get(
 				propName,
 				defaultValue);
 	}
@@ -75,19 +73,18 @@ public class ScopedJobConfiguration
 			final String propName = GeoWaveConfiguratorBase.enumToConfKey(
 					scope,
 					property);
-			if (context.getConfiguration().getRaw(
-					propName) == null) {
+			if (jobConfiguration.getRaw(propName) == null) {
 				if (defaultValue == null) {
 					return null;
 				}
 				logger.warn("Using default for property " + propName);
 			}
-			return GeoWaveConfiguratorBase.getInstance(
-					scope,
-					property,
-					context,
-					iface,
-					defaultValue);
+			return jobConfiguration.getClass(
+					GeoWaveConfiguratorBase.enumToConfKey(
+							scope,
+							property),
+					defaultValue,
+					iface).newInstance();
 		}
 		catch (final Exception ex) {
 			logger.error("Cannot instantiate " + GeoWaveConfiguratorBase.enumToConfKey(
@@ -103,11 +100,10 @@ public class ScopedJobConfiguration
 		final String propName = GeoWaveConfiguratorBase.enumToConfKey(
 				scope,
 				property);
-		if (context.getConfiguration().getRaw(
-				propName) == null) {
+		if (jobConfiguration.getRaw(propName) == null) {
 			logger.warn("Using default for property " + propName);
 		}
-		return context.getConfiguration().getDouble(
+		return jobConfiguration.getDouble(
 				propName,
 				defaultValue);
 	}
@@ -117,10 +113,14 @@ public class ScopedJobConfiguration
 		final String propName = GeoWaveConfiguratorBase.enumToConfKey(
 				scope,
 				property);
-		final String data = context.getConfiguration().getRaw(
-				propName);
+		final String data = jobConfiguration.getRaw(propName);
 		if (data == null) {
 			logger.error(propName + " not found ");
+		}
+		return ByteArrayUtils.byteArrayFromString(data);
+	}
+
+}
 		}
 		return ByteArrayUtils.byteArrayFromString(data);
 	}

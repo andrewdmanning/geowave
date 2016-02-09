@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.GeoWaveMain;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.test.GeoWaveTestEnvironment;
 
@@ -26,15 +27,15 @@ abstract public class MapReduceTestEnvironment extends
 	protected static final String HDFS_BASE_DIRECTORY = "test_tmp";
 	protected static final String DEFAULT_JOB_TRACKER = "local";
 	protected static final String EXPECTED_RESULTS_KEY = "EXPECTED_RESULTS";
-	protected static final int MIN_INPUT_SPLITS = 2;
-	protected static final int MAX_INPUT_SPLITS = 4;
+	protected static final int MIN_INPUT_SPLITS = 3;
+	protected static final int MAX_INPUT_SPLITS = 5;
 	protected static String jobtracker;
 	protected static String hdfs;
 	protected static boolean hdfsProtocol;
 	protected static String hdfsBaseDirectory;
 
 	protected void testMapReduceIngest(
-			final IndexType indexType,
+			final DimensionalityType dimensionalityType,
 			final String ingestFilePath ) {
 		// ingest gpx data directly into GeoWave using the
 		// ingest framework's main method and pre-defined commandline arguments
@@ -42,10 +43,10 @@ abstract public class MapReduceTestEnvironment extends
 		String[] args = null;
 		synchronized (MUTEX) {
 			args = StringUtils.split(
-					"-hdfsingest -f gpx -hdfs " + hdfs + " -hdfsbase " + hdfsBaseDirectory + " -jobtracker " + jobtracker + " -b " + ingestFilePath + " -z " + zookeeper + " -i " + accumuloInstance + " -u " + accumuloUser + " -p " + accumuloPassword + " -n " + TEST_NAMESPACE + " -dim " + (indexType.equals(IndexType.SPATIAL_VECTOR) ? "spatial" : "spatial-temporal"),
+					"-hdfsingest -f gpx -hdfs " + hdfs + " -hdfsbase " + hdfsBaseDirectory + " -jobtracker " + jobtracker + " -b " + ingestFilePath + " -" + GenericStoreCommandLineOptions.NAMESPACE_OPTION_KEY + " " + TEST_NAMESPACE + " -dim " + dimensionalityType.getDimensionalityArg() + " -datastore accumulo -" + BasicAccumuloOperations.ZOOKEEPER_CONFIG_NAME + " " + zookeeper + " -" + BasicAccumuloOperations.INSTANCE_CONFIG_NAME + " " + accumuloInstance + " -" + BasicAccumuloOperations.USER_CONFIG_NAME + " " + accumuloUser + " -" + BasicAccumuloOperations.PASSWORD_CONFIG_NAME + " " + accumuloPassword,
 					' ');
 		}
-		GeoWaveMain.main(args);
+		GeoWaveMain.run(args);
 	}
 
 	@BeforeClass

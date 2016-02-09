@@ -75,7 +75,7 @@ public class ConvexHullJobRunnerTest
 						ConvexHullMapReduce.class,
 						StoreParam.ADAPTER_STORE.getHelper().getValue(
 								runTimeProperties));
-				return tool.run(runTimeProperties.toGeoWaveRunnerArguments());
+				return tool.run(new String[] {});
 			}
 
 			@Override
@@ -92,7 +92,7 @@ public class ConvexHullJobRunnerTest
 						10,
 						job.getNumReduceTasks());
 				final ScopedJobConfiguration configWrapper = new ScopedJobConfiguration(
-						job,
+						job.getConfiguration(),
 						ConvexHullMapReduce.class);
 				Assert.assertEquals(
 						"file://foo/bin",
@@ -154,6 +154,13 @@ public class ConvexHullJobRunnerTest
 					throws IOException {
 				return new Job(
 						tool.getConf());
+			}
+
+			@Override
+			public Configuration getConfiguration(
+					final PropertyManagement runTimeProperties )
+					throws IOException {
+				return new Configuration();
 			}
 		});
 		hullRunner.setInputFormatConfiguration(new SequenceFileInputFormatConfiguration());

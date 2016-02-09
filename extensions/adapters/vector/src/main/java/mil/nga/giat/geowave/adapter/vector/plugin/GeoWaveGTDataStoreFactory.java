@@ -46,6 +46,7 @@ public class GeoWaveGTDataStoreFactory implements
 		}
 	}
 
+	public final static String DISPLAY_NAME_PREFIX = "GeoWave Datastore - ";
 	private static final Logger LOGGER = Logger.getLogger(GeoWaveGTDataStoreFactory.class);
 	private final List<DataStoreCacheEntry> dataStoreCache = new ArrayList<DataStoreCacheEntry>();
 	private final StoreFactoryFamilySpi geowaveStoreFactoryFamily;
@@ -63,9 +64,26 @@ public class GeoWaveGTDataStoreFactory implements
 		}
 		else {
 			final Iterator<StoreFactoryFamilySpi> it = dataStoreFactories.iterator();
-			geowaveStoreFactoryFamily = it.next();
-			if (it.hasNext()) {
-				GeoTools.addFactoryIteratorProvider(new GeoWaveGTDataStoreFactoryIteratorProvider());
+			StoreFactoryFamilySpi memoryFactoryFamily = null;
+			final List<StoreFactoryFamilySpi> allOtherFactoryFamilies = new ArrayList<>();
+			while (it.hasNext()) {
+				StoreFactoryFamilySpi currFactoryFamily = it.next();
+				if (currFactoryFamily.getName().equals(
+						"memory")) {
+					memoryFactoryFamily = currFactoryFamily;
+				}
+				else {
+					allOtherFactoryFamilies.add(currFactoryFamily);
+				}
+			}
+			if (!allOtherFactoryFamilies.isEmpty()) {
+				geowaveStoreFactoryFamily = allOtherFactoryFamilies.get(0);
+				if (allOtherFactoryFamilies.size() > 1) {
+					GeoTools.addFactoryIteratorProvider(new GeoWaveGTDataStoreFactoryIteratorProvider());
+				}
+			}
+			else {
+				geowaveStoreFactoryFamily = memoryFactoryFamily;
 			}
 		}
 	}
@@ -141,7 +159,7 @@ public class GeoWaveGTDataStoreFactory implements
 
 	@Override
 	public String getDisplayName() {
-		return "GeoWave Datastore - " + geowaveStoreFactoryFamily.getName();
+		return DISPLAY_NAME_PREFIX + geowaveStoreFactoryFamily.getName();
 	}
 
 	@Override

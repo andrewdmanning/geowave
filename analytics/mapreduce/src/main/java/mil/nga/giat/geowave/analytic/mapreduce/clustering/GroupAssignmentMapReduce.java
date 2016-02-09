@@ -138,7 +138,7 @@ public class GroupAssignmentMapReduce
 			super.setup(context);
 
 			final ScopedJobConfiguration config = new ScopedJobConfiguration(
-					context,
+					context.getConfiguration(),
 					GroupAssignmentMapReduce.class,
 					GroupAssignmentMapReduce.LOGGER);
 

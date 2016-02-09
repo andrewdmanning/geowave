@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
@@ -12,15 +13,17 @@ import mil.nga.giat.geowave.analytic.AnalyticItemWrapper;
 import mil.nga.giat.geowave.analytic.SimpleFeatureItemWrapperFactory;
 import mil.nga.giat.geowave.analytic.clustering.DistortionGroupManagement.DistortionDataAdapter;
 import mil.nga.giat.geowave.analytic.clustering.DistortionGroupManagement.DistortionEntry;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.DataStore;
+import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.StoreFactoryFamilySpi;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
-import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
-import mil.nga.giat.geowave.core.store.memory.MemoryAdapterStore;
-import mil.nga.giat.geowave.core.store.memory.MemoryDataStore;
-import mil.nga.giat.geowave.core.store.memory.MemoryIndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
+import mil.nga.giat.geowave.core.store.memory.MemoryStoreFactoryFamily;
 
 import org.geotools.feature.type.BasicFeatureTypes;
 import org.junit.Before;
@@ -36,12 +39,27 @@ public class DistortionGroupManagementTest
 
 	final GeometryFactory factory = new GeometryFactory();
 	final SimpleFeatureType ftype;
-	final Index index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
+	final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 
 	final FeatureDataAdapter adapter;
 	final DataStore dataStore;
 	final AdapterStore adapterStore;
 	final IndexStore indexStore;
+
+	private <T> void ingest(
+			final WritableDataAdapter<T> adapter,
+			final PrimaryIndex index,
+			final T entry )
+			throws IOException {
+		try (IndexWriter writer = dataStore.createIndexWriter(
+				index,
+				DataStoreUtils.DEFAULT_VISIBILITY)) {
+			writer.write(
+					adapter,
+					entry);
+			writer.close();
+		}
+	}
 
 	public DistortionGroupManagementTest() {
 		ftype = AnalyticFeature.createGeometryFeatureAdapter(
@@ -54,23 +72,33 @@ public class DistortionGroupManagementTest
 		adapter = new FeatureDataAdapter(
 				ftype);
 
-		dataStore = new MemoryDataStore();
-
-		adapterStore = new MemoryAdapterStore();
+		final String namespace = "test_" + getClass().getName();
+		final StoreFactoryFamilySpi storeFamily = new MemoryStoreFactoryFamily();
+		dataStore = storeFamily.getDataStoreFactory().createStore(
+				new HashMap<String, Object>(),
+				namespace);
+		adapterStore = storeFamily.getAdapterStoreFactory().createStore(
+				new HashMap<String, Object>(),
+				namespace);
 		adapterStore.addAdapter(adapter);
-		indexStore = new MemoryIndexStore();
+		indexStore = storeFamily.getIndexStoreFactory().createStore(
+				new HashMap<String, Object>(),
+				namespace);
 		indexStore.addIndex(index);
 	}
 
 	private void addDistortion(
 			final String grp,
+			final String batchId,
 			final int count,
-			final Double distortion ) {
-		dataStore.ingest(
+			final Double distortion )
+			throws IOException {
+		ingest(
 				new DistortionDataAdapter(),
 				DistortionGroupManagement.DISTORTIONS_INDEX,
 				new DistortionEntry(
 						grp,
+						batchId,
 						count,
 						distortion));
 
@@ -78,8 +106,7 @@ public class DistortionGroupManagementTest
 
 	@Before
 	public void setup() {
-
-		final DataStore dataStore = new MemoryDataStore();
+			throws IOException {
 		// big jump for grp1 between batch 2 and 3
 		// big jump for grp2 between batch 1 and 2
 		// thus, the jump occurs for different groups between different batches!
@@ -87,32 +114,44 @@ public class DistortionGroupManagementTest
 		// b1
 		addDistortion(
 				"grp1",
+				"b1",
 				1,
 				0.1);
 		addDistortion(
 				"grp2",
+				"b1",
 				1,
 				0.1);
 		// b2
 		addDistortion(
 				"grp1",
+				"b1",
 				2,
 				0.2);
 		addDistortion(
 				"grp2",
+				"b1",
 				2,
 				0.3);
 		// b3
 		addDistortion(
 				"grp1",
+				"b1",
 				3,
 				0.4);
 		addDistortion(
 				"grp2",
+				"b1",
 				3,
 				0.4);
+		// another batch to catch wrong batch error case
+		addDistortion(
+				"grp1",
+				"b2",
+				3,
+				0.05);
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -135,7 +174,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -158,7 +197,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -181,7 +220,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -204,7 +243,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -227,7 +266,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -250,7 +289,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -273,7 +312,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -296,7 +335,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -319,7 +358,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -342,7 +381,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -365,7 +404,7 @@ public class DistortionGroupManagementTest
 						1,
 						0));
 
-		dataStore.ingest(
+		ingest(
 				adapter,
 				index,
 				AnalyticFeature.createGeometryFeature(
@@ -393,9 +432,11 @@ public class DistortionGroupManagementTest
 	@Test
 	public void test()
 			throws IOException {
-		DistortionGroupManagement.retainBestGroups(
+		final DistortionGroupManagement distortionGroupManagement = new DistortionGroupManagement(
 				dataStore,
 				indexStore,
+				adapterStore);
+		distortionGroupManagement.retainBestGroups(
 				adapterStore,
 				new SimpleFeatureItemWrapperFactory(),
 				StringUtils.stringFromBinary(adapter.getAdapterId().getBytes()),

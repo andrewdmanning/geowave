@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.core.store.query;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -21,6 +22,10 @@ public class AdapterIdQuery implements
 		this.adapterId = adapterId;
 	}
 
+	public ByteArrayId getAdapterId() {
+		return adapterId;
+	}
+
 	@Override
 	public List<QueryFilter> createFilters(
 			CommonIndexModel indexModel ) {
@@ -37,9 +42,9 @@ public class AdapterIdQuery implements
 	}
 
 	@Override
-	public MultiDimensionalNumericData getIndexConstraints(
+	public List<MultiDimensionalNumericData> getIndexConstraints(
 			NumericIndexStrategy indexStrategy ) {
-		return null;
+		return Collections.emptyList();
 	}
 
 }

@@ -5,7 +5,6 @@ import org.junit.Test;
 public class SimpleIngestIndexWriterTest extends
 		SimpleHBaseIngestTest
 {
-	@Override
 	@Test
 	public void TestIngest() {
 		final SimpleIngestIndexWriter si = new SimpleIngestIndexWriter();

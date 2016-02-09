@@ -1,7 +1,6 @@
 package mil.nga.giat.geowave.core.store.data;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 
 /**
  * This class models all of the necessary information for persisting data in the
@@ -12,25 +11,25 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
  * number of duplicates for this entry in the index, and is used when reading
  * data from the index.
  */
-public class IndexedPersistenceEncoding extends
-		PersistenceEncoding
+public class IndexedPersistenceEncoding<T> extends
+		PersistenceEncoding<T>
 {
-	private final ByteArrayId indexId;
+	private final ByteArrayId indexInsertionId;
 	private final int duplicateCount;
 
 	public IndexedPersistenceEncoding(
 			final ByteArrayId adapterId,
 			final ByteArrayId dataId,
-			final ByteArrayId indexId,
+			final ByteArrayId indexInsertionId,
 			final int duplicateCount,
-			final PersistentDataset<? extends CommonIndexValue> commonData,
+			final PersistentDataset<T> commonData,
 			final PersistentDataset<byte[]> unknownData ) {
 		super(
 				adapterId,
 				dataId,
 				commonData,
 				unknownData);
-		this.indexId = indexId;
+		this.indexInsertionId = indexInsertionId;
 		this.duplicateCount = duplicateCount;
 	}
 
@@ -41,7 +40,7 @@ public class IndexedPersistenceEncoding extends
 	 * @return the index ID
 	 */
 	public ByteArrayId getIndexInsertionId() {
-		return indexId;
+		return indexInsertionId;
 	}
 
 	@Override

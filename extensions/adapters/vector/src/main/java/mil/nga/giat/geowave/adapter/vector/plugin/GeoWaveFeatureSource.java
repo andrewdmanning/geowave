@@ -3,7 +3,7 @@ package mil.nga.giat.geowave.adapter.vector.plugin;
 import java.io.IOException;
 import java.util.Map;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveEmptyTransaction;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveTransactionState;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.TransactionsAllocator;
@@ -33,7 +33,7 @@ public class GeoWaveFeatureSource extends
 	public GeoWaveFeatureSource(
 			final ContentEntry entry,
 			final Query query,
-			final FeatureDataAdapter adapter,
+			final GeotoolsFeatureDataAdapter adapter,
 			final TransactionsAllocator transactionAllocator ) {
 		super(
 				entry,
@@ -61,8 +61,8 @@ public class GeoWaveFeatureSource extends
 		DataStatistics<SimpleFeature> bboxStats = null;
 		if (query.getFilter().equals(
 				Filter.INCLUDE)) {
-			final Map<ByteArrayId, DataStatistics<SimpleFeature>> stats = components.getDataStatistics(new GeoWaveEmptyTransaction(
-					components));
+			final Map<ByteArrayId, DataStatistics<SimpleFeature>> stats = new GeoWaveEmptyTransaction(
+					components).getDataStatistics();
 			bboxStats = stats.get(FeatureBoundingBoxStatistics.composeId(getFeatureType().getGeometryDescriptor().getLocalName()));
 		}
 		if (bboxStats != null) {
@@ -115,8 +115,8 @@ public class GeoWaveFeatureSource extends
 	protected int getCountInternal(
 			final Query query )
 			throws IOException {
-		final Map<ByteArrayId, DataStatistics<SimpleFeature>> stats = components.getDataStatistics(new GeoWaveEmptyTransaction(
-				components));
+		final Map<ByteArrayId, DataStatistics<SimpleFeature>> stats = new GeoWaveEmptyTransaction(
+				components).getDataStatistics();
 		final DataStatistics<SimpleFeature> countStats = stats.get(CountDataStatistics.STATS_ID);
 		if ((countStats != null) && query.getFilter().equals(
 				Filter.INCLUDE)) {

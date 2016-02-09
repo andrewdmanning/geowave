@@ -2,6 +2,8 @@ package mil.nga.giat.geowave.analytic.distance;
 
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
+import org.geotools.referencing.GeodeticCalculator;
+import org.geotools.referencing.datum.DefaultEllipsoid;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
@@ -13,10 +15,11 @@ public class CoordinateCircleDistanceFn implements
 {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = -1245559892132762143L;
 	protected static final CoordinateReferenceSystem DEFAULT_CRS;
+
 	static {
 		try {
 			DEFAULT_CRS = CRS.decode(
@@ -30,8 +33,6 @@ public class CoordinateCircleDistanceFn implements
 		}
 	}
 
-	private static final double EPSILON = 0.0000000001;
-
 	@Override
 	public double measure(
 			final Coordinate c1,
@@ -42,17 +43,29 @@ public class CoordinateCircleDistanceFn implements
 					c2,
 					getCRS());
 		}
-		catch (TransformException e) {
+		catch (final TransformException e) {
 			throw new RuntimeException(
 					"Failed to transform coordinates to provided CRS",
 					e);
 		}
-		catch (java.lang.AssertionError ae) {
-			// wierd error with orthodromic distance
-			if ((Math.abs(c1.x - c2.x) < EPSILON) && (Math.abs(c1.y - c2.y) < EPSILON)) return 0.0;
-			throw ae;
-		}
+		catch (final java.lang.AssertionError ae) {
+			// weird error with orthodromic distance..when distance is too close
+			// (0.05 meter), it fails the tolerance test
 
+			final GeodeticCalculator calc = new GeodeticCalculator(
+					getCRS());
+			calc.setStartingGeographicPoint(
+					c1.x,
+					c1.y);
+			calc.setDestinationGeographicPoint(
+					c2.x,
+					c2.y);
+			return ((DefaultEllipsoid) calc.getEllipsoid()).orthodromicDistance(
+					calc.getStartingGeographicPoint().getX(),
+					calc.getStartingGeographicPoint().getY(),
+					calc.getDestinationGeographicPoint().getX(),
+					calc.getDestinationGeographicPoint().getY());
+		}
 	}
 
 	protected CoordinateReferenceSystem getCRS() {

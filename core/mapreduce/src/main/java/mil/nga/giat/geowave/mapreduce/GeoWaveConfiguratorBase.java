@@ -2,6 +2,7 @@ package mil.nga.giat.geowave.mapreduce;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -18,9 +19,9 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStoreFactorySpi;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
-import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.IndexStoreFactorySpi;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -32,6 +33,7 @@ import org.apache.log4j.Logger;
 public class GeoWaveConfiguratorBase
 {
 	protected static final Logger LOGGER = Logger.getLogger(GeoWaveConfiguratorBase.class);
+	private static final String KEY_SEPARATOR = "-";
 
 	public static enum GeoWaveMetaStore {
 		INDEX,
@@ -68,7 +70,7 @@ public class GeoWaveConfiguratorBase
 			final String suffix ) {
 		return enumToConfKey(
 				implementingClass,
-				e) + "-" + suffix;
+				e) + KEY_SEPARATOR + suffix;
 	}
 
 	/**
@@ -218,7 +220,7 @@ public class GeoWaveConfiguratorBase
 			final Class<?> implementingClass,
 			final JobContext context ) {
 		// use adapter store name and if thats not set, use the data store name
-		String dataStatisticsStoreName = getAdapterStoreName(
+		String dataStatisticsStoreName = getDataStatisticsStoreName(
 				implementingClass,
 				context);
 		if ((dataStatisticsStoreName == null) || (dataStatisticsStoreName.isEmpty())) {
@@ -378,7 +380,7 @@ public class GeoWaveConfiguratorBase
 	public static void addIndex(
 			final Class<?> implementingClass,
 			final Configuration config,
-			final Index index ) {
+			final PrimaryIndex index ) {
 		if (index != null) {
 			config.set(
 					enumToConfKey(
@@ -389,7 +391,7 @@ public class GeoWaveConfiguratorBase
 		}
 	}
 
-	public static Index getIndex(
+	public static PrimaryIndex getIndex(
 			final Class<?> implementingClass,
 			final JobContext context,
 			final ByteArrayId indexId ) {
@@ -451,9 +453,18 @@ public class GeoWaveConfiguratorBase
 	private static Map<String, String> getConfigOptionsInternal(
 			final Class<?> implementingClass,
 			final Configuration configuration ) {
-		return configuration.getValByRegex(enumToConfKey(
+		final String prefix = enumToConfKey(
 				implementingClass,
-				GeneralConfig.STORE_CONFIG_OPTION) + "*");
+				GeneralConfig.STORE_CONFIG_OPTION) + KEY_SEPARATOR;
+		final Map<String, String> enumMap = configuration.getValByRegex(prefix + "*");
+		final Map<String, String> retVal = new HashMap<String, String>();
+		for (final Entry<String, String> entry : enumMap.entrySet()) {
+			final String key = entry.getKey();
+			retVal.put(
+					key.substring(prefix.length()),
+					entry.getValue());
+		}
+		return retVal;
 	}
 
 	private static DataAdapter<?>[] getDataAdaptersInternal(
@@ -476,7 +487,7 @@ public class GeoWaveConfiguratorBase
 		return new DataAdapter[] {};
 	}
 
-	private static Index getIndexInternal(
+	private static PrimaryIndex getIndexInternal(
 			final Class<?> implementingClass,
 			final Configuration configuration,
 			final ByteArrayId indexId ) {
@@ -488,12 +499,12 @@ public class GeoWaveConfiguratorBase
 			final byte[] indexBytes = ByteArrayUtils.byteArrayFromString(input);
 			return PersistenceUtils.fromBinary(
 					indexBytes,
-					Index.class);
+					PrimaryIndex.class);
 		}
 		return null;
 	}
 
-	public static Index[] getIndices(
+	public static PrimaryIndex[] getIndices(
 			final Class<?> implementingClass,
 			final JobContext context ) {
 		return getIndicesInternal(
@@ -533,24 +544,24 @@ public class GeoWaveConfiguratorBase
 						namespace));
 	}
 
-	private static Index[] getIndicesInternal(
+	private static PrimaryIndex[] getIndicesInternal(
 			final Class<?> implementingClass,
 			final Configuration configuration ) {
 		final Map<String, String> input = configuration.getValByRegex(enumToConfKey(
 				implementingClass,
 				GeoWaveMetaStore.INDEX) + "*");
 		if (input != null) {
-			final List<Index> indices = new ArrayList<Index>(
+			final List<PrimaryIndex> indices = new ArrayList<PrimaryIndex>(
 					input.size());
 			for (final String indexStr : input.values()) {
 				final byte[] indexBytes = ByteArrayUtils.byteArrayFromString(indexStr);
 				indices.add(PersistenceUtils.fromBinary(
 						indexBytes,
-						Index.class));
+						PrimaryIndex.class));
 			}
-			return indices.toArray(new Index[indices.size()]);
+			return indices.toArray(new PrimaryIndex[indices.size()]);
 		}
-		return new Index[] {};
+		return new PrimaryIndex[] {};
 	}
 
 	private static String getDataStoreNameInternal(

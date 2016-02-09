@@ -7,12 +7,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.index.NumericIndexStrategy;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.index.sfc.data.MultiDimensionalNumericData;
+import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.IngestCallback;
@@ -20,6 +24,10 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.IndexedAdapterPersistenceEncoding;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
+import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStatistics;
+import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticalDataAdapter;
 import mil.nga.giat.geowave.core.store.data.DataWriter;
 import mil.nga.giat.geowave.core.store.data.PersistentDataset;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
@@ -31,9 +39,7 @@ import mil.nga.giat.geowave.core.store.data.visibility.UnconstrainedVisibilityHa
 import mil.nga.giat.geowave.core.store.data.visibility.UniformVisibilityWriter;
 import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
-import mil.nga.giat.geowave.core.store.index.Index;
-
-import org.apache.log4j.Logger;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
 /*
  */
@@ -48,20 +54,23 @@ public class DataStoreUtils
 	public static final UniformVisibilityWriter DEFAULT_VISIBILITY = new UniformVisibilityWriter(
 			new UnconstrainedVisibilityHandler());
 
-	public static List<ByteArrayRange> constraintsToByteArrayRanges(
-			final MultiDimensionalNumericData constraints,
-			final NumericIndexStrategy indexStrategy ) {
-		if ((constraints == null) || constraints.isEmpty()) {
-			return new ArrayList<ByteArrayRange>(); // implies in negative and
-			// positive infinity
+	public static <T> long cardinality(
+			final PrimaryIndex index,
+			final Map<ByteArrayId, DataStatistics<T>> stats,
+			List<ByteArrayRange> ranges ) {
+		RowRangeHistogramStatistics rangeStats = (RowRangeHistogramStatistics) stats.get(RowRangeHistogramStatistics.composeId(index.getId()));
+		if (rangeStats == null) return Long.MAX_VALUE - 1;
+		long count = 0;
+		for (ByteArrayRange range : ranges) {
+			count += rangeStats.cardinality(
+					range.getStart().getBytes(),
+					range.getEnd().getBytes());
 		}
-		else {
-			return indexStrategy.getQueryRanges(constraints);
-		}
+		return count;
 	}
 
 	public static List<ByteArrayRange> constraintsToByteArrayRanges(
-			final MultiDimensionalNumericData constraints,
+			final List<MultiDimensionalNumericData> constraints,
 			final NumericIndexStrategy indexStrategy,
 			final int maxRanges ) {
 		if ((constraints == null) || constraints.isEmpty()) {
@@ -69,9 +78,16 @@ public class DataStoreUtils
 			// positive infinity
 		}
 		else {
-			return indexStrategy.getQueryRanges(
-					constraints,
-					maxRanges);
+			final List<ByteArrayRange> ranges = new ArrayList<ByteArrayRange>();
+			for (final MultiDimensionalNumericData nd : constraints) {
+				ranges.addAll(indexStrategy.getQueryRanges(
+						nd,
+						maxRanges));
+			}
+			ByteArrayRange.mergeIntersections(
+					ranges,
+					0);
+			return ranges;
 		}
 	}
 
@@ -102,7 +118,7 @@ public class DataStoreUtils
 
 	public static <T> List<EntryRow> entryToRows(
 			final WritableDataAdapter<T> dataWriter,
-			final Index index,
+			final PrimaryIndex index,
 			final T entry,
 			final IngestCallback<T> ingestCallback,
 			final VisibilityWriter<T> customFieldVisibilityWriter ) {
@@ -120,17 +136,36 @@ public class DataStoreUtils
 				ingestInfo);
 	}
 
+	public static List<IndexedAdapterPersistenceEncoding> getEncodings(
+			final PrimaryIndex index,
+			final AdapterPersistenceEncoding encoding ) {
+		final List<ByteArrayId> ids = encoding.getInsertionIds(index);
+		final ArrayList<IndexedAdapterPersistenceEncoding> encodings = new ArrayList<IndexedAdapterPersistenceEncoding>();
+		for (final ByteArrayId id : ids) {
+			encodings.add(new IndexedAdapterPersistenceEncoding(
+					encoding.getAdapterId(),
+					encoding.getDataId(),
+					id,
+					ids.size(),
+					encoding.getCommonData(),
+					encoding.getUnknownData(),
+					encoding.getAdapterExtendedData()));
+		}
+		return encodings;
+	}
+
 	protected static IndexedAdapterPersistenceEncoding getEncoding(
 			final CommonIndexModel model,
-			final DataAdapter<?> dataAdapter,
+			final DataAdapter<?> adapter,
 			final EntryRow row ) {
 		final PersistentDataset<CommonIndexValue> commonData = new PersistentDataset<CommonIndexValue>();
-		final PersistentDataset<Object> extendedData = new PersistentDataset<Object>();
 		final PersistentDataset<byte[]> unknownData = new PersistentDataset<byte[]>();
+		final PersistentDataset<Object> extendedData = new PersistentDataset<Object>();
 		for (final FieldInfo column : row.info.getFieldInfo()) {
 			final FieldReader<? extends CommonIndexValue> reader = model.getReader(column.getDataValue().getId());
 			if (reader == null) {
-				if (dataAdapter.getReader(column.getDataValue().getId()) != null) {
+				final FieldReader extendedReader = adapter.getReader(column.getDataValue().getId());
+				if (extendedReader != null) {
 					extendedData.addValue(column.getDataValue());
 				}
 				else {
@@ -179,7 +214,7 @@ public class DataStoreUtils
 	 */
 	public static <T> List<ByteArrayId> getRowIds(
 			final WritableDataAdapter<T> dataWriter,
-			final Index index,
+			final PrimaryIndex index,
 			final T entry ) {
 		final CommonIndexModel indexModel = index.getIndexModel();
 		final AdapterPersistenceEncoding encodedData = dataWriter.encode(
@@ -200,7 +235,35 @@ public class DataStoreUtils
 		return rowIds;
 	}
 
-	private static <T> void addToRowIds(
+	/**
+	 * Reduce the list of adapter IDs to those which have associated data in the
+	 * given index.
+	 * 
+	 * @param statisticsStore
+	 * @param indexId
+	 * @param adapterIds
+	 * @param authorizations
+	 * @return
+	 */
+	public static List<ByteArrayId> trimAdapterIdsByIndex(
+			final DataStatisticsStore statisticsStore,
+			final ByteArrayId indexId,
+			final CloseableIterator<DataAdapter<?>> adapters,
+			final String... authorizations ) {
+		final List<ByteArrayId> results = new ArrayList<ByteArrayId>();
+		while (adapters.hasNext()) {
+			final DataAdapter<?> adapter = adapters.next();
+			if (!(adapter instanceof StatisticalDataAdapter) || (statisticsStore.getDataStatistics(
+					adapter.getAdapterId(),
+					RowRangeHistogramStatistics.composeId(indexId),
+					authorizations) != null)) {
+				results.add(adapter.getAdapterId());
+			}
+		}
+		return results;
+	}
+
+	public static <T> void addToRowIds(
 			final List<ByteArrayId> rowIds,
 			final List<ByteArrayId> insertionIds,
 			final byte[] dataId,
@@ -233,7 +296,7 @@ public class DataStoreUtils
 	})
 	public static <T> DataStoreEntryInfo getIngestInfo(
 			final WritableDataAdapter<T> dataWriter,
-			final Index index,
+			final PrimaryIndex index,
 			final T entry,
 			final VisibilityWriter<T> customFieldVisibilityWriter ) {
 		final CommonIndexModel indexModel = index.getIndexModel();
@@ -249,14 +312,15 @@ public class DataStoreUtils
 		final List<PersistentValue> extendedValues = extendedData.getValues();
 		final List<PersistentValue> commonValues = indexedData.getValues();
 
-		final List<FieldInfo> fieldInfoList = new ArrayList<FieldInfo>();
+		final List<FieldInfo<?>> fieldInfoList = new ArrayList<FieldInfo<?>>();
 
+		final byte[] dataId = dataWriter.getDataId(
+				entry).getBytes();
 		if (!insertionIds.isEmpty()) {
 			addToRowIds(
 					rowIds,
 					insertionIds,
-					dataWriter.getDataId(
-							entry).getBytes(),
+					dataId,
 					dataWriter.getAdapterId().getBytes(),
 					encodedData.isDeduplicationEnabled());
 
@@ -283,12 +347,14 @@ public class DataStoreUtils
 				}
 			}
 			return new DataStoreEntryInfo(
+					dataId,
 					rowIds,
 					fieldInfoList);
 		}
 		LOGGER.warn("Indexing failed to produce insertion ids; entry [" + dataWriter.getDataId(
 				entry).getString() + "] not saved.");
 		return new DataStoreEntryInfo(
+				dataId,
 				Collections.EMPTY_LIST,
 				Collections.EMPTY_LIST);
 
@@ -298,7 +364,7 @@ public class DataStoreUtils
 		"rawtypes",
 		"unchecked"
 	})
-	private static <T> FieldInfo<T> getFieldInfo(
+	public static <T> FieldInfo<T> getFieldInfo(
 			final DataWriter dataWriter,
 			final PersistentValue<T> fieldValue,
 			final T entry,
@@ -326,8 +392,22 @@ public class DataStoreUtils
 		return null;
 	}
 
-	private static final byte[] BEG_AND_BYTE = "&".getBytes(StringUtils.UTF8_CHAR_SET);
-	private static final byte[] END_AND_BYTE = ")".getBytes(StringUtils.UTF8_CHAR_SET);
+	@SuppressWarnings({
+		"rawtypes",
+		"unchecked"
+	})
+	public static <T> FieldInfo<T> getFieldInfo(
+			final PersistentValue<T> fieldValue,
+			final byte[] value,
+			final byte[] visibility ) {
+		return new FieldInfo<T>(
+				fieldValue,
+				value,
+				visibility);
+	}
+
+	private static final byte[] BEG_AND_BYTE = "&".getBytes(StringUtils.GEOWAVE_CHAR_SET);
+	private static final byte[] END_AND_BYTE = ")".getBytes(StringUtils.GEOWAVE_CHAR_SET);
 
 	private static byte[] merge(
 			final byte vis1[],

@@ -18,6 +18,7 @@ import mil.nga.giat.geowave.analytic.extract.SimpleFeatureCentroidExtractor;
 import mil.nga.giat.geowave.analytic.kmeans.AssociationNotification;
 import mil.nga.giat.geowave.analytic.mapreduce.CountofDoubleWritable;
 import mil.nga.giat.geowave.analytic.param.CentroidParameters;
+import mil.nga.giat.geowave.analytic.param.GlobalParameters;
 import mil.nga.giat.geowave.analytic.param.JumpParameters;
 import mil.nga.giat.geowave.mapreduce.GeoWaveWritableInputMapper;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
@@ -130,7 +131,7 @@ public class KMeansDistortionMapReduce
 				InterruptedException {
 			super.setup(context);
 			final ScopedJobConfiguration config = new ScopedJobConfiguration(
-					context,
+					context.getConfiguration(),
 					KMeansDistortionMapReduce.class,
 					KMeansDistortionMapReduce.LOGGER);
 
@@ -205,6 +206,7 @@ public class KMeansDistortionMapReduce
 		final protected Text output = new Text(
 				"");
 		private CentroidManagerGeoWave<Object> centroidManager;
+		private String batchId;
 
 		@Override
 		public void reduce(
@@ -217,7 +219,13 @@ public class KMeansDistortionMapReduce
 			final List<AnalyticItemWrapper<Object>> centroids = centroidManager.getCentroidsForGroup(key.toString());
 			// it is possible that the number of items in a group are smaller
 			// than the cluster
-			final Integer kCount = expectedK == null ? centroids.size() : expectedK;
+			final Integer kCount;
+			if (expectedK == null) {
+				kCount = centroids.size();
+			}
+			else {
+				kCount = expectedK;
+			}
 			if (centroids.size() == 0) {
 				return;
 			}
@@ -239,13 +247,14 @@ public class KMeansDistortionMapReduce
 
 				final DistortionEntry entry = new DistortionEntry(
 						key.toString(),
+						batchId,
 						kCount,
 						distortion);
 
 				context.write(
 						new GeoWaveOutputKey(
 								DistortionDataAdapter.ADAPTER_ID,
-								DistortionGroupManagement.DISTORTIONS_INDEX.getId()),
+								DistortionGroupManagement.DISTORTIONS_INDEX_LIST),
 						entry);
 			}
 		}
@@ -257,7 +266,7 @@ public class KMeansDistortionMapReduce
 				InterruptedException {
 			super.setup(context);
 			final ScopedJobConfiguration config = new ScopedJobConfiguration(
-					context,
+					context.getConfiguration(),
 					KMeansDistortionMapReduce.class,
 					KMeansDistortionMapReduce.LOGGER);
 
@@ -279,9 +288,13 @@ public class KMeansDistortionMapReduce
 						"Unable to initialize centroid manager",
 						e);
 				throw new IOException(
-						"Unable to initialize centroid manager");
+						"Unable to initialize centroid manager",
+						e);
 			}
 
+			batchId = config.getString(
+					GlobalParameters.Global.PARENT_BATCH_ID,
+					centroidManager.getBatchId());
 		}
 	}
 

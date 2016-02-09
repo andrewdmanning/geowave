@@ -42,8 +42,8 @@ public class HadoopWritableSerializationTool
 	}
 
 	public DataAdapter<?> getAdapter(
-			ByteArrayId adapterId ) {
-		return this.adapterStore.getAdapter(adapterId);
+			final ByteArrayId adapterId ) {
+		return adapterStore.getAdapter(adapterId);
 	}
 
 	public HadoopWritableSerializer<Object, Writable> getHadoopWritableSerializerForAdapter(

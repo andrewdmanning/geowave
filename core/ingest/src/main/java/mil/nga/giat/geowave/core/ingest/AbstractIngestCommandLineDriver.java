@@ -61,13 +61,14 @@ abstract public class AbstractIngestCommandLineDriver implements
 	}
 
 	@Override
-	public void runOperation(
+	public boolean runOperation(
 			final String[] args )
 			throws ParseException {
 		final List<IngestFormatPluginProviderSpi<?, ?>> pluginProviders = applyArguments(args);
-		runInternal(
+		final boolean retVal = runInternal(
 				args,
 				pluginProviders);
+		return retVal;
 	}
 
 	@SuppressFBWarnings(value = "DM_EXIT", justification = "Exiting JVM with System.exit(0) is intentional")
@@ -112,7 +113,7 @@ abstract public class AbstractIngestCommandLineDriver implements
 				final PrintWriter pw = new PrintWriter(
 						new OutputStreamWriter(
 								System.out,
-								StringUtils.UTF8_CHAR_SET));
+								StringUtils.GEOWAVE_CHAR_SET));
 				pw.println("Available ingest formats currently registered as plugins:\n");
 				for (final Entry<String, IngestFormatPluginProviderSpi<?, ?>> pluginProviderEntry : pluginProviderRegistry.entrySet()) {
 					final IngestFormatPluginProviderSpi<?, ?> pluginProvider = pluginProviderEntry.getValue();
@@ -128,6 +129,20 @@ abstract public class AbstractIngestCommandLineDriver implements
 				}
 				pw.println("Available datastores currently registered:\n");
 				Map<String, DataStoreFactorySpi> dataStoreFactories = GeoWaveStoreFinder.getRegisteredDataStoreFactories();
+				for (final Entry<String, DataStoreFactorySpi> dataStoreFactoryEntry : dataStoreFactories.entrySet()) {
+					final DataStoreFactorySpi dataStoreFactory = dataStoreFactoryEntry.getValue();
+					final String desc = dataStoreFactory.getDescription() == null ? "no description" : dataStoreFactory.getDescription();
+					final String text = dataStoreFactory.getName() + ":\n" + desc;
+
+					formatter.printWrapped(
+							pw,
+							formatter.getWidth(),
+							5,
+							text);
+					pw.println();
+				}
+				pw.println("Available datastores currently registered:\n");
+				final Map<String, DataStoreFactorySpi> dataStoreFactories = GeoWaveStoreFinder.getRegisteredDataStoreFactories();
 				for (final Entry<String, DataStoreFactorySpi> dataStoreFactoryEntry : dataStoreFactories.entrySet()) {
 					final DataStoreFactorySpi dataStoreFactory = dataStoreFactoryEntry.getValue();
 					final String desc = dataStoreFactory.getDescription() == null ? "no description" : dataStoreFactory.getDescription();
@@ -161,18 +176,17 @@ abstract public class AbstractIngestCommandLineDriver implements
 					System.exit(-3);
 				}
 			}
-			for (final IngestFormatPluginProviderSpi<?, ?> plugin : selectedPluginProviders) {
-				final IngestFormatOptionProvider optionProvider = plugin.getIngestFormatOptionProvider();
-				if (optionProvider != null) {
-					optionProvider.applyOptions(options);
-				}
-			}
+			applyAdditionalOptions(
+					selectedPluginProviders,
+					commandLine,
+					options);
 			if (options.getOptions().size() > optionCount) {
 				// custom options have been added, reparse the commandline
 				// arguments with the new set of options
 				commandLine = parser.parse(
 						options,
-						args);
+						args,
+						true);
 				for (final IngestFormatPluginProviderSpi<?, ?> plugin : selectedPluginProviders) {
 					final IngestFormatOptionProvider optionProvider = plugin.getIngestFormatOptionProvider();
 					if (optionProvider != null) {
@@ -180,11 +194,13 @@ abstract public class AbstractIngestCommandLineDriver implements
 					}
 				}
 			}
-			parseOptionsInternal(commandLine);
+			parseOptionsInternal(
+					options,
+					commandLine);
 		}
 		catch (final ParseException e) {
 			LOGGER.fatal(
-					"",
+					"Error parsing commandline",
 					e);
 			printHelp(
 					options,
@@ -192,6 +208,19 @@ abstract public class AbstractIngestCommandLineDriver implements
 			System.exit(-1);
 		}
 		return selectedPluginProviders;
+	}
+
+	private void applyAdditionalOptions(
+			final List<IngestFormatPluginProviderSpi<?, ?>> selectedPluginProviders,
+			final CommandLine commandLine,
+			final Options options )
+			throws ParseException {
+		for (final IngestFormatPluginProviderSpi<?, ?> plugin : selectedPluginProviders) {
+			final IngestFormatOptionProvider optionProvider = plugin.getIngestFormatOptionProvider();
+			if (optionProvider != null) {
+				optionProvider.applyOptions(options);
+			}
+		}
 	}
 
 	private List<IngestFormatPluginProviderSpi<?, ?>> getPluginProviders(
@@ -227,13 +256,14 @@ abstract public class AbstractIngestCommandLineDriver implements
 	}
 
 	abstract protected void parseOptionsInternal(
+			Options options,
 			final CommandLine commandLine )
 			throws ParseException;
 
 	abstract protected void applyOptionsInternal(
 			final Options allOptions );
 
-	abstract protected void runInternal(
+	abstract protected boolean runInternal(
 			String[] args,
 			List<IngestFormatPluginProviderSpi<?, ?>> pluginProviders );
 }

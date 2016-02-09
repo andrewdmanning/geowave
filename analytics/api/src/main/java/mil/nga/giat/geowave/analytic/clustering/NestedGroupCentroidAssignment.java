@@ -87,7 +87,7 @@ public class NestedGroupCentroidAssignment<T>
 			IllegalAccessException,
 			IOException {
 		final ScopedJobConfiguration config = new ScopedJobConfiguration(
-				context,
+				context.getConfiguration(),
 				scope,
 				logger);
 		endZoomLevel = config.getInt(

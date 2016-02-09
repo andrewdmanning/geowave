@@ -23,7 +23,7 @@ public class PersistableAdapterStore extends
 	}
 
 	@Override
-	protected GenericStoreCommandLineOptions<AdapterStore> setCLIOptions(
+	protected GenericStoreCommandLineOptions<AdapterStore> getCLIOptions(
 			final Map<String, String> configOptions,
 			final String namespace,
 			final String factoryName ) {

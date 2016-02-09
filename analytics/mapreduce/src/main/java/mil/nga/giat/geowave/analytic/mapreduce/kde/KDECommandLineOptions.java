@@ -7,16 +7,16 @@ import org.apache.commons.cli.ParseException;
 
 public class KDECommandLineOptions
 {
-	private static final String FEATURE_TYPE_KEY = "featureType";
-	private static final String MIN_LEVEL_KEY = "minLevel";
-	private static final String MAX_LEVEL_KEY = "maxLevel";
-	private static final String MIN_SPLITS_KEY = "minSplits";
-	private static final String MAX_SPLITS_KEY = "maxSplits";
-	private static final String COVERAGE_NAME_KEY = "coverageName";
-	private static final String HDFS_HOST_PORT_KEY = "hdfsHostPort";
-	private static final String JOB_TRACKER_HOST_PORT_KEY = "jobSubmissionHostPort";
-	private static final String TILE_SIZE_KEY = "tileSize";
-	private static final String CQL_FILTER_KEY = "cqlFilter";
+	public static final String FEATURE_TYPE_KEY = "featureType";
+	public static final String MIN_LEVEL_KEY = "minLevel";
+	public static final String MAX_LEVEL_KEY = "maxLevel";
+	public static final String MIN_SPLITS_KEY = "minSplits";
+	public static final String MAX_SPLITS_KEY = "maxSplits";
+	public static final String COVERAGE_NAME_KEY = "coverageName";
+	public static final String HDFS_HOST_PORT_KEY = "hdfsHostPort";
+	public static final String JOB_TRACKER_HOST_PORT_KEY = "jobSubmissionHostPort";
+	public static final String TILE_SIZE_KEY = "tileSize";
+	public static final String CQL_FILTER_KEY = "cqlFilter";
 
 	private final String featureType;
 	private final Integer minLevel;

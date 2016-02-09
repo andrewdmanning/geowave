@@ -17,8 +17,12 @@ import org.apache.hadoop.io.WritableComparator;
 public class GeoWaveInputKey extends
 		GeoWaveKey
 {
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
 	private ByteArrayId dataId;
-	private ByteArrayId insertionId;
+	private transient ByteArrayId insertionId;
 
 	public GeoWaveInputKey() {
 		super();
@@ -73,8 +77,7 @@ public class GeoWaveInputKey extends
 	@Override
 	public int hashCode() {
 		final int prime = 31;
-		int result = 1;
-		result = (prime * result) + ((adapterId == null) ? 0 : adapterId.hashCode());
+		int result = super.hashCode();
 		result = (prime * result) + ((dataId == null) ? 0 : dataId.hashCode());
 		return result;
 	}
@@ -85,21 +88,13 @@ public class GeoWaveInputKey extends
 		if (this == obj) {
 			return true;
 		}
-		if (obj == null) {
+		if (!super.equals(obj)) {
 			return false;
 		}
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
 		final GeoWaveInputKey other = (GeoWaveInputKey) obj;
-		if (adapterId == null) {
-			if (other.adapterId != null) {
-				return false;
-			}
-		}
-		else if (!adapterId.equals(other.adapterId)) {
-			return false;
-		}
 		if (dataId == null) {
 			if (other.dataId != null) {
 				return false;

@@ -11,17 +11,18 @@ import mil.nga.giat.geowave.analytic.extract.DimensionExtractor;
 import mil.nga.giat.geowave.analytic.param.CentroidParameters;
 import mil.nga.giat.geowave.analytic.param.CommonParameters;
 import mil.nga.giat.geowave.analytic.param.StoreParameters;
-import mil.nga.giat.geowave.core.cli.AdapterStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.cli.IndexStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.analytic.store.PersistableAdapterStore;
+import mil.nga.giat.geowave.analytic.store.PersistableIndexStore;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.core.store.index.CustomIdIndex;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 
 import org.geotools.feature.type.BasicFeatureTypes;
 import org.slf4j.Logger;
@@ -35,40 +36,6 @@ public class ClusteringUtils
 	public static final String CLUSTERING_CRS = "EPSG:4326";
 
 	final static Logger LOGGER = LoggerFactory.getLogger(ClusteringUtils.class);
-
-	private static Index createIndex(
-			final String indexId,
-			final IndexStore indexStore )
-			throws Exception {
-
-		final ByteArrayId dbId = new ByteArrayId(
-				indexId);
-		if (!indexStore.indexExists(dbId)) {
-			if (indexId.equals(IndexType.SPATIAL_VECTOR.getDefaultId())) {
-				final Index index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
-				indexStore.addIndex(index);
-				return index;
-			}
-			else if (indexId.equals(IndexType.SPATIAL_TEMPORAL_VECTOR.getDefaultId())) {
-				final Index index = IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex();
-				indexStore.addIndex(index);
-				return index;
-			}
-			else {
-				final Index index = new CustomIdIndex(
-						IndexType.SPATIAL_VECTOR.createDefaultIndexStrategy(),
-						IndexType.SPATIAL_VECTOR.getDefaultIndexModel(),
-						new ByteArrayId(
-								indexId));
-				indexStore.addIndex(index);
-				return index;
-			}
-		}
-		else {
-			return indexStore.getIndex(dbId);
-		}
-
-	}
 
 	private static DataAdapter<?> createAdapter(
 			final String sampleDataTypeId,
@@ -98,36 +65,38 @@ public class ClusteringUtils
 	public static DataAdapter[] getAdapters(
 			final PropertyManagement propertyManagement )
 			throws IOException {
-		final AdapterStore adapterStore = ((AdapterStoreCommandLineOptions) StoreParameters.StoreParam.ADAPTER_STORE.getHelper().getValue(
-				propertyManagement)).createStore();
+		final AdapterStore adapterStore = ((PersistableAdapterStore) StoreParameters.StoreParam.ADAPTER_STORE.getHelper().getValue(
+				propertyManagement)).getCliOptions().createStore();
 
 		final mil.nga.giat.geowave.core.store.CloseableIterator<DataAdapter<?>> it = adapterStore.getAdapters();
 		final List<DataAdapter> adapters = new LinkedList<DataAdapter>();
 		while (it.hasNext()) {
 			adapters.add(it.next());
 		}
-
+		it.close();
 		final DataAdapter[] result = new DataAdapter[adapters.size()];
 		adapters.toArray(result);
 		return result;
 	}
 
-	public static Index[] getIndices(
+	public static PrimaryIndex[] getIndices(
 			final PropertyManagement propertyManagement ) {
 
-		final IndexStore indexStore = ((IndexStoreCommandLineOptions) StoreParameters.StoreParam.INDEX_STORE.getHelper().getValue(
-				propertyManagement)).createStore();
+		final IndexStore indexStore = ((PersistableIndexStore) StoreParameters.StoreParam.INDEX_STORE.getHelper().getValue(
+				propertyManagement)).getCliOptions().createStore();
 
-		final mil.nga.giat.geowave.core.store.CloseableIterator<Index> it = indexStore.getIndices();
-		final List<Index> indices = new LinkedList<Index>();
+		final mil.nga.giat.geowave.core.store.CloseableIterator<Index<?, ?>> it = indexStore.getIndices();
+		final List<PrimaryIndex> indices = new LinkedList<PrimaryIndex>();
 		while (it.hasNext()) {
-			indices.add(it.next());
+			indices.add((PrimaryIndex) it.next());
 		}
-
-		final Index[] result = new Index[indices.size()];
+		try {
+			it.close();
+		catch (final IOException e) {
+			LOGGER.warn("Unable to close iterator" + e);
+		final PrimaryIndex[] result = new PrimaryIndex[indices.size()];
 		indices.toArray(result);
 		return result;
-	}
 
 	/*
 	 * Method takes in a polygon and generates the corresponding ranges in a
@@ -136,21 +105,23 @@ public class ClusteringUtils
 	protected static List<ByteArrayRange> getGeoWaveRangesForQuery(
 			final Polygon polygon ) {
 
-		final Index index = IndexType.SPATIAL_VECTOR.createDefaultIndex();
-		final List<ByteArrayRange> ranges = index.getIndexStrategy().getQueryRanges(
+		final PrimaryIndex index = new SpatialDimensionalityTypeProvider().createPrimaryIndex();
+		final List<ByteArrayRange> ranges = DataStoreUtils.constraintsToByteArrayRanges(
 				new SpatialQuery(
-						polygon).getIndexConstraints(index.getIndexStrategy()));
+						polygon).getIndexConstraints(index.getIndexStrategy()),
+				index.getIndexStrategy(),
+				-1);
 
 		return ranges;
 	}
 
-	public static Index createIndex(
+	public static PrimaryIndex createIndex(
 			final PropertyManagement propertyManagement )
 			throws Exception {
 
-		final IndexStore indexStore = ((IndexStoreCommandLineOptions) StoreParameters.StoreParam.INDEX_STORE.getHelper().getValue(
-				propertyManagement)).createStore();
-		return indexStore.getIndex(new ByteArrayId(
+		final IndexStore indexStore = ((PersistableIndexStore) StoreParameters.StoreParam.INDEX_STORE.getHelper().getValue(
+				propertyManagement)).getCliOptions().createStore();
+		return (PrimaryIndex) indexStore.getIndex(new ByteArrayId(
 				propertyManagement.getPropertyAsString(CentroidParameters.Centroid.INDEX_ID)));
 	}
 
@@ -167,8 +138,8 @@ public class ClusteringUtils
 				propertyManagement.getPropertyAsString(
 						CentroidParameters.Centroid.DATA_NAMESPACE_URI,
 						BasicFeatureTypes.DEFAULT_NAMESPACE),
-				((AdapterStoreCommandLineOptions) StoreParameters.StoreParam.ADAPTER_STORE.getHelper().getValue(
-						propertyManagement)).createStore(),
+				((PersistableAdapterStore) StoreParameters.StoreParam.ADAPTER_STORE.getHelper().getValue(
+						propertyManagement)).getCliOptions().createStore(),
 				dimensionExtractorClass.newInstance().getDimensionNames());
 	}
 }

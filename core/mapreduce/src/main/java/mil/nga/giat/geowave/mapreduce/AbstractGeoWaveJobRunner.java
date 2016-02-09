@@ -5,11 +5,12 @@ import java.util.List;
 import java.util.Map;
 
 import mil.nga.giat.geowave.core.cli.CLIOperationDriver;
+import mil.nga.giat.geowave.core.cli.CommandLineResult;
 import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.store.DataStoreFactorySpi;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
-import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputFormat;
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputFormat;
@@ -44,7 +45,7 @@ public abstract class AbstractGeoWaveJobRunner extends
 	protected String namespace;
 	protected DataStoreFactorySpi dataStoreFactory;
 	protected List<DataAdapter<?>> adapters = new ArrayList<DataAdapter<?>>();
-	protected List<Index> indices = new ArrayList<Index>();
+	protected List<PrimaryIndex> indices = new ArrayList<PrimaryIndex>();
 	protected DistributableQuery query = null;
 	protected Integer minInputSplits = null;
 	protected Integer maxInputSplits = null;
@@ -96,7 +97,7 @@ public abstract class AbstractGeoWaveJobRunner extends
 			}
 		}
 		if ((indices != null) && (indices.size() > 0)) {
-			for (final Index index : indices) {
+			for (final PrimaryIndex index : indices) {
 				GeoWaveInputFormat.addIndex(
 						conf,
 						index);
@@ -143,7 +144,7 @@ public abstract class AbstractGeoWaveJobRunner extends
 	}
 
 	public void addIndex(
-			final Index index ) {
+			final PrimaryIndex index ) {
 		indices.add(index);
 	}
 
@@ -156,11 +157,11 @@ public abstract class AbstractGeoWaveJobRunner extends
 	public int run(
 			final String[] args )
 			throws Exception {
-		return runJob();
+		return runOperation(args) ? 0 : -1;
 	}
 
 	@Override
-	public void runOperation(
+	public boolean runOperation(
 			final String[] args )
 			throws ParseException {
 		final Options allOptions = new Options();
@@ -176,19 +177,23 @@ public abstract class AbstractGeoWaveJobRunner extends
 		final BasicParser parser = new BasicParser();
 		final CommandLine commandLine = parser.parse(
 				allOptions,
-				args);
-		final DataStoreCommandLineOptions dataStoreOptions = DataStoreCommandLineOptions.parseOptions(commandLine);
+				args,
+				true);
+		final CommandLineResult<DataStoreCommandLineOptions> dataStoreOptionsResult = DataStoreCommandLineOptions.parseOptions(
+				allOptions,
+				commandLine);
+		final DataStoreCommandLineOptions dataStoreOptions = dataStoreOptionsResult.getResult();
 		dataStoreFactory = (DataStoreFactorySpi) dataStoreOptions.getFactory();
 		configOptions = dataStoreOptions.getConfigOptions();
 		namespace = dataStoreOptions.getNamespace();
 		if (commandLine.hasOption("h")) {
 			printHelp(allOptions);
-			return;
+			return true;
 		}
 		else {
 
 			try {
-				runJob();
+				return runJob() == 0 ? true : false;
 			}
 			catch (final Exception e) {
 				LOGGER.error(

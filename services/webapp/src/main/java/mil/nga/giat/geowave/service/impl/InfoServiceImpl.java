@@ -1,9 +1,9 @@
 package mil.nga.giat.geowave.service.impl;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -26,6 +26,7 @@ import mil.nga.giat.geowave.core.store.config.ConfigUtils;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStoreFactorySpi;
 import mil.nga.giat.geowave.service.InfoService;
+import mil.nga.giat.geowave.service.ServiceUtils;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
@@ -56,9 +57,7 @@ public class InfoServiceImpl implements
 			final String key = it.next().toString();
 			strMap.put(
 					key,
-					ServiceUtils.getProperty(
-							props,
-							key));
+					props.getProperty(key));
 		}
 		configOptions = ConfigUtils.valuesFromStrings(strMap);
 		indexStoreFactory = GeoWaveStoreFinder.findIndexStoreFactory(configOptions);
@@ -98,13 +97,13 @@ public class InfoServiceImpl implements
 	public Response getIndices(
 			@PathParam("namespace")
 			final String namespace ) {
-		try (CloseableIterator<Index> indices = indexStoreFactory.createStore(
+		try (CloseableIterator<Index<?, ?>> indices = indexStoreFactory.createStore(
 				configOptions,
 				namespace).getIndices()) {
 
 			final JSONArray indexNames = new JSONArray();
 			while (indices.hasNext()) {
-				final Index index = indices.next();
+				final Index<?, ?> index = indices.next();
 				if ((index != null) && (index.getId() != null)) {
 					final JSONObject indexObj = new JSONObject();
 					indexObj.put(

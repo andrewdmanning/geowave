@@ -33,7 +33,7 @@ public class EntryRow implements
 				rowId.getRowId());
 	}
 
-	public List<FieldInfo> getColumns() {
+	public List<FieldInfo<?>> getColumns() {
 		return info.getFieldInfo();
 	}
 

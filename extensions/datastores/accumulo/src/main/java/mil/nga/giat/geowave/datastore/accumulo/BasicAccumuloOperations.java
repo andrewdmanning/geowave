@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
@@ -35,6 +36,7 @@ import org.apache.accumulo.core.client.RowIterator;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableExistsException;
 import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.conf.Property;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
@@ -242,12 +244,45 @@ public class BasicAccumuloOperations implements
 			final String tableName,
 			final boolean createTable )
 			throws TableNotFoundException {
+		return createWriter(
+				tableName,
+				createTable,
+				true,
+				true,
+				null);
+	}
+
+	@Override
+	public Writer createWriter(
+			final String tableName,
+			final boolean createTable,
+			final boolean enableVersioning,
+			final boolean enableBlockCache,
+			final Set<ByteArrayId> splits )
+			throws TableNotFoundException {
 		final String qName = getQualifiedTableName(tableName);
 		if (createTable && !connector.tableOperations().exists(
 				qName)) {
 			try {
 				connector.tableOperations().create(
-						qName);
+						qName,
+						enableVersioning);
+				if (enableBlockCache) {
+					connector.tableOperations().setProperty(
+							qName,
+							Property.TABLE_BLOCKCACHE_ENABLED.getKey(),
+							"true");
+				}
+				if ((splits != null) && !splits.isEmpty()) {
+					final SortedSet<Text> partitionKeys = new TreeSet<Text>();
+					for (final ByteArrayId split : splits) {
+						partitionKeys.add(new Text(
+								split.getBytes()));
+					}
+					connector.tableOperations().addSplits(
+							qName,
+							partitionKeys);
+				}
 			}
 			catch (AccumuloException | AccumuloSecurityException | TableExistsException e) {
 				LOGGER.warn(
@@ -255,12 +290,16 @@ public class BasicAccumuloOperations implements
 						e);
 			}
 		}
+		final BatchWriterConfig config = new BatchWriterConfig();
+		config.setMaxMemory(byteBufferSize);
+		config.setMaxLatency(
+				timeoutMillis,
+				TimeUnit.MILLISECONDS);
+		config.setMaxWriteThreads(numThreads);
 		return new mil.nga.giat.geowave.datastore.accumulo.BatchWriterWrapper(
 				connector.createBatchWriter(
 						qName,
-						byteBufferSize,
-						timeoutMillis,
-						numThreads));
+						config));
 	}
 
 	@Override
@@ -272,7 +311,7 @@ public class BasicAccumuloOperations implements
 			try {
 				connector.tableOperations().create(
 						qName,
-						false);
+						true);
 			}
 			catch (AccumuloException | AccumuloSecurityException | TableExistsException e) {
 				LOGGER.warn(
@@ -591,7 +630,7 @@ public class BasicAccumuloOperations implements
 		final List<byte[]> newSet = new ArrayList<byte[]>();
 		for (final String auth : authorizations) {
 			if (!auths.contains(auth)) {
-				newSet.add(auth.getBytes(StringUtils.UTF8_CHAR_SET));
+				newSet.add(auth.getBytes(StringUtils.GEOWAVE_CHAR_SET));
 			}
 		}
 		if (newSet.size() > 0) {
@@ -800,5 +839,37 @@ public class BasicAccumuloOperations implements
 	@Override
 	public Instance getInstance() {
 		return connector.getInstance();
+	}
+
+	@Override
+	public void addSplits(
+			final String tableName,
+			final boolean createTable,
+			final Set<ByteArrayId> splits )
+			throws TableNotFoundException,
+			AccumuloException,
+			AccumuloSecurityException {
+		final String qName = getQualifiedTableName(tableName);
+		if (createTable && !connector.tableOperations().exists(
+				qName)) {
+			try {
+				connector.tableOperations().create(
+						qName,
+						true);
+			}
+			catch (AccumuloException | AccumuloSecurityException | TableExistsException e) {
+				LOGGER.warn(
+						"Unable to create table '" + qName + "'",
+						e);
+			}
+		}
+		final SortedSet<Text> partitionKeys = new TreeSet<Text>();
+		for (final ByteArrayId split : splits) {
+			partitionKeys.add(new Text(
+					split.getBytes()));
+		}
+		connector.tableOperations().addSplits(
+				qName,
+				partitionKeys);
 	}
 }

@@ -29,5 +29,9 @@ public interface RowMergingDataAdapter<T, M extends Mergeable> extends
 
 		public byte[] getBinaryFromMergedObject(
 				final M rowObject );
+
+		public String getTransformName();
+
+		public int getBaseTransformPriority();
 	}
 }

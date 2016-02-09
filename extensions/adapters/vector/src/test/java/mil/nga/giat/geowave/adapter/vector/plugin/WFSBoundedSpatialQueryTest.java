@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import mil.nga.giat.geowave.adapter.vector.BaseDataStoreTest;
 import mil.nga.giat.geowave.adapter.vector.utils.DateUtilities;
 import mil.nga.giat.geowave.core.store.memory.MemoryStoreFactoryFamily;
 
@@ -36,7 +37,8 @@ import com.vividsolutions.jts.geom.PrecisionModel;
  * Test with a default spatial index rather than geo-temporal
  * 
  */
-public class WFSBoundedSpatialQueryTest
+public class WFSBoundedSpatialQueryTest extends
+		BaseDataStoreTest
 {
 	DataStore dataStore;
 	SimpleFeatureType schema;
@@ -59,7 +61,8 @@ public class WFSBoundedSpatialQueryTest
 	public void setup()
 			throws SchemaException,
 			CQLException,
-			IOException {
+			IOException,
+			GeoWavePluginException {
 		dataStore = createDataStore();
 		type = DataUtilities.createType(
 				"geostuff",

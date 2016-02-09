@@ -4,13 +4,13 @@ import java.io.IOException;
 
 import mil.nga.giat.geowave.adapter.raster.RasterUtils;
 import mil.nga.giat.geowave.analytic.mapreduce.kde.KDEJobRunner;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputFormat;
 import mil.nga.giat.geowave.mapreduce.output.GeoWaveOutputKey;
 
-import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.Options;
 import org.apache.commons.cli.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -131,7 +131,7 @@ public class ComparisonStatsJobRunner extends
 							statsNamespace,
 							ComparisonAccumuloStatsReducer.NUM_BANDS,
 							kdeCommandLineOptions.getTileSize()),
-					IndexType.SPATIAL_RASTER.createDefaultIndex());
+					new SpatialDimensionalityTypeProvider().createPrimaryIndex());
 			return ingester.waitForCompletion(true);
 
 		}
@@ -220,6 +220,15 @@ public class ComparisonStatsJobRunner extends
 						"/tmp/" + inputDataStoreOptions.getNamespace() + "_stats_" + kdeCommandLineOptions.getMinLevel() + "_" + kdeCommandLineOptions.getMaxLevel() + "_" + kdeCommandLineOptions.getCoverageName() + "/percentiles"));
 	}
 
+	
+
+	@Override
+	protected void applyOptions(
+			final Options allOptions ) {
+		super.applyOptions(allOptions);
+		ComparisonCommandLineOptions.applyOptions(allOptions);
+	}
+
 	@Override
 	public int run(
 			final String[] args )
@@ -233,5 +242,19 @@ public class ComparisonStatsJobRunner extends
 		final ComparisonCommandLineOptions comparisonOptions = ComparisonCommandLineOptions.parseOptions(commandLine);
 		timeAttribute = comparisonOptions.getTimeAttribute();
 		return super.run(args);
+	}
+	
+
+	@Override
+	protected CommandLine parseOptions(
+			final String[] args,
+			final Options allOptions )
+			throws Exception {
+		final CommandLine commandLine = super.parseOptions(
+				args,
+				allOptions);
+		final ComparisonCommandLineOptions comparisonOptions = ComparisonCommandLineOptions.parseOptions(commandLine);
+		timeAttribute = comparisonOptions.getTimeAttribute();
+		return commandLine;
 	}
 }

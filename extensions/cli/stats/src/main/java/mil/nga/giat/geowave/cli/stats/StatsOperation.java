@@ -2,67 +2,59 @@ package mil.nga.giat.geowave.cli.stats;
 
 import java.io.IOException;
 
-import mil.nga.giat.geowave.core.cli.AdapterStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.cli.CLIOperationDriver;
-import mil.nga.giat.geowave.core.cli.DataStatisticsStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.cli.IndexStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.index.ByteArrayId;
+import org.apache.log4j.Logger;
+
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
-import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
+import mil.nga.giat.geowave.core.store.adapter.statistics.DataStoreStatsAdapterWrapper;
 import mil.nga.giat.geowave.core.store.adapter.statistics.StatsCompositionTool;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.Query;
-
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import mil.nga.giat.geowave.core.store.query.QueryOptions;
 
 /**
- *
+ * 
  * Simple command line tool to recalculate statistics for an adapter.
- *
+ * 
  */
-public class StatsOperation implements
-		CLIOperationDriver
+public class StatsOperation extends
+		AbstractStatsOperation
 {
-	private static final Logger LOGGER = Logger.getLogger(StatsOperationCLIProvider.class);
+	private static final Logger LOGGER = Logger.getLogger(StatsOperation.class);
 
-	public static boolean calculateStastics(
+	@Override
+	protected boolean calculateStatistics(
 			final DataStore dataStore,
 			final IndexStore indexStore,
-			final AdapterStore adapterStore,
 			final DataStatisticsStore statsStore,
-			final ByteArrayId adapterId,
+			final DataAdapter<?> adapter,
 			final String[] authorizations )
 			throws IOException {
-		final DataAdapter<?> adapter = adapterStore.getAdapter(adapterId);
-		if (adapter == null) {
-			LOGGER.error("Unknown adapter " + adapterId);
-			return false;
-		}
 		statsStore.removeAllStatistics(
 				adapter.getAdapterId(),
 				authorizations);
-		try (StatsCompositionTool<?> statsTool = new StatsCompositionTool(
-				adapter,
-				statsStore)) {
-			try (CloseableIterator<Index> indexit = indexStore.getIndices()) {
-				while (indexit.hasNext()) {
-					final Index index = indexit.next();
+
+		try (CloseableIterator<Index<?, ?>> indexit = indexStore.getIndices()) {
+			while (indexit.hasNext()) {
+				final PrimaryIndex index = (PrimaryIndex) indexit.next();
+				try (StatsCompositionTool<?> statsTool = new StatsCompositionTool(
+						new DataStoreStatsAdapterWrapper(
+								index,
+								(WritableDataAdapter) adapter),
+						statsStore)) {
 					try (CloseableIterator<?> entryIt = dataStore.query(
-							adapter,
-							index,
-							(Query) null,
-							(Integer) null,
-							statsTool,
-							authorizations)) {
+							new QueryOptions(
+									adapter,
+									index,
+									(Integer) null,
+									statsTool,
+									authorizations),
+							(Query) null)) {
 						while (entryIt.hasNext()) {
 							entryIt.next();
 						}
@@ -78,64 +70,4 @@ public class StatsOperation implements
 		}
 		return true;
 	}
-
-	public static void main(
-			final String args[] ) {
-		final Options allOptions = new Options();
-		DataStoreCommandLineOptions.applyOptions(allOptions);
-		AdapterStoreCommandLineOptions.applyOptions(allOptions);
-		IndexStoreCommandLineOptions.applyOptions(allOptions);
-		DataStatisticsStoreCommandLineOptions.applyOptions(allOptions);
-		StatsCommandLineOptions.applyOptions(allOptions);
-		final BasicParser parser = new BasicParser();
-		try {
-			final CommandLine commandLine = parser.parse(
-					allOptions,
-					args);
-			final DataStoreCommandLineOptions dataStoreCli = DataStoreCommandLineOptions.parseOptions(commandLine);
-			final AdapterStoreCommandLineOptions adapterStoreCli = AdapterStoreCommandLineOptions.parseOptions(commandLine);
-			final IndexStoreCommandLineOptions indexStoreCli = IndexStoreCommandLineOptions.parseOptions(commandLine);
-			final DataStatisticsStoreCommandLineOptions statsStoreCli = DataStatisticsStoreCommandLineOptions.parseOptions(commandLine);
-			final StatsCommandLineOptions statsOperations = StatsCommandLineOptions.parseOptions(commandLine);
-			System.exit(calculateStastics(
-					dataStoreCli.createStore(),
-					indexStoreCli.createStore(),
-					adapterStoreCli.createStore(),
-					statsStoreCli.createStore(),
-					new ByteArrayId(
-							statsOperations.getTypeName()),
-					getAuthorizations(statsOperations.getAuthorizations())) ? 0 : -1);
-		}
-		catch (final ParseException e) {
-			LOGGER.error(
-					"Unable to parse stats tool arguments",
-					e);
-		}
-		catch (final IOException e) {
-			LOGGER.error(
-					"Unable to parse stats tool arguments",
-					e);
-		}
-
-	}
-
-	private static String[] getAuthorizations(
-			final String auths ) {
-		if ((auths == null) || (auths.length() == 0)) {
-			return new String[0];
-		}
-		final String[] authsArray = auths.split(",");
-		for (int i = 0; i < authsArray.length; i++) {
-			authsArray[i] = authsArray[i].trim();
-		}
-		return authsArray;
-	}
-
-	@Override
-	public void runOperation(
-			final String[] args )
-			throws ParseException {
-		main(args);
-	}
-
 }

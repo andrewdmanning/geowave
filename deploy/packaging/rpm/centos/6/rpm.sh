@@ -3,8 +3,10 @@
 # RPM build script
 #
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Source all our reusable functionality, argument is the location of this script.
-. ../../admin-scripts/rpm-functions.sh "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. "$SCRIPT_DIR/../../admin-scripts/rpm-functions.sh" "$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 declare -A ARGS
 while [ $# -gt 0 ]; do
@@ -25,7 +27,8 @@ ARTIFACT_07_URL=$LOCAL_JENKINS/job/${ARGS[job]}/lastSuccessfulBuild/artifact/dep
 ARTIFACT_08_URL=$LOCAL_JENKINS/job/${ARGS[job]}/lastSuccessfulBuild/artifact/target/site.tar.gz
 ARTIFACT_09_URL=$LOCAL_JENKINS/job/${ARGS[job]}/lastSuccessfulBuild/artifact/deploy/target/puppet-scripts.tar.gz
 ARTIFACT_10_URL=$LOCAL_JENKINS/job/${ARGS[job]}/lastSuccessfulBuild/artifact/docs/target/manpages.tar.gz
-ARTIFACT_11_URL=$LOCAL_JENKINS/userContent/geoserver/${ARGS[geoserver]}
+ARTIFACT_11_URL=$LOCAL_JENKINS/job/${ARGS[job]}/lastSuccessfulBuild/artifact/deploy/target/geowave-analytic-mapreduce.jar
+ARTIFACT_12_URL=$LOCAL_JENKINS/userContent/geoserver/${ARGS[geoserver]}
 RPM_ARCH=noarch
 
 GEOWAVE_VERSION=$(parseVersion)
@@ -49,6 +52,7 @@ case ${ARGS[command]} in
         update_artifact $ARTIFACT_08_URL;
         update_artifact $ARTIFACT_09_URL;
         update_artifact $ARTIFACT_10_URL;
-        update_artifact $ARTIFACT_11_URL geoserver.zip; ;;
+        update_artifact $ARTIFACT_11_URL;
+        update_artifact $ARTIFACT_12_URL geoserver.zip; ;;
         *) about ;;
 esac
