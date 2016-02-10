@@ -14,16 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ServiceLoader;
 
-import mil.nga.giat.geowave.core.store.DataStore;
-import mil.nga.giat.geowave.core.store.GeoWaveStoreFinder;
-import mil.nga.giat.geowave.core.store.StoreFactoryFamilySpi;
-import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
-import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
-import mil.nga.giat.geowave.core.store.config.AbstractConfigOption;
-import mil.nga.giat.geowave.core.store.config.ConfigUtils;
-import mil.nga.giat.geowave.core.store.config.PasswordConfigOption;
-import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
-import mil.nga.giat.geowave.core.store.index.IndexStore;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.log4j.Logger;
@@ -35,7 +25,6 @@ import com.google.common.collect.Lists;
 
 import mil.nga.giat.geowave.adapter.vector.auth.AuthorizationFactorySPI;
 import mil.nga.giat.geowave.adapter.vector.auth.EmptyAuthorizationFactory;
-import mil.nga.giat.geowave.adapter.vector.index.ChooseBestMatchIndexQueryStrategy;
 import mil.nga.giat.geowave.adapter.vector.index.ChooseHeuristicMatchIndexQueryStrategy;
 import mil.nga.giat.geowave.adapter.vector.index.IndexQueryStrategySPI;
 import mil.nga.giat.geowave.adapter.vector.plugin.lock.LockingManagementFactory;
@@ -247,10 +236,6 @@ public class GeoWavePluginConfig
 		authorizationFactory = getAuthorizationFactory(params);
 		authorizationURL = getAuthorizationURL(params);
 		indexQueryStrategy = getIndexQueryStrategy(params);
-	}
-
-	public String getName() {
-		return name;
 	}
 
 	public String getName() {

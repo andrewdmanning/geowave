@@ -128,20 +128,6 @@ abstract public class AbstractIngestCommandLineDriver implements
 					pw.println();
 				}
 				pw.println("Available datastores currently registered:\n");
-				Map<String, DataStoreFactorySpi> dataStoreFactories = GeoWaveStoreFinder.getRegisteredDataStoreFactories();
-				for (final Entry<String, DataStoreFactorySpi> dataStoreFactoryEntry : dataStoreFactories.entrySet()) {
-					final DataStoreFactorySpi dataStoreFactory = dataStoreFactoryEntry.getValue();
-					final String desc = dataStoreFactory.getDescription() == null ? "no description" : dataStoreFactory.getDescription();
-					final String text = dataStoreFactory.getName() + ":\n" + desc;
-
-					formatter.printWrapped(
-							pw,
-							formatter.getWidth(),
-							5,
-							text);
-					pw.println();
-				}
-				pw.println("Available datastores currently registered:\n");
 				final Map<String, DataStoreFactorySpi> dataStoreFactories = GeoWaveStoreFinder.getRegisteredDataStoreFactories();
 				for (final Entry<String, DataStoreFactorySpi> dataStoreFactoryEntry : dataStoreFactories.entrySet()) {
 					final DataStoreFactorySpi dataStoreFactory = dataStoreFactoryEntry.getValue();

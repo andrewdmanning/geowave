@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import org.opengis.feature.simple.SimpleFeature;
+
 import mil.nga.giat.geowave.adapter.vector.GeotoolsFeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.GeoWaveTransaction;
 import mil.nga.giat.geowave.adapter.vector.plugin.transaction.TransactionsAllocator;
@@ -22,12 +23,9 @@ import mil.nga.giat.geowave.core.store.data.visibility.UniformVisibilityWriter;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-import mil.nga.giat.geowave.core.store.query.BasicQuery.Constraints;
 import mil.nga.giat.geowave.core.store.query.BasicQuery;
 import mil.nga.giat.geowave.core.store.query.DataIdQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-
-import org.opengis.feature.simple.SimpleFeature;
 
 public class GeoWaveDataStoreComponents
 {
@@ -54,10 +52,6 @@ public class GeoWaveDataStoreComponents
 		this.gtStore = gtStore;
 		writeIndices = gtStore.getWriteIndices(adapter);
 		this.transactionAllocator = transactionAllocator;
-	}
-
-	public IndexStore getIndexStore() {
-		return indexStore;
 	}
 
 	public IndexStore getIndexStore() {

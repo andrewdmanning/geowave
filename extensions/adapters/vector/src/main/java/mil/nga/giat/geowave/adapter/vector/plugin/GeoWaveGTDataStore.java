@@ -115,14 +115,6 @@ public class GeoWaveGTDataStore extends
 		adapterStore = config.getAdapterStore();
 	}
 
-	public void init(
-			final GeoWavePluginConfig config ) {
-		dataStore = config.getDataStore();
-		dataStatisticsStore = config.getDataStatisticsStore();
-		indexStore = config.getIndexStore();
-		adapterStore = config.getAdapterStore();
-	}
-
 	public AuthorizationSPI getAuthorizationSPI() {
 		return authorizationSPI;
 	}

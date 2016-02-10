@@ -115,8 +115,6 @@ public class DBScanMapReduce
 			final Cluster cluster = ((ClusterNeighborList) neighbors).getCluster();
 			if (cluster == null) {
 				return;
-				}
-				first.merge(cluster);
 			}
 			if (cluster.size() < minOwners) {
 				LOGGER.trace(

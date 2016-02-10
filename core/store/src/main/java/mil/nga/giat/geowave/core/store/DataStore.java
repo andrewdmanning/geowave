@@ -37,20 +37,13 @@ public interface DataStore
 	 *            additional options for the processing the query
 	 * @param the
 	 *            data constraints for the query
-	 * @param additionalAuthorizations
-	 *            The authorizations used to override the default authorization
-	 *            for cell visibility.
 	 * @return An iterator on all results that match the query. The iterator
 	 *         implements Closeable and it is best practice to close the
 	 *         iterator after it is no longer needed.
 	 */
 	public <T> CloseableIterator<T> query(
 			final QueryOptions queryOptions,
-			final Query query,
-			String... additionalAuthorizations );
-
-
-
+			final Query query );
 
 /**
 	 * Delete all data in this data store that matches the query parameter
@@ -68,13 +61,10 @@ public interface DataStore
 	 *            additional options for the processing the query
 	 * @param the
 	 *            data constraints for the query
-	 * @param additionalAuthorizations
-	 *            The authorizations used to override the default authorization
 	 * @return true on success
 	 */
 	public boolean delete(
 			final QueryOptions queryOptions,
-			final Query query,
-			final String... additionalAuthorizations );
+			final Query query );
 
 }

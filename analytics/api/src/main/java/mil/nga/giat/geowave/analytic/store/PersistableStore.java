@@ -7,19 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.GenericStoreFactory;
-import mil.nga.giat.geowave.core.store.config.AbstractConfigOption;
 import mil.nga.giat.geowave.core.store.config.ConfigUtils;
-import mil.nga.giat.geowave.core.store.filter.GenericTypeResolver;
-
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 abstract public class PersistableStore<T> implements
 		Persistable
@@ -109,37 +104,4 @@ abstract public class PersistableStore<T> implements
 			Map<String, String> configOptions,
 			String namespace,
 			String factoryName );
-}
-
-	protected static CommandLine getCommandLineFromConfigOptions(
-			final Map<String, String> configOptions,
-			final GenericStoreFactory<?> genericStoreFactory )
-			throws Exception {
-		final AbstractConfigOption<?>[] storeOptions = genericStoreFactory.getOptions();
-
-		final List<String> args = new ArrayList<String>();
-		for (final AbstractConfigOption<?> option : storeOptions) {
-			final String cliOptionName = ConfigUtils.cleanOptionName(option.getName());
-			final Class<?> cls = GenericTypeResolver.resolveTypeArgument(
-					option.getClass(),
-					AbstractConfigOption.class);
-			final boolean isBoolean = Boolean.class.isAssignableFrom(cls);
-			final String value = configOptions.get(option.getName());
-			if (value != null) {
-				if (isBoolean) {
-					if (value.equalsIgnoreCase("true")) {
-						args.add("-" + cliOptionName);
-					}
-				}
-				else {
-					args.add("-" + cliOptionName);
-					args.add(value);
-				}
-			}
-		}
-		final BasicParser parser = new BasicParser();
-		return parser.parse(
-				new Options(),
-				args.toArray(new String[] {}));
-	}
 }

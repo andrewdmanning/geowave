@@ -92,11 +92,14 @@ public class ClusteringUtils
 		}
 		try {
 			it.close();
+		}
 		catch (final IOException e) {
 			LOGGER.warn("Unable to close iterator" + e);
+		}
 		final PrimaryIndex[] result = new PrimaryIndex[indices.size()];
 		indices.toArray(result);
 		return result;
+	}
 
 	/*
 	 * Method takes in a polygon and generates the corresponding ranges in a

@@ -42,6 +42,43 @@ import javax.media.jai.PlanarImage;
 import javax.media.jai.remote.SerializableState;
 import javax.media.jai.remote.SerializerFactory;
 
+import org.apache.commons.math.util.MathUtils;
+import org.apache.log4j.Logger;
+import org.geotools.coverage.Category;
+import org.geotools.coverage.CoverageFactoryFinder;
+import org.geotools.coverage.GridSampleDimension;
+import org.geotools.coverage.TypeMap;
+import org.geotools.coverage.grid.GridCoverage2D;
+import org.geotools.coverage.grid.GridCoverageFactory;
+import org.geotools.coverage.grid.GridEnvelope2D;
+import org.geotools.coverage.grid.GridGeometry2D;
+import org.geotools.coverage.processing.Operations;
+import org.geotools.geometry.GeneralEnvelope;
+import org.geotools.geometry.jts.GeometryClipper;
+import org.geotools.geometry.jts.JTS;
+import org.geotools.geometry.jts.ReferencedEnvelope;
+import org.geotools.referencing.operation.transform.AffineTransform2D;
+import org.geotools.renderer.lite.RendererUtilities;
+import org.geotools.resources.coverage.CoverageUtilities;
+import org.geotools.resources.i18n.Vocabulary;
+import org.geotools.resources.i18n.VocabularyKeys;
+import org.geotools.util.NumberRange;
+import org.geotools.util.SimpleInternationalString;
+import org.opengis.coverage.ColorInterpretation;
+import org.opengis.coverage.SampleDimension;
+import org.opengis.coverage.SampleDimensionType;
+import org.opengis.coverage.grid.GridCoverage;
+import org.opengis.coverage.grid.GridEnvelope;
+import org.opengis.geometry.Envelope;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.datum.PixelInCell;
+import org.opengis.referencing.operation.TransformException;
+import org.opengis.util.InternationalString;
+
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+
 import mil.nga.giat.geowave.adapter.raster.FitToIndexGridCoverage;
 import mil.nga.giat.geowave.adapter.raster.RasterUtils;
 import mil.nga.giat.geowave.adapter.raster.Resolution;
@@ -88,44 +125,6 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.mapreduce.HadoopDataAdapter;
 import mil.nga.giat.geowave.mapreduce.HadoopWritableSerializer;
-
-import org.apache.commons.math.util.MathUtils;
-import org.apache.log4j.Logger;
-import org.geotools.coverage.Category;
-import org.geotools.coverage.CoverageFactoryFinder;
-import org.geotools.coverage.GridSampleDimension;
-import org.geotools.coverage.TypeMap;
-import org.geotools.coverage.grid.GridCoverage2D;
-import org.geotools.coverage.grid.GridCoverageFactory;
-import org.geotools.coverage.grid.GridEnvelope2D;
-import org.geotools.coverage.grid.GridGeometry2D;
-import org.geotools.coverage.processing.Operations;
-import org.geotools.geometry.GeneralEnvelope;
-import org.geotools.geometry.jts.GeometryClipper;
-import org.geotools.geometry.jts.JTS;
-import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.referencing.operation.transform.AffineTransform2D;
-import org.geotools.renderer.lite.RendererUtilities;
-import org.geotools.resources.coverage.CoverageUtilities;
-import org.geotools.resources.i18n.Vocabulary;
-import org.geotools.resources.i18n.VocabularyKeys;
-import org.geotools.util.NumberRange;
-import org.geotools.util.SimpleInternationalString;
-import org.opengis.coverage.ColorInterpretation;
-import org.opengis.coverage.SampleDimension;
-import org.opengis.coverage.SampleDimensionType;
-import org.opengis.coverage.grid.GridCoverage;
-import org.opengis.coverage.grid.GridEnvelope;
-import org.opengis.geometry.Envelope;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.datum.PixelInCell;
-import org.opengis.referencing.operation.MathTransform1D;
-import org.opengis.referencing.operation.TransformException;
-import org.opengis.util.InternationalString;
-
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
 
 public class RasterDataAdapter implements
 		StatisticalDataAdapter<GridCoverage>,
@@ -1772,95 +1771,6 @@ public class RasterDataAdapter implements
 
 	public Interpolation getInterpolation() {
 		return interpolation;
-	}
-
-	@Override
-	public Map<String, String> getOptions(
-			final Map<String, String> existingOptions ) {
-		final Map<String, String> configuredOptions = getConfiguredOptions();
-		final Map<String, String> mergedOptions = new HashMap<String, String>(
-				configuredOptions);
-		for (final Entry<String, String> e : existingOptions.entrySet()) {
-			final String configuredValue = configuredOptions.get(e.getKey());
-			if ((e.getValue() == null) && (configuredValue == null)) {
-				continue;
-			}
-			else if ((e.getValue() == null) || ((e.getValue() != null) && !e.getValue().equals(
-					configuredValue))) {
-				final String newValue = mergeOption(
-						e.getKey(),
-						e.getValue(),
-						configuredValue);
-				if ((newValue != null) && newValue.equals(e.getValue())) {
-					// once merged the value didn't
-					// change, so just continue
-					continue;
-				}
-				if (newValue == null) {
-					mergedOptions.remove(e.getKey());
-				}
-				else {
-					mergedOptions.put(
-							e.getKey(),
-							newValue);
-				}
-			}
-		}
-		for (final Entry<String, String> e : configuredOptions.entrySet()) {
-			if (!existingOptions.containsKey(e.getKey())) {
-				// existing value should be null
-				// because this key is contained in
-				// the merged set
-				if (e.getValue() == null) {
-					continue;
-				}
-				else {
-					final String newValue = mergeOption(
-							e.getKey(),
-							null,
-							e.getValue());
-					if (newValue == null) {
-						mergedOptions.remove(e.getKey());
-					}
-					else {
-						mergedOptions.put(
-								e.getKey(),
-								newValue);
-					}
-				}
-			}
-		}
-		return mergedOptions;
-	}
-
-	private String mergeOption(
-			final String optionKey,
-			final String currentValue,
-			final String nextValue ) {
-		if ((currentValue == null) || currentValue.trim().isEmpty()) {
-			return nextValue;
-		}
-		else if ((nextValue == null) || nextValue.trim().isEmpty()) {
-			return currentValue;
-		}
-		if (RasterTileRowTransform.MERGE_STRATEGY_KEY.equals(optionKey)) {
-			final byte[] currentStrategyBytes = ByteArrayUtils.byteArrayFromString(currentValue);
-			final byte[] nextStrategyBytes = ByteArrayUtils.byteArrayFromString(nextValue);
-			final RootMergeStrategy currentStrategy = PersistenceUtils.fromBinary(
-					currentStrategyBytes,
-					RootMergeStrategy.class);
-			final RootMergeStrategy nextStrategy = PersistenceUtils.fromBinary(
-					nextStrategyBytes,
-					RootMergeStrategy.class);
-			currentStrategy.merge(nextStrategy);
-			return ByteArrayUtils.byteArrayToString(PersistenceUtils.toBinary(currentStrategy));
-		}
-		return nextValue;
-	}
-
-	@Override
-	public RowTransform<RasterTile<?>> getTransform() {
-		return new RasterTileRowTransform();
 	}
 
 	@Override

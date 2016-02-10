@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import mil.nga.giat.geowave.analytic.param.StoreParameters;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.ParseException;
@@ -76,7 +75,13 @@ public class PropertyManagement implements
 	private final List<PropertyConverter<?>> converters = new ArrayList<PropertyConverter<?>>();
 	private PropertyManagement nestProperties = null;
 
+	public PropertyManagement() {
+		converters.add(new QueryConverter());
+		converters.add(new QueryOptionsConverter());
+		converters.add(new PathConverter());
+		converters.add(new PersistableConverter());
 		converters.add(new DoubleConverter());
+	}
 
 	public PropertyManagement(
 			final PropertyConverter<?>[] converters,
@@ -596,11 +601,8 @@ public class PropertyManagement implements
 			nestProperties.setJobConfiguration(
 					configuration,
 					scope);
+		}
 	}
-
-
-
-
 
 	public void toOutput(
 			final OutputStream os )
