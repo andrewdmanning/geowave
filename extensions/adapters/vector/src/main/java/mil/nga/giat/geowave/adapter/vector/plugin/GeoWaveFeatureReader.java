@@ -262,7 +262,7 @@ public class GeoWaveFeatureReader implements
 				final mil.nga.giat.geowave.core.store.query.Query query ) {
 
 			return components.getDataStore().query(
-						new QueryOptions(
+					new QueryOptions(
 							components.getAdapter(),
 							index,
 							limit,
@@ -272,7 +272,7 @@ public class GeoWaveFeatureReader implements
 							query,
 							filter,
 							components.getAdapter()));
-			}
+		}
 
 		@Override
 		public Filter getFilter() {
@@ -317,8 +317,8 @@ public class GeoWaveFeatureReader implements
 				final mil.nga.giat.geowave.core.store.query.Query query ) {
 
 			final QueryOptions options = new QueryOptions(
-						components.getAdapter(),
-						index,
+					components.getAdapter(),
+					index,
 					transaction.composeAuthorizations());
 			options.setLimit(limit);
 			final double east = envelope.getMaxX();

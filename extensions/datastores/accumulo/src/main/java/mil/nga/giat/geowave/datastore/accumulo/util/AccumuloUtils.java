@@ -77,7 +77,6 @@ import mil.nga.giat.geowave.datastore.accumulo.metadata.AbstractAccumuloPersiste
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloAdapterStore;
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloIndexStore;
 import mil.nga.giat.geowave.datastore.accumulo.query.AccumuloConstraintsQuery;
-import org.apache.accumulo.core.iterators.IteratorUtil.IteratorScope;
 
 /**
  * A set of convenience methods for common operations on Accumulo within
@@ -1216,35 +1215,6 @@ public class AccumuloUtils
 				rowTransform.getBaseTransformPriority() + 1,
 				rowTransform.getTransformName() + ROW_MERGING_VISIBILITY_SUFFIX,
 				RowMergingVisibilityCombiner.class.getName(),
-				optionProvider);
-
-		operations.attachIterators(
-				tableName,
-				createTable,
-				rowMergingCombinerConfig,
-				rowMergingVisibilityCombinerConfig);
-	}
-
-	public static void attachRowMergingIterators(
-			final RowMergingDataAdapter<?, ?> adapter,
-			final AccumuloOperations operations,
-			final String tableName,
-			final boolean createTable )
-			throws TableNotFoundException {
-		final EnumSet<IteratorScope> visibilityCombinerScope = EnumSet.of(IteratorScope.scan);
-		final OptionProvider optionProvider = new RowMergingAdapterOptionProvider(
-				adapter);
-		final IteratorConfig rowMergingCombinerConfig = new IteratorConfig(
-				EnumSet.complementOf(visibilityCombinerScope),
-				ROW_MERGING_COMBINER_PRIORITY,
-				RowMergingCombiner.class.getName(),
-				adapter.getAdapterId().getString() + ROW_MERGING_SUFFIX,
-				optionProvider);
-		final IteratorConfig rowMergingVisibilityCombinerConfig = new IteratorConfig(
-				visibilityCombinerScope,
-				ROW_MERGING_VISIBILITY_COMBINER_PRIORITY,
-				RowMergingVisibilityCombiner.class.getName(),
-				adapter.getAdapterId().getString() + ROW_MERGING_VISIBILITY_SUFFIX,
 				optionProvider);
 
 		operations.attachIterators(

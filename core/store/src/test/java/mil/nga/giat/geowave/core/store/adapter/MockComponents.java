@@ -533,12 +533,6 @@ public class MockComponents
 			// TODO Auto-generated method stub
 			return null;
 		}
-
-		@Override
-		public boolean isCompatibleDefinition(
-				NumericDimensionDefinition otherDimensionDefinition ) {
-			return false;
-		}
 	}
 
 	public static class MockIndexStrategy implements

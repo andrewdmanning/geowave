@@ -106,7 +106,7 @@ public class DBScanIterationsJobRunner implements
 					startPath,
 					true);
 		}
-		
+
 		runTimeProperties.storeIfEmpty(
 				Partition.PARTITIONER_CLASS,
 				OrthodromicDistancePartitioner.class);

@@ -6,6 +6,11 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.hadoop.conf.Configuration;
+import org.opengis.feature.simple.SimpleFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import mil.nga.giat.geowave.analytic.AnalyticItemWrapperFactory;
 import mil.nga.giat.geowave.analytic.PropertyManagement;
 import mil.nga.giat.geowave.analytic.SimpleFeatureItemWrapperFactory;
@@ -36,11 +41,6 @@ import mil.nga.giat.geowave.core.index.sfc.data.NumericRange;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
-
-import org.apache.hadoop.conf.Configuration;
-import org.opengis.feature.simple.SimpleFeature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The KMeans Jump algorithm
@@ -202,9 +202,6 @@ public class KMeansJumpJobRunner extends
 			 * can find the clusters for the given batch
 			 */
 			final int result = distortionGroupManagement.retainBestGroups(
-					dataStoreOptions.createStore(),
-					indexStoreOptions.createStore(),
-					adapterStoreOptions.createStore(),
 					(AnalyticItemWrapperFactory<SimpleFeature>) analyticItemWrapperFC.newInstance(),
 					propertyManagement.getPropertyAsString(CentroidParameters.Centroid.DATA_TYPE_ID),
 					propertyManagement.getPropertyAsString(CentroidParameters.Centroid.INDEX_ID),

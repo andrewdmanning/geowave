@@ -219,15 +219,12 @@ public class ComparisonStatsJobRunner extends
 						"/tmp/" + inputDataStoreOptions.getNamespace() + "_stats_" + kdeCommandLineOptions.getMinLevel() + "_" + kdeCommandLineOptions.getMaxLevel() + "_" + kdeCommandLineOptions.getCoverageName() + "/percentiles"));
 	}
 
-	
-
 	@Override
 	protected void applyOptions(
 			final Options allOptions ) {
 		super.applyOptions(allOptions);
 		ComparisonCommandLineOptions.applyOptions(allOptions);
 	}
-	
 
 	@Override
 	protected CommandLine parseOptions(

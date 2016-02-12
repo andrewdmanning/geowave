@@ -6,6 +6,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.collections.Transformer;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.InputFormat;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.log4j.Logger;
+
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
@@ -24,16 +34,6 @@ import mil.nga.giat.geowave.mapreduce.JobContextAdapterStore;
 import mil.nga.giat.geowave.mapreduce.JobContextIndexStore;
 import mil.nga.giat.geowave.mapreduce.MapReduceDataStore;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputConfigurator.InputConfig;
-
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.commons.collections.Transformer;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.InputFormat;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.log4j.Logger;
 
 public class GeoWaveInputFormat<T> extends
 		InputFormat<GeoWaveInputKey, T>
@@ -281,7 +281,6 @@ public class GeoWaveInputFormat<T> extends
 					getJobContextIndexStore(context),
 					isOutputWritable(
 							context).booleanValue(),
-					getAuthorizations(context),
 					split);
 		}
 		LOGGER.error("Data Store does not support map reduce");
@@ -385,13 +384,6 @@ public class GeoWaveInputFormat<T> extends
 				context);
 	}
 
-	protected static String[] getAuthorizations(
-			final JobContext context ) {
-		return GeoWaveInputConfigurator.getAuthorizations(
-				CLASS,
-				context);
-	}
-
 	/**
 	 * First look for input-specific adapters
 	 * 
@@ -463,7 +455,6 @@ public class GeoWaveInputFormat<T> extends
 					adapterStore,
 					getJobContextDataStatisticsStore(context),
 					getJobContextIndexStore(context),
-					getAuthorizations(context),
 					getMinimumSplitCount(context),
 					getMaximumSplitCount(context));
 		}

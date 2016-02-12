@@ -13,7 +13,9 @@ import mil.nga.giat.geowave.core.geotime.IndexType;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
+import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
 import mil.nga.giat.geowave.test.GeoWaveHBaseTestEnvironment;
@@ -39,8 +41,6 @@ public class AttributesSubsetQueryHBaseIT extends
 	private static SimpleFeatureType simpleFeatureType;
 	private static FeatureDataAdapter dataAdapter;
 	private static DataStore dataStore;
-
-	private static final Index INDEX = IndexType.SPATIAL_VECTOR.createDefaultIndex();
 
 	// constants for attributes of SimpleFeatureType
 	private static final String CITY_ATTRIBUTE = "city";
@@ -86,7 +86,9 @@ public class AttributesSubsetQueryHBaseIT extends
 			throws IOException {
 
 		final CloseableIterator<SimpleFeature> matches = dataStore.query(
-				INDEX,
+				new QueryOptions(
+						dataAdapter,
+						DEFAULT_SPATIAL_INDEX),
 				new SpatialQuery(
 						GeometryUtils.GEOMETRY_FACTORY.toGeometry(new Envelope(
 								GUADALAJARA,
@@ -107,13 +109,16 @@ public class AttributesSubsetQueryHBaseIT extends
 		final List<String> attributesSubset = Arrays.asList(CITY_ATTRIBUTE);
 
 		final CloseableIterator<SimpleFeature> results = dataStore.query(
-				INDEX,
+				new QueryOptions(
+						dataAdapter,
+						DEFAULT_SPATIAL_INDEX,
+						-1,
+						null,
+						new String[0]),
 				new SpatialQuery(
 						GeometryUtils.GEOMETRY_FACTORY.toGeometry(new Envelope(
 								GUADALAJARA,
-								ATLANTA))),
-				new QueryOptions(
-						attributesSubset));
+								ATLANTA))));
 
 		// query expects to match 3 cities from Texas, which should each contain
 		// non-null values for a subset of attributes (city) and nulls for the
@@ -214,10 +219,16 @@ public class AttributesSubsetQueryHBaseIT extends
 
 		LOGGER.info("Ingesting canned data...");
 
-		dataStore.ingest(
-				dataAdapter,
-				INDEX,
-				buildCityDataSet().iterator());
+		try (IndexWriter writer = dataStore.createIndexWriter(
+				DEFAULT_SPATIAL_INDEX,
+				DataStoreUtils.DEFAULT_VISIBILITY)) {
+			for (final SimpleFeature sf : buildCityDataSet()) {
+				writer.write(
+						dataAdapter,
+						sf);
+			}
+
+		}
 
 		LOGGER.info("Ingest complete.");
 	}

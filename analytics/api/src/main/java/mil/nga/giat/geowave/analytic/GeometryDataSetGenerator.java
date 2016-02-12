@@ -7,25 +7,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
-import mil.nga.giat.geowave.analytic.distance.CoordinateCircleDistanceFn;
-import mil.nga.giat.geowave.analytic.distance.DistanceFn;
-import mil.nga.giat.geowave.analytic.distance.FeatureCentroidDistanceFn;
-import mil.nga.giat.geowave.core.cli.CommandLineResult;
-import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
-import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
-import mil.nga.giat.geowave.core.store.DataStore;
-import mil.nga.giat.geowave.core.store.IndexWriter;
-import mil.nga.giat.geowave.core.store.index.Index;
-import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
-import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
-
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.Parser;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.geometry.euclidean.twod.Vector2D;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
@@ -49,6 +35,18 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.Point;
+
+import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
+import mil.nga.giat.geowave.analytic.distance.CoordinateCircleDistanceFn;
+import mil.nga.giat.geowave.analytic.distance.DistanceFn;
+import mil.nga.giat.geowave.analytic.distance.FeatureCentroidDistanceFn;
+import mil.nga.giat.geowave.core.cli.CommandLineResult;
+import mil.nga.giat.geowave.core.cli.DataStoreCommandLineOptions;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
+import mil.nga.giat.geowave.core.store.DataStore;
+import mil.nga.giat.geowave.core.store.IndexWriter;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 
 /**
  * Generate clusters of geometries.
@@ -188,13 +186,14 @@ public class GeometryDataSetGenerator
 				index,
 				DataStoreUtils.DEFAULT_VISIBILITY)) {
 			writer.setupAdapter(adapter);
-		for (final SimpleFeature feature : featureData) {
+			for (final SimpleFeature feature : featureData) {
 				writer.write(
-					adapter,
-					feature);
-			featureBuilder.reset();
+						adapter,
+						feature);
+				featureBuilder.reset();
 
-			idCounter++;
+				idCounter++;
+			}
 		}
 	}
 

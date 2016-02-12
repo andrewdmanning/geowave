@@ -126,6 +126,7 @@ public class GroupAssigmentJobRunner extends
 		params.addAll(NestedGroupCentroidAssignment.getParameters());
 		return params;
 	}
+
 	@Override
 	protected String getJobName() {
 		return "Group Assignment";

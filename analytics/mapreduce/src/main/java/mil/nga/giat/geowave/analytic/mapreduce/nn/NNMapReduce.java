@@ -54,7 +54,7 @@ import com.google.common.primitives.SignedBytes;
 
 /**
  * Find the nearest neighbors to a each item.
- *
+ * 
  * The solution represented here partitions the data using a partitioner. The
  * nearest neighbors are inspected within those partitions. Each partition is
  * processed in memory. If the partitioner is agnostic to density, then the
@@ -62,32 +62,32 @@ import com.google.common.primitives.SignedBytes;
  * Selecting the appropriate partitioning is critical. It may be best to work
  * bottom up, partitioning at a finer grain and iterating through larger
  * partitions.
- *
+ * 
  * The reducer has four extension points:
- *
+ * 
  * @formatter:off
- *
+ * 
  *                (1) createSetForNeighbors() create a set for primary and
  *                secondary neighbor lists. The set implementation can control
  *                the amount of memory used. The algorithm loads the primary and
  *                secondary sets before performing the neighbor analysis. An
  *                implementer can constrain the set size, removing items not
  *                considered relevant.
- *
+ * 
  *                (2) createSummary() permits extensions to create an summary
  *                object for the entire partition
- *
+ * 
  *                (3) processNeighbors() permits extensions to process the
  *                neighbor list for each primary item and update the summary
  *                object
- *
+ * 
  *                (4) processSummary() permits the reducer to produce an output
  *                from the summary object
- *
+ * 
  * @formatter:on
- *
+ * 
  *               * Properties:
- *
+ * 
  * @formatter:off "NNMapReduce.Partition.PartitionerClass" ->
  *                {@link mil.nga.giat.geowave.analytic.partitioner.Partitioner}
  *                <p/>
@@ -104,8 +104,8 @@ import com.google.common.primitives.SignedBytes;
  *                <p/>
  *                "NNMapReduce.Partition.PartitionDistance" -> Maximum distance
  *                between item and its neighbors. (double)
- *
- *
+ * 
+ * 
  * @formatter:on
  */
 public class NNMapReduce
@@ -114,7 +114,7 @@ public class NNMapReduce
 
 	/**
 	 * Nearest neighbors...take one
-	 *
+	 * 
 	 */
 	public static class NNMapper<T> extends
 			Mapper<GeoWaveInputKey, Object, PartitionDataWritable, AdapterWithObjectWritable>
@@ -296,7 +296,7 @@ public class NNMapReduce
 		}
 
 		/**
-		 *
+		 * 
 		 * @param primaries
 		 * @param others
 		 * @param summary
@@ -319,7 +319,7 @@ public class NNMapReduce
 
 		/**
 		 * Allow extended classes to do some final processing for the partition.
-		 *
+		 * 
 		 * @param summary
 		 * @param context
 		 */
