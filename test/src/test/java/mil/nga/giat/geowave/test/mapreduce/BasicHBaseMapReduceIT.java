@@ -13,25 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import mil.nga.giat.geowave.core.geotime.IndexType;
-import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.ByteArrayUtils;
-import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
-import mil.nga.giat.geowave.core.store.index.Index;
-import mil.nga.giat.geowave.core.store.query.DistributableQuery;
-import mil.nga.giat.geowave.datastore.hbase.HBaseAdapterStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseDataStatisticsStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseIndexStore;
-import mil.nga.giat.geowave.datastore.hbase.mapreduce.GeoWaveHBaseConfiguratorBase;
-import mil.nga.giat.geowave.datastore.hbase.mapreduce.dedupe.GeoWaveHBaseDedupeJobRunner;
-import mil.nga.giat.geowave.datastore.hbase.mapreduce.input.GeoWaveHBaseInputFormat;
-import mil.nga.giat.geowave.format.gpx.GpxIngestPlugin;
-import mil.nga.giat.geowave.mapreduce.GeoWaveWritableInputMapper;
-import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
-import mil.nga.giat.geowave.test.GeoWaveTestEnvironment;
-
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
@@ -53,6 +34,24 @@ import org.opengis.feature.simple.SimpleFeature;
 import com.vividsolutions.jts.geom.Geometry;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.ByteArrayUtils;
+import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
+import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.query.DistributableQuery;
+import mil.nga.giat.geowave.datastore.hbase.HBaseAdapterStore;
+import mil.nga.giat.geowave.datastore.hbase.HBaseDataStatisticsStore;
+import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
+import mil.nga.giat.geowave.datastore.hbase.HBaseIndexStore;
+import mil.nga.giat.geowave.datastore.hbase.mapreduce.GeoWaveHBaseConfiguratorBase;
+import mil.nga.giat.geowave.datastore.hbase.mapreduce.dedupe.GeoWaveHBaseDedupeJobRunner;
+import mil.nga.giat.geowave.datastore.hbase.mapreduce.input.GeoWaveHBaseInputFormat;
+import mil.nga.giat.geowave.format.gpx.GpxIngestPlugin;
+import mil.nga.giat.geowave.mapreduce.GeoWaveWritableInputMapper;
+import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
+import mil.nga.giat.geowave.test.GeoWaveTestEnvironment;
 
 public class BasicHBaseMapReduceIT extends
 		MapReduceHBaseTestBase
@@ -78,7 +77,7 @@ public class BasicHBaseMapReduceIT extends
 			Assert.fail("Index not deleted successfully");
 		}
 		testMapReduceIngest(
-				IndexType.SPATIAL_VECTOR,
+				DimensionalityType.SPATIAL,
 				GENERAL_GPX_INPUT_GPX_DIR);
 		final File gpxInputDir = new File(
 				GENERAL_GPX_INPUT_GPX_DIR);
@@ -153,10 +152,7 @@ public class BasicHBaseMapReduceIT extends
 		// ingest the data set into multiple indices and then try several query
 		// methods, by adapter and by index
 		testMapReduceIngest(
-				IndexType.SPATIAL_VECTOR,
-				OSM_GPX_INPUT_DIR);
-		testMapReduceIngest(
-				IndexType.SPATIAL_TEMPORAL_VECTOR,
+				DimensionalityType.ALL,
 				OSM_GPX_INPUT_DIR);
 		final WritableDataAdapter<SimpleFeature>[] adapters = new GpxIngestPlugin().getDataAdapters(null);
 
@@ -208,9 +204,9 @@ public class BasicHBaseMapReduceIT extends
 					adapters[0],
 					adapters[1]
 				},
-				new Index[] {
-					IndexType.SPATIAL_VECTOR.createDefaultIndex(),
-					IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex()
+				new PrimaryIndex[] {
+					DEFAULT_SPATIAL_INDEX,
+					DEFAULT_SPATIAL_TEMPORAL_INDEX
 				});
 
 		// now try all adapters and the spatial temporal index, the result
@@ -219,8 +215,8 @@ public class BasicHBaseMapReduceIT extends
 				fullDataSetResults,
 				null,
 				adapters,
-				new Index[] {
-					IndexType.SPATIAL_TEMPORAL_VECTOR.createDefaultIndex()
+				new PrimaryIndex[] {
+					DEFAULT_SPATIAL_TEMPORAL_INDEX
 				});
 
 		// and finally run with nothing set, should be the full data set

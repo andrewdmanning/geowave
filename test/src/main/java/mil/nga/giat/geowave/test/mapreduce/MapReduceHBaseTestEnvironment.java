@@ -31,7 +31,7 @@ abstract public class MapReduceHBaseTestEnvironment extends
 	protected static String hdfsBaseDirectory;
 
 	protected void testMapReduceIngest(
-			final IndexType indexType,
+			final DimensionalityType indexType,
 			final String ingestFilePath ) {
 		// ingest gpx data directly into GeoWave using the
 		// ingest framework's main method and pre-defined commandline arguments
@@ -39,7 +39,7 @@ abstract public class MapReduceHBaseTestEnvironment extends
 		String[] args = null;
 		synchronized (MUTEX) {
 			args = StringUtils.split(
-					"-hdfshbaseingest -f gpx -hdfs " + hdfs + " -hdfsbase " + hdfsBaseDirectory + " -jobtracker " + jobtracker + " -b " + ingestFilePath + " -z " + zookeeper + " -n " + TEST_NAMESPACE + " -dim " + (indexType.equals(IndexType.SPATIAL_VECTOR) ? "spatial" : "spatial-temporal"),
+					"-hdfshbaseingest -f gpx -hdfs " + hdfs + " -hdfsbase " + hdfsBaseDirectory + " -jobtracker " + jobtracker + " -b " + ingestFilePath + " -z " + zookeeper + " -n " + TEST_NAMESPACE + " -dim " + (indexType.equals(DimensionalityType.SPATIAL) ? "spatial" : "spatial-temporal"),
 					' ');
 		}
 		GeoWaveMain.main(args);

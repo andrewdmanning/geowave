@@ -148,6 +148,7 @@ abstract public class GeoWaveTestEnvironment
 			throws IOException {
 		synchronized (MUTEX) {
 			TimeZone.setDefault(TimeZone.getTimeZone("GMT"));
+			
 			if (accumuloOperations == null) {
 				zookeeper = System.getProperty("zookeeperUrl");
 				accumuloInstance = System.getProperty("instance");
