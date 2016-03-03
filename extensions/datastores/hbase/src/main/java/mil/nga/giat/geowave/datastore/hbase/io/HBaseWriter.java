@@ -126,5 +126,36 @@ public class HBaseWriter
 			throws IOException {
 		table.delete(delete);
 	}
+	
+	public String getLongest(String input){	
+		Character curr = null;
+		Character prev = null;
+		int streak = 0;
+		int longStreak = 0;
+		StringBuilder currentString = new StringBuilder();
+		String longString = null;
+		for(int i = 0; i < input.length(); i++){
+			curr = input.charAt(i);
+			if(curr == prev){
+				streak++;
+				currentString.append(curr);
+			} else {
+				if(streak > longStreak){
+					longStreak = streak;
+					currentString.append(curr);
+					longString = currentString.toString();
+					currentString = new StringBuilder();
+				}				
+				streak = 0;
+			}
+			prev = curr;
+		}
+		if(streak > longStreak){
+			currentString.append(curr);
+			longString = currentString.toString();
+		}
+		
+		return longString;
+	}
 
 }

@@ -10,9 +10,10 @@ import java.util.List;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
-import mil.nga.giat.geowave.core.geotime.IndexType;
+import mil.nga.giat.geowave.core.geotime.ingest.SpatialDimensionalityTypeProvider;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.index.Index;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.datastore.hbase.HBaseAdapterStore;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
@@ -66,11 +67,11 @@ public class SimpleHBaseIngest
 	}
 
 	public static List<SimpleFeature> getGriddedFeatures(
-			SimpleFeatureBuilder pointBuilder,
-			int firstFeatureId ) {
+			final SimpleFeatureBuilder pointBuilder,
+			final int firstFeatureId ) {
 
 		int featureId = firstFeatureId;
-		List<SimpleFeature> feats = new ArrayList<>();
+		final List<SimpleFeature> feats = new ArrayList<>();
 		for (int longitude = -180; longitude <= 180; longitude += 5) {
 			for (int latitude = -90; latitude <= 90; latitude += 5) {
 				pointBuilder.set(
@@ -205,7 +206,7 @@ public class SimpleHBaseIngest
 	 * 
 	 * @return GeoWave index for a default SPATIAL index
 	 */
-	public static Index createSpatialIndex() {
+	public static PrimaryIndex createSpatialIndex() {
 
 		// Reasonable values for spatial and spatio-temporal are provided
 		// through static factory methods.
@@ -213,7 +214,7 @@ public class SimpleHBaseIngest
 		// a custom index may provide better
 		// performance is the distribution/characterization of the data is well
 		// known.
-		return IndexType.SPATIAL_VECTOR.createDefaultIndex();
+		return new SpatialDimensionalityTypeProvider().createPrimaryIndex();
 	}
 
 	/***

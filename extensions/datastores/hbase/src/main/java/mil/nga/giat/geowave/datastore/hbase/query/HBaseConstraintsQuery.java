@@ -1,10 +1,13 @@
 /**
- * 
+ *
  */
 package mil.nga.giat.geowave.datastore.hbase.query;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.hadoop.hbase.filter.Filter;
+import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayRange;
@@ -13,11 +16,8 @@ import mil.nga.giat.geowave.core.store.ScanCallback;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
-import mil.nga.giat.geowave.core.store.index.Index;
-import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
-
-import org.apache.hadoop.hbase.filter.Filter;
-import org.apache.log4j.Logger;
+import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 
 /**
  * @author viggy Functionality similar to
@@ -27,16 +27,17 @@ public class HBaseConstraintsQuery extends
 		HBaseFilteredIndexQuery
 {
 
-	private final static Logger LOGGER = Logger.getLogger(HBaseConstraintsQuery.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			HBaseConstraintsQuery.class);
 	private static final int MAX_RANGE_DECOMPOSITION = 5000;
-	private MultiDimensionalNumericData constraints;
+	private final List<MultiDimensionalNumericData> constraints;
 	protected final List<DistributableQueryFilter> distributableFilters;
 	protected boolean queryFiltersEnabled;
 
 	public HBaseConstraintsQuery(
 			final List<ByteArrayId> adapterIds,
-			final Index index,
-			final MultiDimensionalNumericData constraints,
+			final PrimaryIndex index,
+			final List<MultiDimensionalNumericData> constraints,
 			final List<QueryFilter> queryFilters,
 			final String[] authorizations ) {
 		this(
@@ -52,7 +53,7 @@ public class HBaseConstraintsQuery extends
 
 	public HBaseConstraintsQuery(
 			final List<ByteArrayId> adapterIds,
-			final Index index,
+			final PrimaryIndex index,
 			final DedupeFilter clientDedupeFilter,
 			final ScanCallback<?> scanCallback,
 			final String... authorizations ) {
@@ -68,8 +69,8 @@ public class HBaseConstraintsQuery extends
 
 	public HBaseConstraintsQuery(
 			final List<ByteArrayId> adapterIds,
-			final Index index,
-			final MultiDimensionalNumericData constraints,
+			final PrimaryIndex index,
+			final List<MultiDimensionalNumericData> constraints,
 			final List<QueryFilter> queryFilters,
 			final DedupeFilter clientDedupeFilter,
 			final ScanCallback<?> scanCallback,
@@ -80,7 +81,8 @@ public class HBaseConstraintsQuery extends
 				scanCallback,
 				authorizations);
 		this.constraints = constraints;
-		final SplitFilterLists lists = splitList(queryFilters);
+		final SplitFilterLists lists = splitList(
+				queryFilters);
 		final List<QueryFilter> clientFilters = lists.clientFilters;
 		// add dedupe filters to the front of both lists so that the
 		// de-duplication is performed before any more complex filtering
@@ -88,7 +90,8 @@ public class HBaseConstraintsQuery extends
 		clientFilters.add(
 				0,
 				clientDedupeFilter != null ? clientDedupeFilter : new DedupeFilter());
-		super.setClientFilters(clientFilters);
+		super.setClientFilters(
+				clientFilters);
 		distributableFilters = lists.distributableFilters;
 		// we are assuming we always have to ensure no duplicates
 		// and that the deduplication is the least expensive filter so we add it
@@ -110,10 +113,12 @@ public class HBaseConstraintsQuery extends
 		}
 		for (final QueryFilter filter : allFilters) {
 			if (filter instanceof DistributableQueryFilter) {
-				distributableFilters.add((DistributableQueryFilter) filter);
+				distributableFilters.add(
+						(DistributableQueryFilter) filter);
 			}
 			else {
-				clientFilters.add(filter);
+				clientFilters.add(
+						filter);
 			}
 		}
 		return new SplitFilterLists(
@@ -136,7 +141,7 @@ public class HBaseConstraintsQuery extends
 
 	@Override
 	protected List<ByteArrayRange> getRanges() {
-		return HBaseUtils.constraintsToByteArrayRanges(
+		return DataStoreUtils.constraintsToByteArrayRanges(
 				constraints,
 				index.getIndexStrategy(),
 				MAX_RANGE_DECOMPOSITION);
@@ -144,8 +149,9 @@ public class HBaseConstraintsQuery extends
 
 	@Override
 	protected List<QueryFilter> getAllFiltersList() {
-		List<QueryFilter> filters = super.getAllFiltersList();
-		filters.addAll(distributableFilters);
+		final List<QueryFilter> filters = super.getAllFiltersList();
+		filters.addAll(
+				distributableFilters);
 		return filters;
 	}
 
