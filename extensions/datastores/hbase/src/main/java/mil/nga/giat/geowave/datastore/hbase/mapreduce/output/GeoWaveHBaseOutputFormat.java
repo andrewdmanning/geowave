@@ -29,6 +29,7 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
+import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.datastore.hbase.HBaseAdapterStore;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
@@ -249,12 +250,13 @@ public class GeoWaveHBaseOutputFormat extends
 				final ByteArrayId indexId ) {
 			if (!indexWriterCache.containsKey(
 					indexId)) {
-				final Index index = indexStore.getIndex(
+				final PrimaryIndex index = (PrimaryIndex) indexStore.getIndex(
 						indexId);
 				IndexWriter writer = null;
 				if (index != null) {
 					writer = dataStore.createIndexWriter(
-							index);
+							index,
+							DataStoreUtils.DEFAULT_VISIBILITY);
 				}
 				else {
 					LOGGER.warn(

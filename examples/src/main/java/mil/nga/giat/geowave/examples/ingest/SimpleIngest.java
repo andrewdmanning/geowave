@@ -1,5 +1,6 @@
 package mil.nga.giat.geowave.examples.ingest;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -16,6 +17,11 @@ import mil.nga.giat.geowave.datastore.accumulo.index.secondary.AccumuloSecondary
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloAdapterStore;
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.accumulo.metadata.AccumuloIndexStore;
+import mil.nga.giat.geowave.datastore.hbase.HBaseAdapterStore;
+import mil.nga.giat.geowave.datastore.hbase.HBaseDataStatisticsStore;
+import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
+import mil.nga.giat.geowave.datastore.hbase.HBaseIndexStore;
+import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 
 import org.apache.accumulo.core.client.AccumuloException;
 import org.apache.accumulo.core.client.AccumuloSecurityException;
@@ -66,7 +72,7 @@ public class SimpleIngest
 			}
 		}
 		return feats;
-	}
+	}	
 
 	/***
 	 * DataStore is essentially the controller that take the accumulo
@@ -77,7 +83,7 @@ public class SimpleIngest
 	 *            Accumulo instance configuration
 	 * @return DataStore object for the particular accumulo instance
 	 */
-	protected DataStore getGeowaveDataStore(
+	protected DataStore getAccumuloGeowaveDataStore(
 			final BasicAccumuloOperations instance ) {
 
 		// GeoWave persists both the index and data adapter to the same accumulo
@@ -130,6 +136,41 @@ public class SimpleIngest
 				accumuloInstance,
 				accumuloUser,
 				accumuloPass,
+				geowaveNamespace);
+	}	
+
+	/***
+	 * DataStore is essentially the controller that take the HBase
+	 * information, geowave configuration, and data type, and inserts/queries
+	 * from HBase
+	 * 
+	 * @param instance
+	 *            HBase instance configuration
+	 * @return DataStore object for the particular HBase instance
+	 */
+	protected DataStore getHbaseGeowaveDataStore(
+			final BasicHBaseOperations instance ) {
+
+		// GeoWave persists both the index and data adapter to the same accumulo
+		// namespace as the data. The intent here
+		// is that all data is discoverable without configuration/classes stored
+		// outside of the accumulo instance.
+		return new HBaseDataStore(
+				new HBaseIndexStore(
+						instance),
+				new HBaseAdapterStore(
+						instance),
+				new HBaseDataStatisticsStore(
+						instance),
+				instance);
+	}
+
+	protected BasicHBaseOperations getHbaseOperationsInstance(
+			String zookeeperInstances,
+			String geowaveNamespace )
+			throws IOException {
+		return new BasicHBaseOperations(
+				zookeeperInstances,
 				geowaveNamespace);
 	}
 

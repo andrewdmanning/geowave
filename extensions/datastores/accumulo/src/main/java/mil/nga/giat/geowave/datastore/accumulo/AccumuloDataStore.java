@@ -11,9 +11,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.BatchDeleter;
+import org.apache.accumulo.core.client.IteratorSetting;
+import org.apache.accumulo.core.client.MutationsRejectedException;
+import org.apache.accumulo.core.client.Scanner;
+import org.apache.accumulo.core.client.ScannerBase;
+import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Range;
+import org.apache.accumulo.core.data.Value;
+import org.apache.accumulo.core.iterators.user.WholeRowIterator;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.log4j.Logger;
+
+import com.google.common.collect.Iterators;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
+import mil.nga.giat.geowave.core.store.CastIterator;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreCallbackManager;
@@ -56,27 +77,6 @@ import mil.nga.giat.geowave.datastore.accumulo.util.EntryIteratorWrapper;
 import mil.nga.giat.geowave.datastore.accumulo.util.ScannerClosableWrapper;
 import mil.nga.giat.geowave.mapreduce.MapReduceDataStore;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
-
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.BatchDeleter;
-import org.apache.accumulo.core.client.IteratorSetting;
-import org.apache.accumulo.core.client.MutationsRejectedException;
-import org.apache.accumulo.core.client.Scanner;
-import org.apache.accumulo.core.client.ScannerBase;
-import org.apache.accumulo.core.client.TableNotFoundException;
-import org.apache.accumulo.core.data.Key;
-import org.apache.accumulo.core.data.Range;
-import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.iterators.user.WholeRowIterator;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.log4j.Logger;
-
-import com.google.common.collect.Iterators;
-
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * This is the Accumulo implementation of the data store. It requires an
@@ -193,9 +193,9 @@ public class AccumuloDataStore implements
 	/*
 	 * Since this general-purpose method crosses multiple adapters, the type of
 	 * result cannot be assumed.
-	 * 
+	 *
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see
 	 * mil.nga.giat.geowave.core.store.DataStore#query(mil.nga.giat.geowave.
 	 * core.store.query.QueryOptions,
@@ -347,33 +347,6 @@ public class AccumuloDataStore implements
 				},
 				Iterators.concat(new CastIterator<T>(
 						results.iterator())));
-	}
-
-	protected static class CastIterator<T> implements
-			Iterator<CloseableIterator<T>>
-	{
-
-		final Iterator<CloseableIterator<Object>> it;
-
-		public CastIterator(
-				final Iterator<CloseableIterator<Object>> it ) {
-			this.it = it;
-		}
-
-		@Override
-		public boolean hasNext() {
-			return it.hasNext();
-		}
-
-		@Override
-		public CloseableIterator<T> next() {
-			return (CloseableIterator<T>) it.next();
-		}
-
-		@Override
-		public void remove() {
-			it.remove();
-		}
 	}
 
 	protected static byte[] getRowIdBytes(
@@ -537,11 +510,11 @@ public class AccumuloDataStore implements
 
 	/*
 	 * Perhaps a use for this optimization with DataIdQuery ?
-	 * 
+	 *
 	 * private List<Entry<Key, Value>> getEntryRowWithRowIds( final String
 	 * tableName, final List<ByteArrayId> rowIds, final ByteArrayId adapterId,
 	 * final String... authorizations ) {
-	 * 
+	 *
 	 * final List<Entry<Key, Value>> resultList = new ArrayList<Entry<Key,
 	 * Value>>(); if ((rowIds == null) || rowIds.isEmpty()) { return resultList;
 	 * } final List<ByteArrayRange> ranges = new ArrayList<ByteArrayRange>();
@@ -551,18 +524,18 @@ public class AccumuloDataStore implements
 	 * ((BatchScanner)
 	 * scanner).setRanges(AccumuloUtils.byteArrayRangesToAccumuloRanges
 	 * (ranges));
-	 * 
+	 *
 	 * final IteratorSetting iteratorSettings = new IteratorSetting(
 	 * QueryFilterIterator.WHOLE_ROW_ITERATOR_PRIORITY,
 	 * QueryFilterIterator.WHOLE_ROW_ITERATOR_NAME, WholeRowIterator.class);
 	 * scanner.addScanIterator(iteratorSettings);
-	 * 
+	 *
 	 * final Iterator<Map.Entry<Key, Value>> iterator = scanner.iterator();
 	 * while (iterator.hasNext()) { resultList.add(iterator.next()); } } catch
 	 * (final TableNotFoundException e) { LOGGER.warn( "Unable to query table '"
 	 * + tableName + "'.  Table does not exist.", e); } finally { if (scanner !=
 	 * null) { scanner.close(); } }
-	 * 
+	 *
 	 * return resultList; }
 	 */
 

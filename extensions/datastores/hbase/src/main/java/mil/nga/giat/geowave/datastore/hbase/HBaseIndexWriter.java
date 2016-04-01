@@ -51,26 +51,32 @@ public class HBaseIndexWriter implements
 	protected boolean useAltIndex;
 	protected String altIdxTableName;
 
+	protected final VisibilityWriter<?> customFieldVisibilityWriter;
+
 	public HBaseIndexWriter(
 			final PrimaryIndex index,
 			final BasicHBaseOperations operations,
-			final HBaseDataStore dataStore ) {
+			final HBaseDataStore dataStore,
+			final VisibilityWriter<?> customFieldVisibilityWriter ) {
 		this(
 				index,
 				operations,
 				new HBaseOptions(),
-				dataStore);
+				dataStore,
+				customFieldVisibilityWriter);
 	}
 
 	public HBaseIndexWriter(
 			final PrimaryIndex index,
 			final BasicHBaseOperations operations,
 			final HBaseOptions options,
-			final HBaseDataStore dataStore ) {
+			final HBaseDataStore dataStore,
+			final VisibilityWriter<?> customFieldVisibilityWriter ) {
 		this.index = index;
 		this.operations = operations;
 		this.dataStore = dataStore;
 		this.options = options;
+		this.customFieldVisibilityWriter = customFieldVisibilityWriter;
 		initialize();
 	}
 
@@ -161,7 +167,8 @@ public class HBaseIndexWriter implements
 
 	public <T> List<ByteArrayId> writeInternal(
 			final WritableDataAdapter<T> writableAdapter,
-			final T entry ) {
+			final T entry,
+			final VisibilityWriter<T> visibilityWriter ) {
 		final ByteArrayId adapterIdObj = writableAdapter.getAdapterId();
 
 		// final byte[] adapterId = writableAdapter.getAdapterId().getBytes();
@@ -179,7 +186,8 @@ public class HBaseIndexWriter implements
 					writableAdapter,
 					index,
 					entry,
-					writer);
+					writer,
+					visibilityWriter);
 			if (persistStats) {
 				List<DataStatisticsBuilder> stats;
 				if (statsMap.containsKey(
@@ -255,20 +263,14 @@ public class HBaseIndexWriter implements
 
 	@Override
 	public synchronized void flush() {
-		// thread safe flush of the writers
-		if (writer != null) {
-			writer.flush();
-		}
-		if (useAltIndex && (altIdxWriter != null)) {
-			altIdxWriter.flush();
-		}
+		// HBase writer does not require/support flush
 	}
 
 	@Override
 	public <T> List<ByteArrayId> write(
-			WritableDataAdapter<T> writableAdapter,
-			T entry,
-			VisibilityWriter<T> fieldVisibilityWriter ) {
+			final WritableDataAdapter<T> writableAdapter,
+			final T entry,
+			final VisibilityWriter<T> fieldVisibilityWriter ) {
 		if (writableAdapter instanceof IndexDependentDataAdapter) {
 			final IndexDependentDataAdapter adapter = ((IndexDependentDataAdapter) writableAdapter);
 			final Iterator<T> indexedEntries = adapter.convertToIndex(
@@ -276,10 +278,11 @@ public class HBaseIndexWriter implements
 					entry);
 			final List<ByteArrayId> rowIds = new ArrayList<ByteArrayId>();
 			while (indexedEntries.hasNext()) {
-				rowIds.addAll(writeInternal(
-						adapter,
-						indexedEntries.next(),
-						fieldVisibilityWriter));
+				rowIds.addAll(
+						writeInternal(
+								adapter,
+								indexedEntries.next(),
+								fieldVisibilityWriter));
 			}
 			return rowIds;
 		}

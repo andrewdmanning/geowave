@@ -86,6 +86,7 @@ abstract public class GeoWaveTestEnvironment
 	protected static final String TEST_CASE_BASE = "data/";
 	protected static final String DEFAULT_MINI_ACCUMULO_PASSWORD = "Ge0wave";
 	protected static final String HADOOP_WINDOWS_UTIL = "winutils.exe";
+	protected static final String HADOOP_DLL = "hadoop.dll";
 	protected static final Object MUTEX = new Object();
 	protected static AccumuloOperations accumuloOperations;
 	protected static String zookeeper = "z";
