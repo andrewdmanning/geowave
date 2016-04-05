@@ -27,6 +27,8 @@ import com.github.sakserv.propertyparser.PropertyParser;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.GeoWaveMain;
+import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStoreFactory;
+import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStoreFactory;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 
@@ -308,19 +310,20 @@ public class GeoWaveHBaseTestEnvironment extends
 		final String[] args = StringUtils.split(
 				"-localingest -datastore " + new HBaseDataStoreFactory().getName() + " -f geotools-vector -b " + ingestFilePath + " -" + GenericStoreCommandLineOptions.NAMESPACE_OPTION_KEY + " " + TEST_NAMESPACE + " -dim " + dimensionalityType.getDimensionalityArg() + " -" + BasicHBaseOperations.ZOOKEEPER_INSTANCES_NAME + " " + zookeeper,
 				' ');
-		GeoWaveMain.main(
+		GeoWaveMain.run(
 				args);
 		verifyStats();
 	}
 
 	private void verifyStats() {
-		GeoWaveMain.main(
-				new String[] {
-					"-hbasestatsdump",
-					"-z",
-					zookeeper,
-					"-n",
-					TEST_NAMESPACE
+		GeoWaveMain.run(new String[] {
+			"-statsdump",
+			"-" + GenericStoreCommandLineOptions.NAMESPACE_OPTION_KEY,
+			TEST_NAMESPACE,
+			"-datastore",
+			new HBaseDataStoreFactory().getName(),
+			"-" + BasicHBaseOperations.ZOOKEEPER_INSTANCES_NAME,
+			zookeeper
 		});
 	}
 

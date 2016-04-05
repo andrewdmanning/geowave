@@ -26,6 +26,7 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticalDataAdapter
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.datastore.hbase.io.HBaseWriter;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 

@@ -60,10 +60,10 @@ import mil.nga.giat.geowave.core.store.memory.MemoryAdapterStore;
 import mil.nga.giat.geowave.core.store.query.DataIdQuery;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-import mil.nga.giat.geowave.datastore.hbase.HBaseAdapterStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseIndexStore;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseAdapterStore;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseIndexStore;
 import mil.nga.giat.geowave.format.geotools.vector.GeoToolsVectorDataStoreIngestPlugin;
 
 public class GeoWaveHBaseBasicIT extends
@@ -104,9 +104,9 @@ public class GeoWaveHBaseBasicIT extends
 	@Test
 	public void testIngestAndQuerySpatialPointsAndLines() {
 		// ingest both lines and points
-		testLocalIngest(
-				DimensionalityType.SPATIAL,
-				HAIL_SHAPEFILE_FILE);
+//		testLocalIngest(
+//				DimensionalityType.SPATIAL,
+//				HAIL_SHAPEFILE_FILE);
 		testLocalIngest(
 				DimensionalityType.SPATIAL,
 				TORNADO_TRACKS_SHAPEFILE_FILE);
@@ -776,21 +776,6 @@ public class GeoWaveHBaseBasicIT extends
 			final Class<T> clazz,
 			final Object o ) {
 		return (T[]) o;
-	}
-
-	private void testIngest(
-			final IndexType indexType,
-			final String ingestFilePath ) {
-		// ingest a shapefile (geotools type) directly into GeoWave using the
-		// ingest framework's main method and pre-defined commandline arguments
-		LOGGER.warn(
-				"Ingesting '" + ingestFilePath + "' - this may take several minutes...");
-		final String[] args = StringUtils.split(
-				"-localingest -f geotools-vector -b " + ingestFilePath + " -z " + zookeeper + " -n " + TEST_NAMESPACE + " -dim " + (indexType.equals(
-						DEFAULT_SPATIAL_INDEX) ? "spatial" : "spatial-temporal"),
-				' ');
-		GeoWaveMain.main(
-				args);
 	}
 
 	private void testQuery(

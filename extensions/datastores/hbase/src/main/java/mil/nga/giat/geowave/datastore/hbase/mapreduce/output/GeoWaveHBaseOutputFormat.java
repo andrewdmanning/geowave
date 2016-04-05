@@ -30,13 +30,13 @@ import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
-import mil.nga.giat.geowave.datastore.hbase.HBaseAdapterStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseIndexStore;
 import mil.nga.giat.geowave.datastore.hbase.mapreduce.GeoWaveHBaseConfiguratorBase;
 import mil.nga.giat.geowave.datastore.hbase.mapreduce.JobContextHBaseAdapterStore;
 import mil.nga.giat.geowave.datastore.hbase.mapreduce.JobContextHBaseIndexStore;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseAdapterStore;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseIndexStore;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 
 /**

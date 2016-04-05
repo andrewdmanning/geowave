@@ -1,7 +1,7 @@
 /**
  *
  */
-package mil.nga.giat.geowave.datastore.hbase;
+package mil.nga.giat.geowave.datastore.hbase.metadata;
 
 import org.apache.log4j.Logger;
 
@@ -9,7 +9,6 @@ import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
-import mil.nga.giat.geowave.datastore.hbase.metadata.AbstractHBasePersistence;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 
 /**

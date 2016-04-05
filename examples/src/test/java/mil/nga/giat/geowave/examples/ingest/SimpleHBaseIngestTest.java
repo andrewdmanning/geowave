@@ -19,11 +19,11 @@ import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.query.BasicQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-import mil.nga.giat.geowave.datastore.hbase.HBaseAdapterStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseIndexStore;
 import mil.nga.giat.geowave.datastore.hbase.HBaseOptions;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseAdapterStore;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseIndexStore;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 
 public class SimpleHBaseIngestTest

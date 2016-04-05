@@ -14,7 +14,7 @@ import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.index.Index;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
-import mil.nga.giat.geowave.datastore.hbase.HBaseIndexStore;
+import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseIndexStore;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 
 /**
