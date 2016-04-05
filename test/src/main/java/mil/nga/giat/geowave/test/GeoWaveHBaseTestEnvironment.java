@@ -5,33 +5,28 @@ package mil.nga.giat.geowave.test;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.Map;
 import java.util.TimeZone;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.SystemUtils;
-import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.MiniHBaseCluster;
 import org.apache.hadoop.hbase.client.Connection;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import com.google.common.io.Files;
+import com.github.sakserv.minicluster.config.ConfigVars;
+import com.github.sakserv.minicluster.impl.HbaseLocalCluster;
+import com.github.sakserv.minicluster.impl.ZookeeperLocalCluster;
+import com.github.sakserv.propertyparser.PropertyParser;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import mil.nga.giat.geowave.core.cli.GenericStoreCommandLineOptions;
 import mil.nga.giat.geowave.core.cli.GeoWaveMain;
-import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStoreFactory;
-import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.datastore.hbase.HBaseDataStoreFactory;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 
@@ -45,6 +40,7 @@ public class GeoWaveHBaseTestEnvironment extends
 
 	private final static Logger LOGGER = Logger.getLogger(
 			GeoWaveHBaseTestEnvironment.class);
+	private static final String HBASE_PROPS_FILE = "hbase.properties";
 	protected static BasicHBaseOperations operations;
 	protected static String zookeeper;
 	protected static File TEMP_DIR = new File(
@@ -72,126 +68,162 @@ public class GeoWaveHBaseTestEnvironment extends
 									"Could not create temporary directory");
 						}
 					}
-//					TEMP_DIR.deleteOnExit();
+					// TEMP_DIR.deleteOnExit();
 
-					// if (SystemUtils.IS_OS_WINDOWS && isYarn()) {
-					// // this must happen before the cluster is started
-					// // because yarn
-					// // expects winutils.exe to exist within a bin
-					// // directory in the hbase cluster directory
-					// // (hbase will always set this
-					// // directory as hadoop_home)
-					// LOGGER.info(
-					// "Running YARN on windows requires a local installation of
-					// Hadoop");
-					// LOGGER.info(
-					// "'HADOOP_HOME' must be set and 'PATH' must contain
-					// %HADOOP_HOME%/bin");
-					//
-					// final Map<String, String> env = System.getenv();
-					// String hadoopHome = System.getProperty(
-					// "hadoop.home.dir");
-					// if (hadoopHome == null) {
-					// hadoopHome = env.get(
-					// "HADOOP_HOME");
-					// }
-					// boolean success = false;
-					// if (hadoopHome != null) {
-					// final File hadoopDir = new File(
-					// hadoopHome);
-					// if (hadoopDir.exists()) {
-					// final File binDir = new File(
+					// Configuration conf = new Configuration();
+					// System.setProperty(
+					// "test.build.data",
+					// TEMP_DIR.getAbsolutePath());
+					// conf.set(
+					// "test.build.data",
+					// new File(
 					// TEMP_DIR,
-					// "bin");
-					// if (binDir.mkdir()) {
-					// FileUtils.copyFile(
-					// new File(
-					// hadoopDir + File.separator + "bin",
-					// HADOOP_WINDOWS_UTIL),
-					// new File(
-					// binDir,
-					// HADOOP_WINDOWS_UTIL));
-					// success = true;
+					// "zookeeper").getAbsolutePath());
+					// conf.set(
+					// "fs.default.name",
+					// "file:///");
+					// conf.set(
+					// "zookeeper.session.timeout",
+					// "180000");
+					// conf.set(
+					// "hbase.zookeeper.peerport",
+					// "2888");
+					// conf.set(
+					// "hbase.zookeeper.property.clientPort",
+					// "2181");
+					// conf.set("hbase.zookeeper.quorum", "127.0.0.1");
+					// conf.addResource(
+					// new Path(
+					// "conf/hbase-site1.xml"));
+					// try {
+					// File masterDir = new File(
+					// TEMP_DIR,
+					// "hbase");
+					// conf.set(
+					// HConstants.HBASE_DIR,
+					// masterDir.toURI().toURL().toString());
 					// }
-					// }
-					// }
-					// if (!success) {
+					// catch (MalformedURLException e1) {
 					// LOGGER.error(
-					// "'HADOOP_HOME' environment variable is not set or
-					// <HADOOP_HOME>/bin/winutils.exe does not exist");
-					// return;
+					// e1.getMessage());
 					// }
+					//
+					// Configuration hbaseConf = HBaseConfiguration.create(
+					// conf);
+					// hbaseConf.set("hbase.zookeeper.quorum", "127.0.0.1");
+					// utility = new HBaseTestingUtility(
+					// hbaseConf);
+					//
+					// // utility = new HBaseTestingUtility();
+					// try {
+					// utility.startMiniCluster(
+					// 2);
 					// }
+					// catch (Exception e) {
+					// LOGGER.error(
+					// e);
+					// e.printStackTrace();
+					// Assert.fail(
+					// "Could not start HBaseMiniCluster");
+					// }
+					//
+					// zookeeper = utility.getZooKeeperWatcher().getBaseZNode();
+					// hbaseInstance = utility.getMiniHBaseCluster();
 
-					Configuration conf = new Configuration();
-					System.setProperty(
-							"test.build.data",
-							TEMP_DIR.getAbsolutePath());
-					conf.set(
-							"test.build.data",
-							new File(
-									TEMP_DIR,
-									"zookeeper").getAbsolutePath());
-					conf.set(
-							"fs.default.name",
-							"file:///");
-					conf.set(
-							"zookeeper.session.timeout",
-							"180000");
-					conf.set(
-							"hbase.zookeeper.peerport",
-							"2888");
-					conf.set(
-							"hbase.zookeeper.property.clientPort",
-							"2181");
-					conf.set("hbase.zookeeper.quorum", "127.0.0.1");
-					conf.addResource(
-							new Path(
-									"conf/hbase-site1.xml"));
+					PropertyParser propertyParser = null;
+
 					try {
-						File masterDir = new File(
-								TEMP_DIR,
-								"hbase");
-						conf.set(
-								HConstants.HBASE_DIR,
-								masterDir.toURI().toURL().toString());
+						propertyParser = new PropertyParser(
+								HBASE_PROPS_FILE);
+						propertyParser.parsePropsFile();
 					}
-					catch (MalformedURLException e1) {
+					catch (IOException e) {
 						LOGGER.error(
-								e1.getMessage());
+								"Unable to load property file: {}" + HBASE_PROPS_FILE);
 					}
+					
+					System.setProperty("HADOOP_HOME", System.getenv().get("HADOOP_HOME"));
 
-					Configuration hbaseConf = HBaseConfiguration.create(
-							conf);
-					hbaseConf.set("hbase.zookeeper.quorum", "127.0.0.1");
-					utility = new HBaseTestingUtility(
-							hbaseConf);
+					HbaseLocalCluster hbaseLocalCluster = null;
+					ZookeeperLocalCluster zookeeperLocalCluster = null;
 
-					// utility = new HBaseTestingUtility();
 					try {
-						utility.startMiniCluster(
-								2);
+						zookeeperLocalCluster = new ZookeeperLocalCluster.Builder()
+								.setPort(
+										Integer.parseInt(
+												propertyParser.getProperty(
+														ConfigVars.ZOOKEEPER_PORT_KEY)))
+								.setTempDir(
+										propertyParser.getProperty(
+												ConfigVars.ZOOKEEPER_TEMP_DIR_KEY))
+								.setZookeeperConnectionString(
+										propertyParser.getProperty(
+												ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
+								.build();
+						zookeeperLocalCluster.start();
 					}
 					catch (Exception e) {
-						LOGGER.error(
-								e);
+						LOGGER.error("Exception starting zookeeperLocalCluster: " + e);
 						e.printStackTrace();
-						Assert.fail(
-								"Could not start HBaseMiniCluster");
+						Assert.fail();
 					}
 
-					zookeeper = utility.getZooKeeperWatcher().getBaseZNode();
-					hbaseInstance = utility.getMiniHBaseCluster();
-
-
+					zookeeper = zookeeperLocalCluster.getZookeeperConnectionString();
 					
-					Connection conn = utility.getConnection();
-//					Connection conn = ConnectionFactory.createConnection(
-//							hbaseConf);
+					try {
+						hbaseLocalCluster = new HbaseLocalCluster.Builder()
+								.setHbaseMasterPort(
+										Integer.parseInt(
+												propertyParser.getProperty(
+														ConfigVars.HBASE_MASTER_PORT_KEY)))
+								.setHbaseMasterInfoPort(
+										Integer.parseInt(
+												propertyParser.getProperty(
+														ConfigVars.HBASE_MASTER_INFO_PORT_KEY)))
+								.setNumRegionServers(
+										Integer.parseInt(
+												propertyParser.getProperty(
+														ConfigVars.HBASE_NUM_REGION_SERVERS_KEY)))
+								.setHbaseRootDir(
+										propertyParser.getProperty(
+												ConfigVars.HBASE_ROOT_DIR_KEY))
+								.setZookeeperPort(
+										Integer.parseInt(
+												propertyParser.getProperty(
+														ConfigVars.ZOOKEEPER_PORT_KEY)))
+								.setZookeeperConnectionString(
+										propertyParser.getProperty(
+												ConfigVars.ZOOKEEPER_CONNECTION_STRING_KEY))
+								.setZookeeperZnodeParent(
+										propertyParser.getProperty(
+												ConfigVars.HBASE_ZNODE_PARENT_KEY))
+								.setHbaseWalReplicationEnabled(
+										Boolean.parseBoolean(
+												propertyParser.getProperty(
+														ConfigVars.HBASE_WAL_REPLICATION_ENABLED_KEY)))
+								.setHbaseConfiguration(
+										new Configuration())
+								.build();
+						hbaseLocalCluster.start();
+					}
+					catch (Exception e) {
+						LOGGER.error("Exception starting hbaseLocalCluster: " + e);
+						e.printStackTrace();
+						Assert.fail();
+					}
 
+					// Connection conn = utility.getConnection();
+
+					// Connection conn = ConnectionFactory.createConnection(
+					// hbaseConf);
+
+//					operations = new BasicHBaseOperations(
+//							TEST_NAMESPACE,
+//							conn);
+					
 					operations = new BasicHBaseOperations(
-							TEST_NAMESPACE,
-							conn);
+							zookeeperLocalCluster.getZookeeperConnectionString(),
+							TEST_NAMESPACE);
 
 				}
 				else {
@@ -268,9 +300,11 @@ public class GeoWaveHBaseTestEnvironment extends
 		// ingest framework's main method and pre-defined commandline arguments
 		LOGGER.warn(
 				"Ingesting '" + ingestFilePath + "' - this may take several minutes...");
-//		final String[] args = StringUtils.split(
-//				"-localhbaseingest -f geotools-vector -b " + ingestFilePath + " -z " + zookeeper + " -n " + TEST_NAMESPACE + " -dim " + dimensionalityType.getDimensionalityArg(),
-//				' ');
+		// final String[] args = StringUtils.split(
+		// "-localhbaseingest -f geotools-vector -b " + ingestFilePath + " -z "
+		// + zookeeper + " -n " + TEST_NAMESPACE + " -dim " +
+		// dimensionalityType.getDimensionalityArg(),
+		// ' ');
 		final String[] args = StringUtils.split(
 				"-localingest -datastore " + new HBaseDataStoreFactory().getName() + " -f geotools-vector -b " + ingestFilePath + " -" + GenericStoreCommandLineOptions.NAMESPACE_OPTION_KEY + " " + TEST_NAMESPACE + " -dim " + dimensionalityType.getDimensionalityArg() + " -" + BasicHBaseOperations.ZOOKEEPER_INSTANCES_NAME + " " + zookeeper,
 				' ');

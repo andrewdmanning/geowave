@@ -46,21 +46,21 @@ public class BasicHBaseOperations
 				"A comma-separated list of zookeeper servers that an HBase instance is using")
 	};
 
-	protected static Connection conn;
+	private final Connection conn;
 	private final String tableNamespace;
 
 	public BasicHBaseOperations(
 			final String zookeeperInstances,
 			final String geowaveNamespace )
 			throws IOException {
-//		final Configuration hConf = HBaseConfiguration.create();
-//		hConf.set(
-//				HBASE_CONFIGURATION_ZOOKEEPER_QUORUM,
-//				zookeeperInstances);
-//		hConf.setInt(
-//				HBASE_CONFIGURATION_TIMEOUT,
-//				120000);
-//		conn = ConnectionFactory.createConnection(hConf);
+		final Configuration hConf = HBaseConfiguration.create();
+		hConf.set(
+				HBASE_CONFIGURATION_ZOOKEEPER_QUORUM,
+				zookeeperInstances);
+		hConf.setInt(
+				HBASE_CONFIGURATION_TIMEOUT,
+				120000);
+		conn = ConnectionFactory.createConnection(hConf);
 		tableNamespace = geowaveNamespace;
 	}
 
