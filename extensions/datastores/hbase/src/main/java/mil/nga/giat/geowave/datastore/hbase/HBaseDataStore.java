@@ -62,6 +62,9 @@ import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 import mil.nga.giat.geowave.datastore.hbase.query.HBaseConstraintsQuery;
 import mil.nga.giat.geowave.datastore.hbase.query.HBaseRowIdsQuery;
 import mil.nga.giat.geowave.datastore.hbase.query.SingleEntryFilter;
+import mil.nga.giat.geowave.datastore.hbase.util.HBaseCloseableIteratorWrapper;
+import mil.nga.giat.geowave.datastore.hbase.util.HBaseCloseableIteratorWrapper.MultiScannerClosableWrapper;
+import mil.nga.giat.geowave.datastore.hbase.util.HBaseEntryIteratorWrapper;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.mapreduce.MapReduceDataStore;
 import mil.nga.giat.geowave.mapreduce.input.GeoWaveInputKey;
@@ -187,60 +190,108 @@ public class HBaseDataStore implements
 		return adapterStore;
 	}
 
+	@SuppressWarnings("unchecked")
 	private CloseableIterator<Object> getEntries(
 			final PrimaryIndex index,
 			final List<ByteArrayId> dataIds,
 			final DataAdapter<Object> adapter,
-			final DedupeFilter filter,
-			final ScanCallback<Object> scanCallback,
+			final DedupeFilter dedupeFilter,
+			final ScanCallback<Object> callback,
 			final String[] authorizations,
 			final double[] maxResolutionSubsamplingPerDimension,
-			final boolean b ) {
-		// TODO Auto-generated method stub
-		return null;
+			final boolean limit )
+			throws IOException {
+		final String altIdxTableName = index.getId().getString() + HBaseUtils.ALT_INDEX_TABLE;
+
+		MemoryAdapterStore tempAdapterStore;
+
+		tempAdapterStore = new MemoryAdapterStore(
+				new DataAdapter[] {
+					adapter
+				});
+
+		if (options.isUseAltIndex() && operations.tableExists(altIdxTableName)) {
+			final List<ByteArrayId> rowIds = getAltIndexRowIds(
+					altIdxTableName,
+					dataIds,
+					adapter.getAdapterId(),
+					limit ? 1 : -1);
+
+			if (rowIds.size() > 0) {
+				final HBaseRowIdsQuery<Object> q = new HBaseRowIdsQuery<Object>(
+						adapter,
+						index,
+						rowIds,
+						callback,
+						dedupeFilter,
+						authorizations);
+
+				return q.query(
+						operations,
+						tempAdapterStore,
+						// TODO support this?
+						//maxResolutionSubsamplingPerDimension,
+						(limit || (rowIds.size() < 2)) ? 1 : -1);
+			}
+		}
+		else {
+			return getEntryRows(
+					index,
+					tempAdapterStore,
+					dataIds,
+					adapter.getAdapterId(),
+					callback,
+					authorizations,
+					limit ? 1 : -1);
+		}
+		return new CloseableIterator.Empty();
 	}
 
-	private List<KeyValue> getEntryRowWithRowIds(
-			final String tableName,
-			final List<ByteArrayId> rowIds,
+	private CloseableIterator<Object> getEntryRows(
+			final PrimaryIndex index,
+			final AdapterStore adapterStore,
+			final List<ByteArrayId> dataIds,
 			final ByteArrayId adapterId,
-			final String... authorizations ) {
+			final ScanCallback<Object> scanCallback,
+			final String[] authorizations,
+			final int limit ) {
 
-		final List<KeyValue> resultList = new ArrayList<KeyValue>();
-		if ((rowIds == null) || rowIds.isEmpty()) {
-			return resultList;
-		}
-		/*
-		 * final List<ByteArrayRange> ranges = new ArrayList<ByteArrayRange>();
-		 * for (final ByteArrayId row : rowIds) { ranges.add(new ByteArrayRange(
-		 * row, row)); }
-		 */
+		final String tableName = StringUtils.stringFromBinary(index.getId().getBytes());
+
+		final List<Iterator<Result>> resultList = new ArrayList<Iterator<Result>>();
+		final List<ResultScanner> resultScanners = new ArrayList<ResultScanner>();
+		Iterator<Result> iterator = null;
+
 		try {
-			final Scan scanner = new Scan();
-			scanner.setStartRow(rowIds.get(
-					0).getBytes());
-			final ResultScanner results = operations.getScannedResults(
-					scanner,
-					tableName);
-			/*
-			 * ((BatchScanner) scanner).setRanges(HBaseUtils.
-			 * byteArrayRangesToAccumuloRanges(ranges));
-			 */
-			/*
-			 * final IteratorSetting iteratorSettings = new IteratorSetting(
-			 * QueryFilterIterator.WHOLE_ROW_ITERATOR_PRIORITY,
-			 * QueryFilterIterator.WHOLE_ROW_ITERATOR_NAME,
-			 * WholeRowIterator.class);
-			 * scanner.addScanIterator(iteratorSettings);
-			 */
 
-			final Iterator<Result> iterator = results.iterator();
-			while (iterator.hasNext()) {
-				final Cell cell = iterator.next().listCells().get(
-						0);
-				resultList.add(new KeyValue(
-						cell));
+			for(final ByteArrayId dataId : dataIds){
+				final Scan scanner = new Scan();
+				scanner.setFilter(new SingleEntryFilter(
+						dataId.getBytes(),
+						adapterId.getBytes()));
+				final ResultScanner results = operations.getScannedResults(
+						scanner,
+						tableName);
+				resultScanners.add(results);
+				final Iterator<Result> resultIt = results.iterator();
+				if(resultIt.hasNext()){
+					resultList.add(resultIt);
+				}
 			}
+
+			iterator = Iterators.concat(resultList.iterator());
+
+//			int i = 0;
+//			while (iterator.hasNext() && (i < limit)) { // FB supression as FB
+//														// not
+//														// detecting i reference
+//														// here
+//				final Cell cell = iterator.next().listCells().get(
+//						0);
+//				resultList.add(new KeyValue(
+//						cell));
+//				i++;
+//			}
 		}
 		catch (final IOException e) {
 			LOGGER.warn(
@@ -248,109 +299,44 @@ public class HBaseDataStore implements
 					e);
 		}
 
-		return resultList;
-	}
-
-	private List<KeyValue> getEntryRows(
-			final String tableName,
-			final ByteArrayId dataId,
-			final ByteArrayId adapterId,
-			final int limit,
-			final String... authorizations ) {
-
-		/*
-		 * final List<KeyValue> resultList = new ArrayList<KeyValue>(); Scan
-		 * scanner = new Scan(); try { scanner.addFamily(adapterId.getBytes());
-		 * ResultScanner results = operations.getScannedResults( scanner,
-		 * tableName);
-		 *
-		 * #406 Need to see how to add these iterators to fine grain the
-		 * results final IteratorSetting rowIteratorSettings = new
-		 * IteratorSetting(
-		 * SingleEntryFilterIterator.WHOLE_ROW_ITERATOR_PRIORITY,
-		 * SingleEntryFilterIterator.WHOLE_ROW_ITERATOR_NAME,
-		 * WholeRowIterator.class);
-		 * scanner.addScanIterator(rowIteratorSettings);
-		 *
-		 * final IteratorSetting filterIteratorSettings = new IteratorSetting(
-		 * SingleEntryFilterIterator.ENTRY_FILTER_ITERATOR_PRIORITY,
-		 * SingleEntryFilterIterator.ENTRY_FILTER_ITERATOR_NAME,
-		 * SingleEntryFilterIterator.class);
-		 *
-		 * filterIteratorSettings.addOption(
-		 * SingleEntryFilterIterator.ADAPTER_ID,
-		 * ByteArrayUtils.byteArrayToString(adapterId.getBytes()));
-		 *
-		 * filterIteratorSettings.addOption( SingleEntryFilterIterator.DATA_ID,
-		 * ByteArrayUtils.byteArrayToString(dataId.getBytes()));
-		 * scanner.addScanIterator(filterIteratorSettings);
-		 *
-		 * final Iterator<Result> iterator = results.iterator(); int i = 0;
-		 * while (iterator.hasNext() && (i < limit)) { // FB supression as FB //
-		 * not // detecting i reference // here Cell cell =
-		 * iterator.next().listCells().get( 0); resultList.add(new KeyValue(
-		 * cell)); i++; } } catch (final IOException e) { LOGGER.warn(
-		 * "Unable to query table '" + tableName + "'. Table does not exist.",
-		 * e); } return resultList;
-		 */
-		final List<KeyValue> resultList = new ArrayList<KeyValue>();
-		final Scan scanner = new Scan();
-		try {
-
-			scanner.setFilter(new SingleEntryFilter(
-					dataId.getBytes(),
-					adapterId.getBytes()));
-			final ResultScanner results = operations.getScannedResults(
-					scanner,
-					tableName);
-
-			final Iterator<Result> iterator = results.iterator();
-			int i = 0;
-			while (iterator.hasNext() && (i < limit)) { // FB supression as FB
-														// not
-														// detecting i reference
-														// here
-				final Cell cell = iterator.next().listCells().get(
-						0);
-				resultList.add(new KeyValue(
-						cell));
-				i++;
-			}
-		}
-		catch (final IOException e) {
-			LOGGER.warn(
-					"Unable to query table '" + tableName + "'.  Table does not exist.",
-					e);
-		}
-		return resultList;
+		return new HBaseCloseableIteratorWrapper<Object>(
+				new MultiScannerClosableWrapper(
+						resultScanners),
+				new HBaseEntryIteratorWrapper(
+						adapterStore,
+						index,
+						iterator,
+						null,
+						scanCallback));
 	}
 
 	private List<ByteArrayId> getAltIndexRowIds(
 			final String tableName,
-			final ByteArrayId dataId,
+			final List<ByteArrayId> dataIds,
 			final ByteArrayId adapterId,
 			final int limit ) {
 
 		final List<ByteArrayId> result = new ArrayList<ByteArrayId>();
 		try {
 			if (options.isUseAltIndex() && operations.tableExists(tableName)) {
-				final Scan scanner = new Scan();
-				scanner.setStartRow(dataId.getBytes());
-				scanner.setStopRow(dataId.getBytes());
-				scanner.addFamily(adapterId.getBytes());
+				for(final ByteArrayId dataId : dataIds){
+					final Scan scanner = new Scan();
+					scanner.setStartRow(dataId.getBytes());
+					scanner.setStopRow(dataId.getBytes());
+					scanner.addFamily(adapterId.getBytes());
 
-				final ResultScanner results = operations.getScannedResults(
-						scanner,
-						tableName);
-				final Iterator<Result> iterator = results.iterator();
-				int i = 0;
-				while (iterator.hasNext() && (i < limit)) {
-					result.add(new ByteArrayId(
-							CellUtil.cloneQualifier(iterator.next().listCells().get(
-									0))));
-					i++;
+					final ResultScanner results = operations.getScannedResults(
+							scanner,
+							tableName);
+					final Iterator<Result> iterator = results.iterator();
+					int i = 0;
+					while (iterator.hasNext() && (i < limit)) {
+						result.add(new ByteArrayId(
+								CellUtil.cloneQualifier(iterator.next().listCells().get(
+										0))));
+						i++;
+					}
 				}
-
 			}
 		}
 		catch (final IOException e) {

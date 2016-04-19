@@ -66,17 +66,6 @@ public class HBaseRowIdsQuery<T> extends
 		this.rows = rows;
 	}
 
-//	public HBaseRowIdQueryViggy(
-//			final PrimaryIndex index,
-//			final ByteArrayId row,
-//			final String... authorizations ) {
-//		super(
-//				index,
-//				row,
-//				authorizations,
-//				null);
-//	}
-
 //	@Override
 //	protected Integer getScannerLimit() {
 //		return 1;
