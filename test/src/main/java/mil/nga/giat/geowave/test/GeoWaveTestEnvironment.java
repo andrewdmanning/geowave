@@ -106,6 +106,8 @@ abstract public class GeoWaveTestEnvironment
 
 	protected static final AtomicBoolean DEFER_CLEANUP = new AtomicBoolean(
 			false);
+	
+	protected static HashMap<Long, SimpleFeature> expectedFeatures = new HashMap<Long, SimpleFeature>();
 
 	protected static boolean isYarn() {
 		return VersionUtil.compareVersions(
@@ -400,7 +402,10 @@ abstract public class GeoWaveTestEnvironment
 				// easy to check against
 				featureIterator = expectedResults.features();
 				while (featureIterator.hasNext()) {
-					hashedCentroids.add(hashCentroid((Geometry) featureIterator.next().getDefaultGeometry()));
+					SimpleFeature feature = featureIterator.next();
+					long centroid = hashCentroid((Geometry) feature.getDefaultGeometry());
+					hashedCentroids.add(centroid);
+					expectedFeatures.put(centroid, feature);
 				}
 			}
 			finally {

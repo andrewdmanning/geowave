@@ -14,13 +14,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.math.util.MathUtils;
 import org.apache.log4j.Logger;
 import org.geotools.feature.AttributeTypeBuilder;
 import org.geotools.feature.simple.SimpleFeatureBuilder;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.h2.index.IndexType;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,7 +32,6 @@ import com.vividsolutions.jts.geom.Geometry;
 
 import mil.nga.giat.geowave.adapter.vector.FeatureDataAdapter;
 import mil.nga.giat.geowave.adapter.vector.stats.FeatureBoundingBoxStatistics;
-import mil.nga.giat.geowave.core.cli.GeoWaveMain;
 import mil.nga.giat.geowave.core.geotime.GeometryUtils;
 import mil.nga.giat.geowave.core.geotime.store.query.SpatialQuery;
 import mil.nga.giat.geowave.core.geotime.store.statistics.BoundingBoxDataStatistics;
@@ -104,9 +101,9 @@ public class GeoWaveHBaseBasicIT extends
 	@Test
 	public void testIngestAndQuerySpatialPointsAndLines() {
 		// ingest both lines and points
-//		testLocalIngest(
-//				DimensionalityType.SPATIAL,
-//				HAIL_SHAPEFILE_FILE);
+		testLocalIngest(
+				DimensionalityType.SPATIAL,
+				HAIL_SHAPEFILE_FILE);
 		testLocalIngest(
 				DimensionalityType.SPATIAL,
 				TORNADO_TRACKS_SHAPEFILE_FILE);
@@ -221,9 +218,9 @@ public class GeoWaveHBaseBasicIT extends
 		// assume a bounding box statistic exists and calculate the value
 		// separately to ensure calculation works
 		private double minX = Double.MAX_VALUE;
-		private double minY = Double.MAX_VALUE;;
-		private double maxX = -Double.MAX_VALUE;;
-		private double maxY = -Double.MAX_VALUE;;
+		private double minY = Double.MAX_VALUE;
+		private double maxX = -Double.MAX_VALUE;
+		private double maxY = -Double.MAX_VALUE;
 		protected final Map<ByteArrayId, DataStatistics<SimpleFeature>> statsCache = new HashMap<ByteArrayId, DataStatistics<SimpleFeature>>();
 
 		// otherwise use the statistics interface to calculate every statistic
@@ -833,6 +830,8 @@ public class GeoWaveHBaseBasicIT extends
 							"Actual result '" + result.toString() + "' not found in expected result set",
 							expectedResults.hashedCentroids.contains(
 									actualhashCentroid));
+
+					final SimpleFeature found = expectedFeatures.remove(actualhashCentroid);
 					totalResults++;
 				}
 				else {
@@ -847,6 +846,11 @@ public class GeoWaveHBaseBasicIT extends
 					Assert.fail(
 							"Actual result '" + obj.toString() + "' is not of type Simple Feature.");
 				}
+			}
+			for(final SimpleFeature notRead : expectedFeatures.values()){
+				LOGGER.error("Failed to read feature " + notRead.getID() + " | " + notRead + " from query results.");
+				LOGGER.error("Hashed centroid: " + hashCentroid(
+						(Geometry) notRead.getDefaultGeometry()));
 			}
 			if (expectedResults.count != totalResults) {
 				try {

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NavigableMap;
 
@@ -47,6 +48,7 @@ import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
+import mil.nga.giat.geowave.core.store.memory.EntryRowID;
 import mil.nga.giat.geowave.datastore.hbase.entities.HBaseRowId;
 import mil.nga.giat.geowave.datastore.hbase.io.HBaseWriter;
 
@@ -94,20 +96,38 @@ public class HBaseUtils
 				END_AND_BYTE);
 		return buffer.array();
 	}
-
-	public static <T> List<RowMutations> entryToMutations(
-			final WritableDataAdapter<T> dataWriter,
-			final PrimaryIndex index,
-			final T entry,
-			final VisibilityWriter<T> customFieldVisibilityWriter ) {
-		final DataStoreEntryInfo ingestInfo = DataStoreUtils.getIngestInfo(
-				dataWriter,
-				index,
-				entry,
-				customFieldVisibilityWriter);
-		return buildMutations(
-				dataWriter.getAdapterId().getBytes(),
-				ingestInfo);
+	
+	private static HashSet goodDataIds;
+	static{
+		goodDataIds = new HashSet();
+		goodDataIds.add("tornado_tracks.21986");
+		goodDataIds.add("tornado_tracks.28685");
+	}
+	
+	private static HashSet badDataIds;
+	static{
+		badDataIds = new HashSet();
+		badDataIds.add("tornado_tracks.7583");
+		
+		
+		badDataIds.add("tornado_tracks.1528");		
+		badDataIds.add("tornado_tracks.1678");
+		badDataIds.add("tornado_tracks.6562");
+		badDataIds.add("tornado_tracks.8099");
+		badDataIds.add("tornado_tracks.9382");
+		badDataIds.add("tornado_tracks.19066");
+		badDataIds.add("tornado_tracks.19067");
+		badDataIds.add("tornado_tracks.21984");
+		badDataIds.add("tornado_tracks.21985");
+		badDataIds.add("tornado_tracks.21987");
+		badDataIds.add("tornado_tracks.21990");
+		badDataIds.add("tornado_tracks.21992");
+		badDataIds.add("tornado_tracks.22010");
+		badDataIds.add("tornado_tracks.22126");
+		badDataIds.add("tornado_tracks.24630");
+		badDataIds.add("tornado_tracks.28682");
+		badDataIds.add("tornado_tracks.28683");
+		badDataIds.add("tornado_tracks.28684");
 	}
 
 	private static List<RowMutations> buildMutations(
@@ -118,7 +138,14 @@ public class HBaseUtils
 		for (final ByteArrayId rowId : ingestInfo.getRowIds()) {
 			final RowMutations mutation = new RowMutations(
 					rowId.getBytes());
-
+//			EntryRowID entry = new EntryRowID(rowId.getBytes());
+//			String dataId = new String(entry.getDataId());
+//			if(goodDataIds.contains(dataId)){
+//				LOGGER.error("GOOD mutations: " + dataId + " | " + rowId.getReadableString());
+//			}
+//			else if(badDataIds.contains(dataId)){
+//				LOGGER.error("BAD mutations: " + dataId + " | " + rowId.getReadableString());
+//			}
 			try {
 				final Put row = new Put(
 						rowId.getBytes());
@@ -317,7 +344,6 @@ public class HBaseUtils
 				index,
 				scanCallback);
 		return pair != null ? pair.getLeft() : null;
-
 	}
 
 	@SuppressWarnings("unchecked")

@@ -20,12 +20,12 @@ public class HBaseEntryIteratorWrapper<T> implements
 	private final static Logger LOGGER = Logger.getLogger(
 			HBaseEntryIteratorWrapper.class);
 	private final AdapterStore adapterStore;
-	private final PrimaryIndex index;
+	protected final PrimaryIndex index;
 	private final Iterator<Result> scannerIt;
-	private final QueryFilter clientFilter;
+	protected final QueryFilter clientFilter;
 	private final ScanCallback<T> scanCallback;
 
-	private T nextValue;
+	protected T nextValue;
 
 	public HBaseEntryIteratorWrapper(
 			final AdapterStore adapterStore,
@@ -69,7 +69,7 @@ public class HBaseEntryIteratorWrapper<T> implements
 		return nextValue != null;
 	}
 
-	private void findNext() {
+	protected void findNext() {
 		while ((nextValue == null) && scannerIt.hasNext()) {
 			final Result row = scannerIt.next();
 			final T decodedValue = decodeRow(
@@ -83,7 +83,7 @@ public class HBaseEntryIteratorWrapper<T> implements
 		}
 	}
 
-	private T decodeRow(
+	protected T decodeRow(
 			final Result row,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index ) {

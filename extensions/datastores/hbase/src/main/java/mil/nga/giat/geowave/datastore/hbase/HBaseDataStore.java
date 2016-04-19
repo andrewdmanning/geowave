@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
@@ -24,16 +25,18 @@ import org.apache.log4j.Logger;
 import com.google.common.collect.Iterators;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.CastIterator;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
+import mil.nga.giat.geowave.core.store.DataStoreCallbackManager;
 import mil.nga.giat.geowave.core.store.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.ScanCallback;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
-import mil.nga.giat.geowave.core.store.adapter.statistics.StatsCompositionTool;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.index.Index;
@@ -49,7 +52,7 @@ import mil.nga.giat.geowave.core.store.query.EverythingQuery;
 import mil.nga.giat.geowave.core.store.query.PrefixIdQuery;
 import mil.nga.giat.geowave.core.store.query.Query;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-import mil.nga.giat.geowave.datastore.hbase.entities.HBaseRowId;
+import mil.nga.giat.geowave.core.store.query.RowIdQuery;
 import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.hbase.io.HBaseWriter;
 import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseAdapterStore;
@@ -57,7 +60,7 @@ import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore;
 import mil.nga.giat.geowave.datastore.hbase.metadata.HBaseIndexStore;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 import mil.nga.giat.geowave.datastore.hbase.query.HBaseConstraintsQuery;
-import mil.nga.giat.geowave.datastore.hbase.query.HBaseFilteredIndexQuery;
+import mil.nga.giat.geowave.datastore.hbase.query.HBaseRowIdsQuery;
 import mil.nga.giat.geowave.datastore.hbase.query.SingleEntryFilter;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.mapreduce.MapReduceDataStore;
@@ -180,103 +183,21 @@ public class HBaseDataStore implements
 				customFieldVisibilityWriter);
 	}
 
-	public CloseableIterator<?> query(
-			final HBaseFilteredIndexQuery query ) {
-		return query.query(
-				operations,
-				adapterStore,
-				0);
+	public AdapterStore getAdapterStore() {
+		return adapterStore;
 	}
 
-	private boolean deleteAltIndexEntry(
-			final String tableName,
-			final ByteArrayId dataId,
-			final ByteArrayId adapterId ) {
-		final boolean success = true;
-		// TODO #406 Need to Fix this later, currently have not coded it
-		LOGGER.warn("This is not implemeted yet. Need to fix");
-
-		return success;
-	}
-
-	private boolean deleteRowsForSingleEntry(
-			final String tableName,
-			final List<KeyValue> rows,
-			final DeleteRowObserver deleteRowObserver,
-			final String... authorizations ) {
-
-		try {
-			final HBaseWriter deleter = operations.createWriter(
-					tableName,
-					"",
-					false);
-			for (final KeyValue rowData : rows) {
-				final byte[] id = rowData.getRow();
-				final Delete d = new Delete(
-						id);
-				deleter.delete(d);
-			}
-			return true;
-		}
-		catch (final IOException e) {
-			LOGGER.warn(
-					"Unable to delete row from table [" + tableName + "].",
-					e);
-			return false;
-		}
-
-	}
-
-	private DeleteRowObserver createDecodingDeleteObserver(
-			final StatsCompositionTool<Object> stats,
+	private CloseableIterator<Object> getEntries(
+			final PrimaryIndex index,
+			final List<ByteArrayId> dataIds,
 			final DataAdapter<Object> adapter,
-			final PrimaryIndex index ) {
-
-		return stats.isPersisting() ? new DeleteRowObserver() {
-			// many rows can be associated with one entry.
-			// need a control to delete only one.
-			boolean foundOne = false;
-
-			@Override
-			public void deleteRow(
-					final KeyValue keyValue ) {
-				if (!foundOne) {
-					final HBaseRowId rowId = new HBaseRowId(
-							keyValue.getRow());
-					final List<KeyValue> list = new ArrayList<KeyValue>();
-					list.add(keyValue);
-					final Result r = new Result(
-							list);
-					HBaseUtils.decodeRow(
-							r,
-							rowId,
-							adapter,
-							null,
-							null,
-							index,
-							new ScanCallback<Object>() {
-
-								@Override
-								public void entryScanned(
-										final DataStoreEntryInfo entryInfo,
-										final Object entry ) {
-									stats.entryDeleted(
-											entryInfo,
-											entry);
-								}
-
-							});
-
-				}
-				foundOne = true;
-			}
-		} : null;
-	}
-
-	private interface DeleteRowObserver
-	{
-		public void deleteRow(
-				KeyValue keyValye );
+			final DedupeFilter filter,
+			final ScanCallback<Object> scanCallback,
+			final String[] authorizations,
+			final double[] maxResolutionSubsamplingPerDimension,
+			final boolean b ) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private List<KeyValue> getEntryRowWithRowIds(
@@ -441,24 +362,6 @@ public class HBaseDataStore implements
 		return result;
 	}
 
-	private <T> StatsCompositionTool<T> getStatsCompositionTool(
-			final DataAdapter<T> adapter ) {
-		return new StatsCompositionTool<T>(
-				adapter,
-				options.isPersistDataStatistics() ? statisticsStore : null);
-	}
-
-	private <T> void synchronizeStatsWithStore(
-			final StatsCompositionTool<T> compositionTool,
-			final boolean commitStats ) {
-		if (commitStats) {
-			compositionTool.flush();
-		}
-		else {
-			compositionTool.reset();
-		}
-	}
-
 	public void store(
 			final PrimaryIndex index ) {
 		if (options.isPersistIndex() && !indexStore.indexExists(index.getId())) {
@@ -496,24 +399,24 @@ public class HBaseDataStore implements
 				while (indexIt.hasNext()) {
 					final PrimaryIndex index = (PrimaryIndex) indexIt.next();
 					indexCount++;
-					// TODO add back in RowIdQuery support
-//					if (sanitizedQuery instanceof RowIdQuery) {
-//						final HBaseRowIdQuery q = new HBaseRowIdQuery(
-//								sanitizedQueryOptions.getAdapterIds(adapterStore),
-//								index,
-//								((RowIdQuery) sanitizedQuery).getRowIds(),
-//								(ScanCallback<Object>) sanitizedQueryOptions.getScanCallback(),
-//								filter,
-//								sanitizedQueryOptions.getAuthorizations());
-//
-//						results.add(q.query(
-//								operations,
-//								tempAdapterStore,
-//								sanitizedQueryOptions.getMaxResolutionSubsamplingPerDimension(),
-//								-1));
-//						continue;
-//					}
-//					else
+					if (sanitizedQuery instanceof RowIdQuery) {
+						final HBaseRowIdsQuery q = new HBaseRowIdsQuery(
+								sanitizedQueryOptions.getAdapterIds(adapterStore),
+								index,
+								((RowIdQuery) sanitizedQuery).getRowIds(),
+								sanitizedQueryOptions.getScanCallback(),
+								filter,
+								sanitizedQueryOptions.getAuthorizations());
+
+						results.add(q.query(
+								operations,
+								tempAdapterStore,
+								// TODO support this?
+								//sanitizedQueryOptions.getMaxResolutionSubsamplingPerDimension(),
+								-1));
+						continue;
+					}
+					else
 						if (sanitizedQuery instanceof DataIdQuery) {
 						final DataIdQuery idQuery = (DataIdQuery) sanitizedQuery;
 						results.add(getEntries(
@@ -543,33 +446,20 @@ public class HBaseDataStore implements
 						continue;
 					}
 					else if (sanitizedQuery instanceof AdapterIdQuery) {
-						// TODO Update constructor
-//						final HBaseConstraintsQuery hbaseQuery = new HBaseConstraintsQuery(
-//								Collections.singletonList(((AdapterIdQuery) sanitizedQuery).getAdapterId()),
-//								index,
-//								sanitizedQuery,
-//								filter,
-//								sanitizedQueryOptions.getScanCallback(),
-//								queryOptions.getAggregation(),
-//								sanitizedQueryOptions.getAuthorizations());
 						final HBaseConstraintsQuery hbaseQuery = new HBaseConstraintsQuery(
 								Collections.singletonList(((AdapterIdQuery) sanitizedQuery).getAdapterId()),
 								index,
+								sanitizedQuery,
 								filter,
 								sanitizedQueryOptions.getScanCallback(),
+								queryOptions.getAggregation(),
 								sanitizedQueryOptions.getAuthorizations());
-						// TODO update query
-//						results.add(hbaseQuery.query(
-//								operations,
-//								tempAdapterStore,
-//								sanitizedQueryOptions.getMaxResolutionSubsamplingPerDimension(),
-//								sanitizedQueryOptions.getLimit(),
-//								true));
 						results.add(hbaseQuery.query(
 								operations,
 								tempAdapterStore,
-								sanitizedQueryOptions.getLimit(),
-								true));
+								// TODO support this?
+								//sanitizedQueryOptions.getMaxResolutionSubsamplingPerDimension(),
+								sanitizedQueryOptions.getLimit()));
 						continue;
 
 					}
@@ -589,34 +479,21 @@ public class HBaseDataStore implements
 						// the null case should not happen, but the findbugs
 						// seems to like it.
 						if ((adapterIds == null) || (adapterIds.size() > 0)) {
-							// TODO Update constructor
-//							hbaseQuery = new HBaseConstraintsQuery(
-//									adapterIds,
-//									index,
-//									sanitizedQuery,
-//									filter,
-//									sanitizedQueryOptions.getScanCallback(),
-//									queryOptions.getAggregation(),
-//									sanitizedQueryOptions.getAuthorizations());
 							hbaseQuery = new HBaseConstraintsQuery(
 									adapterIds,
 									index,
+									sanitizedQuery,
 									filter,
 									sanitizedQueryOptions.getScanCallback(),
+									queryOptions.getAggregation(),
 									sanitizedQueryOptions.getAuthorizations());
 
-							// TODO update query
-//							results.add(hbaseQuery.query(
-//									operations,
-//									tempAdapterStore,
-//									sanitizedQueryOptions.getMaxResolutionSubsamplingPerDimension(),
-//									sanitizedQueryOptions.getLimit(),
-//									true));
 							results.add(hbaseQuery.query(
 									operations,
 									tempAdapterStore,
-									sanitizedQueryOptions.getLimit(),
-									true));
+									// TODO support this?
+									//sanitizedQueryOptions.getMaxResolutionSubsamplingPerDimension(),
+									sanitizedQueryOptions.getLimit()));
 						}
 					}
 					catch (final IOException e) {
@@ -651,112 +528,196 @@ public class HBaseDataStore implements
 						results.iterator())));
 	}
 
-
-
-
-
-
-
-
-
-
-	private CloseableIterator<Object> getEntries(
-			final PrimaryIndex index,
-			final List<ByteArrayId> dataIds,
-			final DataAdapter<Object> adapter,
-			final DedupeFilter filter,
-			final ScanCallback<Object> scanCallback,
-			final String[] authorizations,
-			final double[] maxResolutionSubsamplingPerDimension,
-			final boolean b ) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public AdapterStore getAdapterStore() {
-		return adapterStore;
-	}
-
-
-
-
-
-
-
-
-	// OLD version of query()
-//	{
-//
-//		// query the indices that are supported for this query object, and these
-//		// data adapter Ids
-//		final List<CloseableIterator<Object>> results = new ArrayList<CloseableIterator<Object>>();
-//		int indexCount = 0;
-//		// all queries will use the same instance of the dedupe filter for
-//		// client side filtering because the filter needs to be applied across
-//		// indices
-//		final DedupeFilter clientDedupeFilter = new DedupeFilter();
-//		while (indices.hasNext()) {
-//			final PrimaryIndex index = indices.next();
-//			final HBaseConstraintsQuery hbaseQuery;
-//			if (query == null) {
-//				hbaseQuery = new HBaseConstraintsQuery(
-//						adapterIds,
-//						index,
-//						clientDedupeFilter,
-//						scanCallback,
-//						authorizations);
-//			}
-//			else if (query.isSupported(index)) {
-//				// construct the query
-//				hbaseQuery = new HBaseConstraintsQuery(
-//						adapterIds,
-//						index,
-//						query.getIndexConstraints(index.getIndexStrategy()),
-//						query.createFilters(index.getIndexModel()),
-//						clientDedupeFilter,
-//						scanCallback,
-//						authorizations);
-//			}
-//			else {
-//				continue;
-//			}
-//			if ((queryOptions != null) && (!queryOptions.getFieldIds().isEmpty())) {
-//				// results should contain subset of fieldIds
-//				hbaseQuery.setFieldIds(queryOptions.getFieldIds());
-//			}
-//			results.add(hbaseQuery.query(
-//					operations,
-//					adapterStore,
-//					limit,
-//					true));
-//			indexCount++;
-//		}
-//		// if there aren't multiple indices, the client-side dedupe filter can
-//		// just cache rows that are duplicated within the index and not
-//		// everything
-//		clientDedupeFilter.setMultiIndexSupportEnabled(indexCount > 1);
-//
-//		// concatenate iterators
-//		return new CloseableIteratorWrapper<T>(
-//				new Closeable() {
-//					@Override
-//					public void close()
-//							throws IOException {
-//						for (final CloseableIterator<Object> result : results) {
-//							result.close();
-//						}
-//					}
-//				},
-//				Iterators.concat(new CastIterator<T>(
-//						results.iterator())));
-//	}
-
 	@Override
 	public boolean delete(
 			final QueryOptions queryOptions,
 			final Query query ) {
-		// TODO
+		if (((query == null) || (query instanceof EverythingQuery)) && queryOptions.isAllAdaptersAndIndices()) {
+			try {
+				operations.deleteAll();
+			}
+			catch (final IOException e) {
+				LOGGER.error(
+						"Unable to delete all tables",
+						e);
 				return false;
+			}
+		}
+		else {
+
+			try (CloseableIterator<Index<?, ?>> indexIt = queryOptions.getIndices(indexStore)) {
+				final AtomicBoolean aOk = new AtomicBoolean(
+						true);
+				while (indexIt.hasNext() && aOk.get()) {
+					final PrimaryIndex index = (PrimaryIndex) indexIt.next();
+					final String tableName = StringUtils.stringFromBinary(index.getId().getBytes());
+					final String altIdxTableName = tableName + HBaseUtils.ALT_INDEX_TABLE;
+
+					final boolean useAltIndex = options.isUseAltIndex() && operations.tableExists(altIdxTableName);
+
+					final HBaseWriter idxDeleter = operations.createWriter(
+							tableName,
+							"",
+							false);
+					final HBaseWriter altIdxDelete = operations.createWriter(
+							altIdxTableName,
+							"",
+							false);
+
+					try (final DataStoreCallbackManager callbackCache = new DataStoreCallbackManager(
+							statisticsStore,
+							secondaryIndexDataStore)) {
+						callbackCache.setPersistStats(options.persistDataStatistics);
+
+						try (final CloseableIterator<DataAdapter<?>> adapterIt = queryOptions.getAdapters(adapterStore)) {
+							while (adapterIt.hasNext()) {
+								final DataAdapter<Object> adapter = (DataAdapter<Object>) adapterIt.next();
+
+								final ScanCallback<Object> callback = new ScanCallback<Object>() {
+									@Override
+									public void entryScanned(
+											final DataStoreEntryInfo entryInfo,
+											final Object entry ) {
+										callbackCache.getDeleteCallback(
+												(WritableDataAdapter<Object>) adapter,
+												index).entryDeleted(
+												entryInfo,
+												entry);
+										try {
+											addToBatch(
+													idxDeleter,
+													entryInfo.getRowIds());
+											if (useAltIndex) {
+												addToBatch(
+														altIdxDelete,
+														Collections.singletonList(adapter.getDataId(entry)));
+											}
+										}
+										catch (final IOException e) {
+											LOGGER.error(
+													"Failed deletion",
+													e);
+											aOk.set(false);
+										}
+
+									}
+								};
+
+								CloseableIterator<?> dataIt = null;
+								if (query instanceof RowIdQuery) {
+									final HBaseRowIdsQuery<Object> q = new HBaseRowIdsQuery<Object>(
+											queryOptions.getAdapterIds(adapterStore),
+											index,
+											((RowIdQuery) query).getRowIds(),
+											callback,
+											null,
+											queryOptions.getAuthorizations());
+
+									dataIt = q.query(
+											operations,
+											adapterStore,
+											// TODO support this?
+											//null,
+											-1);
+								}
+								else if (query instanceof DataIdQuery) {
+									final DataIdQuery idQuery = (DataIdQuery) query;
+									dataIt = getEntries(
+											index,
+											idQuery.getDataIds(),
+											(DataAdapter<Object>) adapterStore.getAdapter(idQuery.getAdapterId()),
+											null,
+											callback,
+											queryOptions.getAuthorizations(),
+											null,
+											false);
+								}
+								else if (query instanceof AdapterIdQuery) {
+									dataIt = new HBaseConstraintsQuery(
+											Collections.singletonList(((AdapterIdQuery) query).getAdapterId()),
+											index,
+											query,
+											null,
+											callback,
+											null,
+											queryOptions.getAuthorizations()).query(
+											operations,
+											adapterStore,
+											// TODO support this?
+											//null,
+											null);
+								}
+								else if (query instanceof PrefixIdQuery) {
+									// TODO
+//									dataIt = new HBaseRowPrefixQuery<Object>(
+//											index,
+//											((PrefixIdQuery) query).getRowPrefix(),
+//											callback,
+//											null,
+//											queryOptions.getAuthorizations()).query(
+//											operations,
+//											null,
+//											adapterStore);
+
+								}
+								else {
+									dataIt = new HBaseConstraintsQuery(
+											Collections.singletonList(adapter.getAdapterId()),
+											index,
+											query,
+											null,
+											callback,
+											null,
+											queryOptions.getAuthorizations()).query(
+											operations,
+											adapterStore,
+											// TODO support this?
+											//null,
+											null);
+								}
+
+								while (dataIt.hasNext()) {
+									dataIt.next();
+								}
+								try {
+									dataIt.close();
+								}
+								catch (final Exception ex) {
+									LOGGER.warn(
+											"Cannot close iterator",
+											ex);
+								}
+							}
+						}
+					}
+					idxDeleter.close();
+					if (altIdxDelete != null) {
+						altIdxDelete.close();
+					}
+				}
+				return aOk.get();
+			}
+			catch (final IOException e) {
+				LOGGER.error(
+						"Failed delete operation " + query.toString(),
+						e);
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private void addToBatch(
+			final HBaseWriter deleter,
+			final List<ByteArrayId> ids )
+			throws IOException {
+		final List<Delete> deletes = new ArrayList<Delete>();
+		for (final ByteArrayId id : ids) {
+			deletes.add(new Delete(
+					id.getBytes()));
+		}
+		deleter.delete(deletes);
 	}
 
 	@Override
@@ -790,324 +751,6 @@ public class HBaseDataStore implements
 		LOGGER.error("This method getSplits9 is not yet coded. Need to fix it");
 		return null;
 	}
-
-//	@Override
-//	public <T> List<ByteArrayId> ingest(
-//			WritableDataAdapter<T> writableAdapter,
-//			PrimaryIndex index,
-//			T entry ) {
-//		return this.ingest(
-//				writableAdapter,
-//				index,
-//				entry,
-//				new UniformVisibilityWriter<T>(
-//						new UnconstrainedVisibilityHandler<T, Object>()));
-//	}
-//
-//	@Override
-//	public <T> void ingest(
-//			WritableDataAdapter<T> writableAdapter,
-//			PrimaryIndex index,
-//			Iterator<T> entryIterator ) {
-//		ingest(
-//				writableAdapter,
-//				index,
-//				entryIterator,
-//				null,
-//				new UniformVisibilityWriter<T>(
-//						new UnconstrainedVisibilityHandler<T, Object>()));
-//	}
-//
-//	public <T> void ingest(
-//			final WritableDataAdapter<T> writableAdapter,
-//			final PrimaryIndex index,
-//			Iterator<T> entryIterator,
-//			IngestCallback<T> ingestCallback,
-//			VisibilityWriter<T> customFieldVisibilityWriter ) {
-//		if (writableAdapter instanceof IndexDependentDataAdapter) {
-//			ingestInternal(
-//					writableAdapter,
-//					index,
-//					new HBaseIteratorWrapper<T, T>(
-//							entryIterator,
-//							new Converter<T, T>() {
-//
-//								@Override
-//								public Iterator<T> convert(
-//										final T entry ) {
-//									return ((IndexDependentDataAdapter) writableAdapter).convertToIndex(
-//											index,
-//											entry);
-//								}
-//							},
-//							null),
-//					ingestCallback,
-//					customFieldVisibilityWriter);
-//		}
-//		else {
-//			ingestInternal(
-//					writableAdapter,
-//					index,
-//					entryIterator,
-//					ingestCallback,
-//					customFieldVisibilityWriter);
-//		}
-//	}
-
-//	private <T> void ingestInternal(
-//			final WritableDataAdapter<T> dataWriter,
-//			final PrimaryIndex index,
-//			final Iterator<T> entryIterator,
-//			final IngestCallback<T> ingestCallback,
-//			final VisibilityWriter<T> customFieldVisibilityWriter ) {
-//		try {
-//			store(dataWriter);
-//			store(index);
-//
-//			final String tableName = StringUtils.stringFromBinary(index.getId().getBytes());
-//			final String altIdxTableName = tableName + HBaseUtils.ALT_INDEX_TABLE;
-//			// final byte[] adapterId = dataWriter.getAdapterId().getBytes();
-//
-//			boolean useAltIndex = options.isUseAltIndex();
-//
-//			if (useAltIndex) {
-//				if (operations.tableExists(tableName)) {
-//					if (!operations.tableExists(altIdxTableName)) {
-//						useAltIndex = false;
-//						LOGGER.warn("Requested alternate index table [" + altIdxTableName + "] does not exist.");
-//					}
-//				}
-//				else {
-//					if (operations.tableExists(altIdxTableName)) {
-//						operations.deleteTable(altIdxTableName);
-//						LOGGER.warn("Deleting current alternate index table [" + altIdxTableName + "] as main table does not yet exist.");
-//					}
-//				}
-//			}
-//
-//			final String indexName = StringUtils.stringFromBinary(index.getId().getBytes());
-//			HBaseWriter writer = operations.createWriter(
-//					indexName,
-//					dataWriter.getAdapterId().getString(),
-//					options.isCreateTable());
-//
-//			/*
-//			 * HBase doesnt support locality groups. Hence we will not use this.
-//			 * if (options.isUseLocalityGroups() &&
-//			 * !operations.localityGroupExists( tableName, adapterId)) {
-//			 * operations.addLocalityGroup( tableName, adapterId); }
-//			 */
-//
-//			final List<IngestCallback<T>> callbacks = new ArrayList<IngestCallback<T>>();
-//
-//			HBaseWriter altIdxWriter = null;
-//			if (useAltIndex) {
-//				altIdxWriter = operations.createWriter(
-//						altIdxTableName,
-//						dataWriter.getAdapterId().getString(),
-//						options.isCreateTable());
-//
-//				callbacks.add(new HBaseAltIndexIngestCallback<T>(
-//						altIdxWriter,
-//						dataWriter));
-//			}
-//
-//			final StatsCompositionTool<T> statsCompositionTool = this.getStatsCompositionTool(dataWriter);
-//			callbacks.add(statsCompositionTool);
-//
-//			if (ingestCallback != null) {
-//				callbacks.add(ingestCallback);
-//			}
-//			final IngestCallback<T> finalIngestCallback;
-//			if (callbacks.size() > 1) {
-//				finalIngestCallback = new IngestCallbackList<T>(
-//						callbacks);
-//			}
-//			else if (callbacks.size() == 1) {
-//				finalIngestCallback = callbacks.get(0);
-//			}
-//			else {
-//				finalIngestCallback = null;
-//			}
-//
-//			writer.write(
-//					new Iterable<RowMutations>() {
-//						@Override
-//						public Iterator<RowMutations> iterator() {
-//							return new HBaseIteratorWrapper<T, RowMutations>(
-//									entryIterator,
-//									new Converter<T, RowMutations>() {
-//
-//										@Override
-//										public Iterator<RowMutations> convert(
-//												final T entry ) {
-//											return HBaseUtils.entryToMutations(
-//													dataWriter,
-//													index,
-//													entry,
-//													customFieldVisibilityWriter).iterator();
-//										}
-//									},
-//									finalIngestCallback == null ? null : new Callback<T, RowMutations>() {
-//
-//										@Override
-//										public void notifyIterationComplete(
-//												final T entry ) {
-//											finalIngestCallback.entryIngested(
-//													HBaseUtils.getIngestInfo(
-//															dataWriter,
-//															index,
-//															entry,
-//															customFieldVisibilityWriter),
-//													entry);
-//										}
-//									});
-//						}
-//					},
-//					dataWriter.getAdapterId().getString());
-//			writer.close();
-//			if (useAltIndex && (altIdxWriter != null)) {
-//				altIdxWriter.close();
-//			}
-//
-//			synchronizeStatsWithStore(
-//					statsCompositionTool,
-//					true);
-//		}
-//		catch (IOException e) {
-//			LOGGER.warn(
-//					"Unable to create writer",
-//					e);
-//		}
-//
-//	}
-
-//	@Override
-//	public <T> List<ByteArrayId> ingest(
-//			WritableDataAdapter<T> writableAdapter,
-//			PrimaryIndex index,
-//			T entry,
-//			VisibilityWriter<T> customFieldVisibilityWriter ) {
-//		if (writableAdapter instanceof IndexDependentDataAdapter) {
-//			final IndexDependentDataAdapter adapter = ((IndexDependentDataAdapter) writableAdapter);
-//			final Iterator<T> indexedEntries = adapter.convertToIndex(
-//					index,
-//					entry);
-//			final List<ByteArrayId> rowIds = new ArrayList<ByteArrayId>();
-//			while (indexedEntries.hasNext()) {
-//				rowIds.addAll(ingestInternal(
-//						adapter,
-//						index,
-//						indexedEntries.next(),
-//						customFieldVisibilityWriter));
-//			}
-//			return rowIds;
-//		}
-//		else {
-//			return ingestInternal(
-//					writableAdapter,
-//					index,
-//					entry,
-//					customFieldVisibilityWriter);
-//		}
-//	}
-
-//	public <T> List<ByteArrayId> ingestInternal(
-//			final WritableDataAdapter<T> writableAdapter,
-//			final PrimaryIndex index,
-//			final T entry,
-//			final VisibilityWriter<T> customFieldVisibilityWriter ) {
-//		store(writableAdapter);
-//		store(index);
-//
-//		HBaseWriter writer = null;
-//		StatsCompositionTool<T> statisticsTool = null;
-//		try {
-//			final String indexName = StringUtils.stringFromBinary(index.getId().getBytes());
-//			final String altIdxTableName = indexName + HBaseUtils.ALT_INDEX_TABLE;
-//			// final byte[] adapterId =
-//			// writableAdapter.getAdapterId().getBytes();
-//
-//			boolean useAltIndex = options.isUseAltIndex();
-//
-//			if (useAltIndex) {
-//				if (operations.tableExists(indexName)) {
-//					if (!operations.tableExists(altIdxTableName)) {
-//						useAltIndex = false;
-//						LOGGER.warn("Requested alternate index table [" + altIdxTableName + "] does not exist.");
-//					}
-//				}
-//				else {
-//					if (operations.tableExists(altIdxTableName)) {
-//						operations.deleteTable(altIdxTableName);
-//						LOGGER.warn("Deleting current alternate index table [" + altIdxTableName + "] as main table does not yet exist.");
-//					}
-//				}
-//			}
-//
-//			statisticsTool = getStatsCompositionTool(writableAdapter);
-//
-//			writer = operations.createWriter(
-//					indexName,
-//					writableAdapter.getAdapterId().getString(),
-//					options.isCreateTable());
-//			final DataStoreEntryInfo entryInfo = HBaseUtils.write(
-//					writableAdapter,
-//					index,
-//					entry,
-//					writer,
-//					customFieldVisibilityWriter);
-//
-//			writer.close();
-//			if (useAltIndex) {
-//				final HBaseWriter altIdxWriter = operations.createWriter(
-//						altIdxTableName,
-//						writableAdapter.getAdapterId().getString(),
-//						options.isCreateTable());
-//
-//				HBaseUtils.writeAltIndex(
-//						writableAdapter,
-//						entryInfo,
-//						entry,
-//						altIdxWriter);
-//
-//				altIdxWriter.close();
-//			}
-//			statisticsTool.entryIngested(
-//					entryInfo,
-//					entry);
-//
-//			synchronizeStatsWithStore(
-//					statisticsTool,
-//					true);
-//
-//			return entryInfo.getRowIds();
-//		}
-//		catch (IOException e) {
-//			LOGGER.error(
-//					"Unable to ingest data entry",
-//					e);
-//		}
-//		finally {
-//			try {
-//				statisticsTool.close();
-//			}
-//			catch (Exception e) {
-//				LOGGER.error("Unable to close statistics tool");
-//			}
-//		}
-//		return new ArrayList<ByteArrayId>();
-//	}
-
-//	@Override
-//	public <T> void ingest(
-//			WritableDataAdapter<T> writableAdapter,
-//			PrimaryIndex index,
-//			Iterator<T> entryIterator,
-//			IngestCallback<T> ingestCallback ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method ingest4 is not yet coded. Need to fix it");
-//	}
 
 //	@Override
 //	public <T> T getEntry(
@@ -1232,289 +875,6 @@ public class HBaseDataStore implements
 //					ex);
 //		}
 //		return success;
-//	}
-
-//	@Override
-//	public <T> CloseableIterator<T> getEntriesByPrefix(
-//			PrimaryIndex index,
-//			ByteArrayId rowPrefix,
-//			String... authorizations ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method getEntriesByPrefix3 is not yet coded. Need to fix it");
-//		return null;
-//	}
-
-//	@Override
-//	public <T> CloseableIterator<T> query(
-//			DataAdapter<T> adapter,
-//			PrimaryIndex index,
-//			Query query,
-//			int limit,
-//			String... authorizations ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method query5 is not yet coded. Need to fix it");
-//		return null;
-//	}
-//
-//	@Override
-//	public <T> CloseableIterator<T> query(
-//			DataAdapter<T> adapter,
-//			PrimaryIndex index,
-//			Query query,
-//			Integer limit,
-//			ScanCallback<?> scanCallback,
-//			String... authorizations ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method query6 is not yet coded. Need to fix it");
-//		return null;
-//	}
-
-//	@Override
-//	public CloseableIterator<?> query(
-//			Query query,
-//			String... authorizations ) {
-//		return query(
-//				(List<ByteArrayId>) null,
-//				query,
-//				authorizations);
-//	}
-//
-//	@Override
-//	public <T> CloseableIterator<T> query(
-//			DataAdapter<T> adapter,
-//			Query query,
-//			String... additionalAuthorizations ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method query3c is not yet coded. Need to fix it");
-//		return null;
-//	}
-//
-//	@Override
-//	public <T> CloseableIterator<T> query(
-//			PrimaryIndex index,
-//			Query query,
-//			String... additionalAuthorizations ) {
-//		return query(
-//				index,
-//				query,
-//				null,
-//				additionalAuthorizations);
-//	}
-
-//	@Override
-//	public <T> CloseableIterator<T> query(
-//			DataAdapter<T> adapter,
-//			PrimaryIndex index,
-//			Query query,
-//			String... additionalAuthorizations ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method query4c is not yet coded. Need to fix it");
-//		return null;
-//	}
-//
-//	@Override
-//	public CloseableIterator<?> query(
-//			List<ByteArrayId> adapterIds,
-//			Query query,
-//			String... additionalAuthorizations ) {
-//		return query(
-//				adapterIds,
-//				query,
-//				adapterStore,
-//				null,
-//				null,
-//				additionalAuthorizations);
-//	}
-//
-//	@Override
-//	public CloseableIterator<?> query(
-//			Query query,
-//			int limit,
-//			String... additionalAuthorizations ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method query3 is not yet coded. Need to fix it");
-//		return null;
-//	}
-//
-//	@Override
-//	public <T> CloseableIterator<T> query(
-//			DataAdapter<T> adapter,
-//			Query query,
-//			int limit,
-//			String... additionalAuthorizations ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method query4b is not yet coded. Need to fix it");
-//		return null;
-//	}
-//
-//	@Override
-//	public <T> CloseableIterator<T> query(
-//			PrimaryIndex index,
-//			Query query,
-//			int limit,
-//			String... additionalAuthorizations ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method query4a is not yet coded. Need to fix it");
-//		return null;
-//	}
-//
-//	@Override
-//	public CloseableIterator<?> query(
-//			List<ByteArrayId> adapterIds,
-//			Query query,
-//			int limit,
-//			String... additionalAuthorizations ) {
-//		//  #406 Need to fix
-//		LOGGER.error("This method query4 is not yet coded. Need to fix it");
-//		return null;
-//	}
-
-//	@SuppressWarnings("unchecked")
-//	private <T> CloseableIterator<T> query(
-//			final DataAdapter<T> adapter,
-//			final Query query,
-//			final Integer limit ) {
-//		store(adapter);
-//		return ((CloseableIterator<T>) query(
-//				Arrays.asList(new ByteArrayId[] {
-//					adapter.getAdapterId()
-//				}),
-//				query,
-//				new MemoryAdapterStore(
-//						new DataAdapter[] {
-//							adapter
-//						}),
-//				limit,
-//				null));
-//	}
-//
-//	private CloseableIterator<?> query(
-//			final List<ByteArrayId> adapterIds,
-//			final Query query,
-//			final AdapterStore adapterStore,
-//			final Integer limit,
-//			final ScanCallback<?> scanCallback,
-//			final String... authorizations ) {
-//		try (final CloseableIterator<Index<?, ?>> indices = indexStore.getIndices()) {
-//			return query(
-//					adapterIds,
-//					query,
-//					indices,
-//					adapterStore,
-//					limit,
-//					scanCallback,
-//					null,
-//					authorizations);
-//		}
-//		catch (final IOException e) {
-//			LOGGER.warn(
-//					"unable to close index iterator for query",
-//					e);
-//		}
-//		return new HBaseCloseableIteratorWrapper<Object>(
-//				new Closeable() {
-//					@Override
-//					public void close()
-//							throws IOException {}
-//				},
-//				new ArrayList<Object>().iterator());
-//	}
-//
-//	@SuppressWarnings("unchecked")
-//	private <T> CloseableIterator<T> query(
-//			final PrimaryIndex index,
-//			final Query query,
-//			final Integer limit,
-//			final QueryOptions queryOptions,
-//			final String... additionalAuthorizations ) {
-//		if ((query != null) && !query.isSupported(index)) {
-//			throw new IllegalArgumentException(
-//					"Index does not support the query");
-//		}
-//		return (CloseableIterator<T>) query(
-//				null,
-//				query,
-//				new CloseableIterator.Wrapper(
-//						Arrays.asList(
-//								new PrimaryIndex[] {
-//									index
-//								}).iterator()),
-//				adapterStore,
-//				limit,
-//				null,
-//				queryOptions,
-//				additionalAuthorizations);
-//	}
-
-//	private CloseableIterator<?> query(
-//			final List<ByteArrayId> adapterIds,
-//			final Query query,
-//			final CloseableIterator<PrimaryIndex> indices,
-//			final AdapterStore adapterStore,
-//			final Integer limit,
-//			final ScanCallback<?> scanCallback,
-//			final QueryOptions queryOptions,
-//			final String... authorizations ) {
-//		// query the indices that are supported for this query object, and these
-//		// data adapter Ids
-//		final List<CloseableIterator<?>> results = new ArrayList<CloseableIterator<?>>();
-//		int indexCount = 0;
-//		// all queries will use the same instance of the dedupe filter for
-//		// client side filtering because the filter needs to be applied across
-//		// indices
-//		final DedupeFilter clientDedupeFilter = new DedupeFilter();
-//		while (indices.hasNext()) {
-//			final PrimaryIndex index = indices.next();
-//			final HBaseConstraintsQuery hbaseQuery;
-//			if (query == null) {
-//				hbaseQuery = new HBaseConstraintsQuery(
-//						adapterIds,
-//						index,
-//						clientDedupeFilter,
-//						scanCallback,
-//						authorizations);
-//			}
-//			else if (query.isSupported(index)) {
-//				// construct the query
-//				hbaseQuery = new HBaseConstraintsQuery(
-//						adapterIds,
-//						index,
-//						query.getIndexConstraints(index.getIndexStrategy()),
-//						query.createFilters(index.getIndexModel()),
-//						clientDedupeFilter,
-//						scanCallback,
-//						authorizations);
-//			}
-//			else {
-//				continue;
-//			}
-//			if ((queryOptions != null) && (!queryOptions.getFieldIds().isEmpty())) {
-//				// results should contain subset of fieldIds
-//				hbaseQuery.setFieldIds(queryOptions.getFieldIds());
-//			}
-//			results.add(hbaseQuery.query(
-//					operations,
-//					adapterStore,
-//					limit,
-//					true));
-//			indexCount++;
-//		}
-//		// if there aren't multiple indices, the client-side dedupe filter can
-//		// just cache rows that are duplicated within the index and not
-//		// everything
-//		clientDedupeFilter.setMultiIndexSupportEnabled(indexCount > 1);
-//		// concatenate iterators
-//		return new HBaseCloseableIteratorWrapper<Object>(
-//				new Closeable() {
-//					@Override
-//					public void close()
-//							throws IOException {
-//						for (final CloseableIterator<?> result : results) {
-//							result.close();
-//						}
-//					}
-//				},
-//				Iterators.concat(results.iterator()));
 //	}
 
 }

@@ -29,17 +29,14 @@ abstract public class AbstractHBaseRowQuery<T> extends
 
 	private static final Logger LOGGER = Logger.getLogger(
 			AbstractHBaseRowQuery.class);
-	protected final ByteArrayId row;
 	protected final ScanCallback<T> scanCallback;
 
 	public AbstractHBaseRowQuery(
 			final PrimaryIndex index,
-			final ByteArrayId row,
 			final String[] authorizations,
 			final ScanCallback<T> scanCallback ) {
 		super(
 				index);
-		this.row = row;
 		this.scanCallback = scanCallback;
 	}
 

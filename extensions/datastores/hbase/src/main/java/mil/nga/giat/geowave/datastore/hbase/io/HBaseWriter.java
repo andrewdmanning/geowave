@@ -4,6 +4,7 @@
 package mil.nga.giat.geowave.datastore.hbase.io;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
@@ -125,6 +126,12 @@ public class HBaseWriter
 			Delete delete )
 			throws IOException {
 		table.delete(delete);
+	}
+
+	public void delete(
+			List<Delete> deletes )
+			throws IOException {
+		table.delete(deletes);
 	}
 	
 	public String getLongest(String input){	

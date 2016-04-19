@@ -27,6 +27,10 @@ import org.apache.accumulo.core.client.ScannerBase;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.user.WholeRowIterator;
+//import org.apache.accumulo.core.client.ScannerBase;
+//import org.apache.accumulo.core.data.Key;
+//import org.apache.accumulo.core.data.Value;
+//import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.Iterators;
