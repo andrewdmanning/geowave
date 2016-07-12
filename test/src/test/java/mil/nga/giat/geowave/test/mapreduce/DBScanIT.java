@@ -63,7 +63,7 @@ import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
 public class DBScanIT
 {
 	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStorePluginOptions;
 

@@ -54,7 +54,7 @@ public class SecondaryIndexingDriverIT
 	private static int NUM_FEATURES = 10;
 
 	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStoreOptions;
 

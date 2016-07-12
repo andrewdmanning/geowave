@@ -88,7 +88,7 @@ public class LandsatIT
 	}
 
 	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStoreOptions;
 	private static final String REFERENCE_LANDSAT_IMAGE_PATH = "src/test/resources/landsat/expected.png";

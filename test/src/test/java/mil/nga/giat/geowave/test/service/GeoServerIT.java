@@ -78,7 +78,7 @@ public class GeoServerIT
 	private String update;
 
 	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStoreOptions;
 

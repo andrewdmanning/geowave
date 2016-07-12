@@ -56,7 +56,7 @@ import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
 public class GeoWaveKMeansIT
 {
 	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStorePluginOptions;
 

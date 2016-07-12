@@ -61,7 +61,7 @@ public class GeoWaveIngestGeoserverIT
 
 	private static GeoserverServiceClient geoserverServiceClient = null;
 	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStoreOptions;
 

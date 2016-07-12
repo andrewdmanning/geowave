@@ -40,7 +40,7 @@ import mil.nga.giat.geowave.test.annotation.NamespaceOverride;
 	Environment.MAP_REDUCE
 })
 @GeoWaveTestStore({
-	GeoWaveStoreType.ACCUMULO
+	GeoWaveStoreType.HBASE
 })
 public class KDERasterResizeIT
 {

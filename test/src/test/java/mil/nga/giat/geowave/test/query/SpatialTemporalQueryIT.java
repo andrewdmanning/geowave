@@ -80,7 +80,7 @@ public class SpatialTemporalQueryIT
 	private PrimaryIndex currentGeotoolsIndex;
 
 	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStoreOptions;
 

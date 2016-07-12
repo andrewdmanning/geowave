@@ -46,7 +46,7 @@ public class AttributesSubsetQueryIT
 	private static FeatureDataAdapter dataAdapter;
 
 	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStore;
 

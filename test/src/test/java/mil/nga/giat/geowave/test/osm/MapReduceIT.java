@@ -45,7 +45,7 @@ public class MapReduceIT
 			"osm").getAbsoluteFile().toString();
 
 	@GeoWaveTestStore({
-		GeoWaveStoreType.ACCUMULO
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStoreOptions;
 

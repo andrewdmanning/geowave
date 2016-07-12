@@ -30,7 +30,7 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	BasicMapReduceIT.class,
 	GeoWaveRasterIT.class,
 	LandsatIT.class,
-	BulkIngestInputGenerationIT.class,
+	BulkIngestInputGenerationIT.class, // Accumulo-dependent
 	KDERasterResizeIT.class,
 	GeoWaveKMeansIT.class,
 	GeoWaveNNIT.class,
@@ -42,8 +42,8 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	DBScanIT.class,
 	SpatialTemporalQueryIT.class,
 	PolygonDataIdQueryIT.class,
-	ConfigCacheIT.class,
-	DataStatisticsStoreIT.class,
+	ConfigCacheIT.class, // Accumulo-dependent
+	DataStatisticsStoreIT.class, // HBase-dependent
 })
 public class GeoWaveITSuite
 {
