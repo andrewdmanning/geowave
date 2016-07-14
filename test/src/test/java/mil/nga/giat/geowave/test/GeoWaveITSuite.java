@@ -29,7 +29,9 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	BasicKafkaIT.class,
 	BasicMapReduceIT.class,
 	// GeoWaveRasterIT.class, // Fails in HBase
-//	LandsatIT.class,	// Fails in HBase - AbstractGeowavePersistence.getCombinedId(AbstractGeowavePersistence.java:82) NPE
+	// LandsatIT.class, // Fails in HBase -
+	// AbstractGeowavePersistence.getCombinedId(AbstractGeowavePersistence.java:82)
+	// NPE
 	// BulkIngestInputGenerationIT.class, // Accumulo-dependent
 	// KDERasterResizeIT.class, // Fails in HBase
 	GeoWaveKMeansIT.class,
@@ -37,11 +39,11 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	// GeoServerIT.class,
 	// GeoWaveServicesIT.class,
 	// GeoWaveIngestGeoserverIT.class,
-//	AttributesSubsetQueryIT.class,	// Fails in HBase
+	// AttributesSubsetQueryIT.class, // Fails in HBase
 	SecondaryIndexingQueryIT.class,
 	DBScanIT.class,
 	SpatialTemporalQueryIT.class,
-	PolygonDataIdQueryIT.class,	// Fails in HBase
+//	PolygonDataIdQueryIT.class, // Fails in HBase
 	// ConfigCacheIT.class, // Accumulo-dependent
 	DataStatisticsStoreIT.class, // HBase-dependent
 })
