@@ -36,14 +36,14 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	// KDERasterResizeIT.class, // Fails in HBase
 	GeoWaveKMeansIT.class,
 	GeoWaveNNIT.class,
-	// GeoServerIT.class,
-	// GeoWaveServicesIT.class,
-	// GeoWaveIngestGeoserverIT.class,
+	GeoServerIT.class, // ???
+	// GeoWaveServicesIT.class, // ???
+	// GeoWaveIngestGeoserverIT.class, // ???
 	// AttributesSubsetQueryIT.class, // Fails in HBase
 	SecondaryIndexingQueryIT.class,
 	DBScanIT.class,
 	SpatialTemporalQueryIT.class,
-//	PolygonDataIdQueryIT.class, // Fails in HBase
+	// PolygonDataIdQueryIT.class, // Fails in HBase
 	// ConfigCacheIT.class, // Accumulo-dependent
 	DataStatisticsStoreIT.class, // HBase-dependent
 })
