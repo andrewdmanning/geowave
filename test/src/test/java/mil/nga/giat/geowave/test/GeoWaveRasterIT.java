@@ -475,8 +475,6 @@ public class GeoWaveRasterIT
 			final RasterTileMergeStrategy<?> mergeStrategy )
 			throws IOException {
 
-		System.out.println("Beginning ingest.");
-
 		// just ingest a number of rasters
 		final DataStore dataStore = dataStoreOptions.createDataStore();
 		final RasterDataAdapter basicAdapter = RasterUtils.createDataAdapterTypeDouble(
@@ -522,8 +520,6 @@ public class GeoWaveRasterIT
 						raster));
 			}
 		}
-
-		System.out.println("Done with ingest.");
 	}
 
 	private static double getValue(

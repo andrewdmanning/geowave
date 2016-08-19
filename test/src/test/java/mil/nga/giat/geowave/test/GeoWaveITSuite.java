@@ -31,10 +31,10 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	GeoWaveRasterIT.class,
 
 	LandsatIT.class,
-	
+
 	// BulkIngestInputGenerationIT.class, // Accumulo-dependent
 
-	KDERasterResizeIT.class,
+	KDERasterResizeIT.class, // infinite loop in binRanges()
 	GeoWaveKMeansIT.class,
 	GeoWaveNNIT.class,
 
@@ -73,14 +73,16 @@ public class GeoWaveITSuite
 	@BeforeClass
 	public static void setupSuite() {
 		synchronized (GeoWaveITRunner.MUTEX) {
-			GeoWaveITRunner.DEFER_CLEANUP.set(true);
+			GeoWaveITRunner.DEFER_CLEANUP.set(
+					true);
 		}
 	}
 
 	@AfterClass
 	public static void tearDownSuite() {
 		synchronized (GeoWaveITRunner.MUTEX) {
-			GeoWaveITRunner.DEFER_CLEANUP.set(false);
+			GeoWaveITRunner.DEFER_CLEANUP.set(
+					false);
 		}
 	}
 }

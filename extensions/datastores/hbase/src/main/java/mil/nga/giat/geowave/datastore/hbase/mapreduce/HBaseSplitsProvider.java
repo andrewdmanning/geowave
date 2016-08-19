@@ -262,6 +262,7 @@ public class HBaseSplitsProvider extends
 						new ByteArrayId(
 								regionInfo.getEndKey())));
 				rangeList.add(overlappingRange);
+				i.remove();
 
 				final ByteArrayRange uncoveredRange = new ByteArrayRange(
 						new ByteArrayId(
