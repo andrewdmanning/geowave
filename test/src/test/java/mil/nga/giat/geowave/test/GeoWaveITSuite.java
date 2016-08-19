@@ -34,7 +34,7 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 
 	// BulkIngestInputGenerationIT.class, // Accumulo-dependent
 
-	KDERasterResizeIT.class, // infinite loop in binRanges()
+	KDERasterResizeIT.class,
 	GeoWaveKMeansIT.class,
 	GeoWaveNNIT.class,
 

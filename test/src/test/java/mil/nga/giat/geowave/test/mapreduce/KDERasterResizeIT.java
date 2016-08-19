@@ -145,6 +145,7 @@ public class KDERasterResizeIT
 					command.createRunner(new ManualOperationParams()),
 					new String[] {});
 		}
+
 		final int numLevels = (BASE_MAX_LEVEL - BASE_MIN_LEVEL) + 1;
 		final double[][][][] initialSampleValuesPerRequestSize = new double[numLevels][][][];
 		for (int l = 0; l < numLevels; l++) {
@@ -161,6 +162,7 @@ public class KDERasterResizeIT
 									l))),
 					null);
 		}
+
 		for (int i = MIN_TILE_SIZE_POWER_OF_2; i <= MAX_TILE_SIZE_POWER_OF_2; i += INCREMENT) {
 			final String originalTileSizeCoverageName = TEST_COVERAGE_NAME_PREFIX + i;
 			final String resizeTileSizeCoverageName = TEST_RESIZE_COVERAGE_NAME_PREFIX + i;
