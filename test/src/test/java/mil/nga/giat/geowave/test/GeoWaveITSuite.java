@@ -28,23 +28,85 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	GeoWaveBasicIT.class,
 	BasicKafkaIT.class,
 	BasicMapReduceIT.class,
-	// GeoWaveRasterIT.class, // Fails in HBase
+	GeoWaveRasterIT.class,
+
 	// LandsatIT.class, // Fails in HBase -
-	// AbstractGeowavePersistence.getCombinedId(AbstractGeowavePersistence.java:82)
-	// NPE
+	// java.lang.NullPointerException: null
+	// at
+	// mil.nga.giat.geowave.core.store.metadata.AbstractGeowavePersistence.getCombinedId(AbstractGeowavePersistence.java:82)
+	// at
+	// mil.nga.giat.geowave.core.store.metadata.AbstractGeowavePersistence.addObjectToCache(AbstractGeowavePersistence.java:91)
+	// at
+	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore.access$000(HBaseDataStatisticsStore.java:22)
+	// at
+	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore$StatisticsNativeIteratorWrapper.next(HBaseDataStatisticsStore.java:2
+	// 35)
+	// at
+	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore$StatisticsNativeIteratorWrapper.next(HBaseDataStatisticsStore.java:1
+	// 87)
+	// at
+	// mil.nga.giat.geowave.datastore.hbase.metadata.AbstractHBasePersistence.getObject(AbstractHBasePersistence.java:72)
+	// at
+	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore.getDataStatistics(HBaseDataStatisticsStore.java:73)
+	// at
+	// mil.nga.giat.geowave.adapter.raster.plugin.GeoWaveRasterReader.getOriginalEnvelope(GeoWaveRasterReader.java:322)
+	// at
+	// mil.nga.giat.geowave.adapter.raster.plugin.GeoWaveRasterReader.renderGridCoverage(GeoWaveRasterReader.java:523)
+	// at
+	// mil.nga.giat.geowave.test.landsat.LandsatIT.testMosaic(LandsatIT.java:180)
+
 	// BulkIngestInputGenerationIT.class, // Accumulo-dependent
-	// KDERasterResizeIT.class, // Fails in HBase
+
+	// KDERasterResizeIT.class, // Fails in HBase:
+	// java.lang.NullPointerException
+	// at
+	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore$StatisticsNativeIteratorWrapper.next(HBaseDataStatisticsStore.java:222)
+	// at
+	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore$StatisticsNativeIteratorWrapper.next(HBaseDataStatisticsStore.java:1)
+	// at
+	// mil.nga.giat.geowave.datastore.hbase.metadata.AbstractHBasePersistence.getObject(AbstractHBasePersistence.java:72)
+	// at
+	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore.getDataStatistics(HBaseDataStatisticsStore.java:73)
+	// at
+	// mil.nga.giat.geowave.adapter.raster.plugin.GeoWaveRasterReader.getOriginalEnvelope(GeoWaveRasterReader.java:322)
+	// at
+	// mil.nga.giat.geowave.adapter.raster.plugin.GeoWaveRasterReader.renderGridCoverage(GeoWaveRasterReader.java:523)
+	// at
+	// mil.nga.giat.geowave.test.mapreduce.KDERasterResizeIT.testSamplesMatch(KDERasterResizeIT.java:259)
+	// at
+	// mil.nga.giat.geowave.test.mapreduce.KDERasterResizeIT.testKDEAndRasterResize(KDERasterResizeIT.java:151)
+
 	GeoWaveKMeansIT.class,
 	GeoWaveNNIT.class,
-	GeoServerIT.class, // ???
+
+	// GeoServerIT.class, // Fails in HBase:
+	// net.sf.json.JSONException: A JSONObject text must begin with '{' at
+	// character 1 of No such datastore: geowave_test,mil_nga_giat_geowave_test
+	// at net.sf.json.util.JSONTokener.syntaxError(JSONTokener.java:499)
+	// at net.sf.json.JSONObject._fromJSONTokener(JSONObject.java:972)
+	// at net.sf.json.JSONObject._fromString(JSONObject.java:1201)
+	// at net.sf.json.JSONObject.fromObject(JSONObject.java:165)
+	// at net.sf.json.JSONObject.fromObject(JSONObject.java:134)
+	// at
+	// mil.nga.giat.geowave.service.client.GeoserverServiceClient.getDatastore(GeoserverServiceClient.java:112)
+	// at
+	// mil.nga.giat.geowave.test.service.GeoServerIT.initialize(GeoServerIT.java:130)
+
 	// GeoWaveServicesIT.class, // ???
 	// GeoWaveIngestGeoserverIT.class, // ???
-	// AttributesSubsetQueryIT.class, // Fails in HBase
+
+	// AttributesSubsetQueryIT.class, // Fails in HBase - doesn't do field
+	// subsetting in testServerSideFiltering - need to add support for that
+
 	SecondaryIndexingQueryIT.class,
 	DBScanIT.class,
 	SpatialTemporalQueryIT.class,
-	// PolygonDataIdQueryIT.class, // Fails in HBase
-	// ConfigCacheIT.class, // Accumulo-dependent
+
+	// PolygonDataIdQueryIT.class, // Fails in HBase - returns extra results
+
+	// ConfigCacheIT.class, // Accumulo-dependent - change from Accumulo*** to
+	// Memory*** and put in core-store
+
 	DataStatisticsStoreIT.class, // HBase-dependent
 })
 public class GeoWaveITSuite

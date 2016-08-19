@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.hadoop.hbase.client.Result;
@@ -26,6 +28,7 @@ import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.ScanCallback;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
@@ -35,6 +38,7 @@ import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseEntryIteratorWrapper;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils.MultiScannerClosableWrapper;
+import mil.nga.giat.geowave.datastore.hbase.util.MergingEntryIterator;
 
 public abstract class HBaseFilteredIndexQuery extends
 		HBaseQuery implements
@@ -278,14 +282,37 @@ public abstract class HBaseFilteredIndexQuery extends
 		// server side filters and hence they have to run on clients itself. So
 		// need to add server side filters also in list of client filters.
 		final List<QueryFilter> filters = getAllFiltersList();
-		return new HBaseEntryIteratorWrapper(
-				adapterStore,
-				index,
-				resultsIterator,
-				filters.isEmpty() ? null : filters.size() == 1 ? filters.get(0)
-						: new mil.nga.giat.geowave.core.store.filter.FilterList<QueryFilter>(
-								filters),
-				scanCallback);
+		final QueryFilter queryFilter = filters.isEmpty() ? null : filters.size() == 1 ? filters.get(0)
+				: new mil.nga.giat.geowave.core.store.filter.FilterList<QueryFilter>(
+						filters);
+
+		final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters = new HashMap<ByteArrayId, RowMergingDataAdapter>();
+		for (final ByteArrayId adapterId : adapterIds) {
+			final DataAdapter adapter = adapterStore.getAdapter(adapterId);
+			if (adapter instanceof RowMergingDataAdapter) {
+				mergingAdapters.put(
+						adapterId,
+						(RowMergingDataAdapter) adapter);
+			}
+		}
+
+		if (mergingAdapters.isEmpty()) {
+			return new HBaseEntryIteratorWrapper(
+					adapterStore,
+					index,
+					resultsIterator,
+					queryFilter,
+					scanCallback);
+		}
+		else {
+			return new MergingEntryIterator(
+					adapterStore,
+					index,
+					resultsIterator,
+					queryFilter,
+					scanCallback,
+					mergingAdapters);
+		}
 	}
 
 	protected List<QueryFilter> getAllFiltersList() {

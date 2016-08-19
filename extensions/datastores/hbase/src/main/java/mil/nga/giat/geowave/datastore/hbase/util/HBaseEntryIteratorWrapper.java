@@ -59,6 +59,7 @@ public class HBaseEntryIteratorWrapper<T> extends
 			LOGGER.error("Row is not an HBase row Result.");
 			return null;
 		}
+
 		return HBaseUtils.decodeRow(
 				result,
 				adapterStore,

@@ -5,9 +5,17 @@ import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
+
+import org.apache.accumulo.core.client.AccumuloException;
+import org.apache.accumulo.core.client.AccumuloSecurityException;
+import org.apache.accumulo.core.client.TableNotFoundException;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.opengis.coverage.grid.GridCoverage;
+
+import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.GeometryFactory;
 
 import junit.framework.Assert;
 import mil.nga.giat.geowave.adapter.raster.RasterUtils;
@@ -22,25 +30,11 @@ import mil.nga.giat.geowave.core.index.Persistable;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.DataStore;
 import mil.nga.giat.geowave.core.store.IndexWriter;
-import mil.nga.giat.geowave.core.store.memory.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.operations.remote.options.DataStorePluginOptions;
 import mil.nga.giat.geowave.core.store.query.EverythingQuery;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
-import mil.nga.giat.geowave.datastore.accumulo.AccumuloDataStore;
-import mil.nga.giat.geowave.datastore.accumulo.util.ConnectorPool;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore;
 import mil.nga.giat.geowave.test.annotation.GeoWaveTestStore.GeoWaveStoreType;
-
-import org.apache.accumulo.core.client.AccumuloException;
-import org.apache.accumulo.core.client.AccumuloSecurityException;
-import org.apache.accumulo.core.client.Connector;
-import org.apache.accumulo.core.client.TableNotFoundException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.opengis.coverage.grid.GridCoverage;
-
-import com.vividsolutions.jts.geom.Envelope;
-import com.vividsolutions.jts.geom.GeometryFactory;
 
 @RunWith(GeoWaveITRunner.class)
 public class GeoWaveRasterIT
@@ -481,6 +475,8 @@ public class GeoWaveRasterIT
 			final RasterTileMergeStrategy<?> mergeStrategy )
 			throws IOException {
 
+		System.out.println("Beginning ingest.");
+
 		// just ingest a number of rasters
 		final DataStore dataStore = dataStoreOptions.createDataStore();
 		final RasterDataAdapter basicAdapter = RasterUtils.createDataAdapterTypeDouble(
@@ -526,6 +522,8 @@ public class GeoWaveRasterIT
 						raster));
 			}
 		}
+
+		System.out.println("Done with ingest.");
 	}
 
 	private static double getValue(
@@ -772,6 +770,7 @@ public class GeoWaveRasterIT
 									x,
 									y,
 									b);
+
 							final double sum = thisSample + nextSample;
 							final double average = sum / totalTiles;
 							thisRaster.setSample(
