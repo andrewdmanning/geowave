@@ -30,52 +30,11 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	BasicMapReduceIT.class,
 	GeoWaveRasterIT.class,
 
-	// LandsatIT.class, // Fails in HBase -
-	// java.lang.NullPointerException: null
-	// at
-	// mil.nga.giat.geowave.core.store.metadata.AbstractGeowavePersistence.getCombinedId(AbstractGeowavePersistence.java:82)
-	// at
-	// mil.nga.giat.geowave.core.store.metadata.AbstractGeowavePersistence.addObjectToCache(AbstractGeowavePersistence.java:91)
-	// at
-	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore.access$000(HBaseDataStatisticsStore.java:22)
-	// at
-	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore$StatisticsNativeIteratorWrapper.next(HBaseDataStatisticsStore.java:2
-	// 35)
-	// at
-	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore$StatisticsNativeIteratorWrapper.next(HBaseDataStatisticsStore.java:1
-	// 87)
-	// at
-	// mil.nga.giat.geowave.datastore.hbase.metadata.AbstractHBasePersistence.getObject(AbstractHBasePersistence.java:72)
-	// at
-	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore.getDataStatistics(HBaseDataStatisticsStore.java:73)
-	// at
-	// mil.nga.giat.geowave.adapter.raster.plugin.GeoWaveRasterReader.getOriginalEnvelope(GeoWaveRasterReader.java:322)
-	// at
-	// mil.nga.giat.geowave.adapter.raster.plugin.GeoWaveRasterReader.renderGridCoverage(GeoWaveRasterReader.java:523)
-	// at
-	// mil.nga.giat.geowave.test.landsat.LandsatIT.testMosaic(LandsatIT.java:180)
-
+	LandsatIT.class,
+	
 	// BulkIngestInputGenerationIT.class, // Accumulo-dependent
 
-	// KDERasterResizeIT.class, // Fails in HBase:
-	// java.lang.NullPointerException
-	// at
-	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore$StatisticsNativeIteratorWrapper.next(HBaseDataStatisticsStore.java:222)
-	// at
-	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore$StatisticsNativeIteratorWrapper.next(HBaseDataStatisticsStore.java:1)
-	// at
-	// mil.nga.giat.geowave.datastore.hbase.metadata.AbstractHBasePersistence.getObject(AbstractHBasePersistence.java:72)
-	// at
-	// mil.nga.giat.geowave.datastore.hbase.metadata.HBaseDataStatisticsStore.getDataStatistics(HBaseDataStatisticsStore.java:73)
-	// at
-	// mil.nga.giat.geowave.adapter.raster.plugin.GeoWaveRasterReader.getOriginalEnvelope(GeoWaveRasterReader.java:322)
-	// at
-	// mil.nga.giat.geowave.adapter.raster.plugin.GeoWaveRasterReader.renderGridCoverage(GeoWaveRasterReader.java:523)
-	// at
-	// mil.nga.giat.geowave.test.mapreduce.KDERasterResizeIT.testSamplesMatch(KDERasterResizeIT.java:259)
-	// at
-	// mil.nga.giat.geowave.test.mapreduce.KDERasterResizeIT.testKDEAndRasterResize(KDERasterResizeIT.java:151)
-
+	KDERasterResizeIT.class,
 	GeoWaveKMeansIT.class,
 	GeoWaveNNIT.class,
 
