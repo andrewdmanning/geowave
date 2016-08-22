@@ -242,7 +242,7 @@ public class HBaseDataStore extends
 						tempAdapterStore,
 						index,
 						iterator,
-						null,
+						dedupeFilter,
 						scanCallback));
 	}
 

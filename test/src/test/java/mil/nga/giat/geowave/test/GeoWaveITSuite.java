@@ -29,7 +29,6 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	BasicKafkaIT.class,
 	BasicMapReduceIT.class,
 	GeoWaveRasterIT.class,
-
 	LandsatIT.class,
 
 	// BulkIngestInputGenerationIT.class, // Accumulo-dependent
@@ -60,13 +59,12 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	SecondaryIndexingQueryIT.class,
 	DBScanIT.class,
 	SpatialTemporalQueryIT.class,
-
-	// PolygonDataIdQueryIT.class, // Fails in HBase - returns extra results
+	 PolygonDataIdQueryIT.class,
 
 	// ConfigCacheIT.class, // Accumulo-dependent - change from Accumulo*** to
 	// Memory*** and put in core-store
 
-	DataStatisticsStoreIT.class, // HBase-dependent
+	DataStatisticsStoreIT.class,
 })
 public class GeoWaveITSuite
 {
