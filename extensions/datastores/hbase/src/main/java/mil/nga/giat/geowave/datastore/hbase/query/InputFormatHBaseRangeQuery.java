@@ -71,6 +71,7 @@ public class InputFormatHBaseRangeQuery extends
 				null,
 				null,
 				null,
+				null,
 				queryOptions.getAuthorizations());
 
 		this.range = range;
@@ -80,8 +81,7 @@ public class InputFormatHBaseRangeQuery extends
 	@Override
 	protected List<Scan> getScanners(
 			final Integer limit,
-			final List<Filter> distributableFilters,
-			final CloseableIterator<DataAdapter<?>> adapters ) {
+			final List<Filter> distributableFilters ) {
 
 		final Scan scanner = new Scan();
 

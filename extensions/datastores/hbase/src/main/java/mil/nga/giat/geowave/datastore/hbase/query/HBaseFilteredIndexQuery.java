@@ -2,15 +2,13 @@ package mil.nga.giat.geowave.datastore.hbase.query;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.client.Scan;
@@ -29,9 +27,7 @@ import mil.nga.giat.geowave.core.store.ScanCallback;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
-import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
-import mil.nga.giat.geowave.core.store.index.CommonIndexValue;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.FilteredIndexQuery;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
@@ -48,16 +44,17 @@ public abstract class HBaseFilteredIndexQuery extends
 	protected final ScanCallback<?> scanCallback;
 	protected List<QueryFilter> clientFilters;
 	private final static Logger LOGGER = Logger.getLogger(HBaseFilteredIndexQuery.class);
-	private Collection<String> fieldIds = null;
 
 	public HBaseFilteredIndexQuery(
 			final List<ByteArrayId> adapterIds,
 			final PrimaryIndex index,
 			final ScanCallback<?> scanCallback,
+			final Pair<List<String>, DataAdapter<?>> fieldIds,
 			final String... authorizations ) {
 		super(
 				adapterIds,
 				index,
+				fieldIds,
 				authorizations);
 		this.scanCallback = scanCallback;
 	}
@@ -66,11 +63,6 @@ public abstract class HBaseFilteredIndexQuery extends
 	public void setClientFilters(
 			final List<QueryFilter> clientFilters ) {
 		this.clientFilters = clientFilters;
-	}
-
-	public void setFieldIds(
-			final Collection<String> fieldIds ) {
-		this.fieldIds = fieldIds;
 	}
 
 	private boolean validateAdapters(
@@ -119,15 +111,11 @@ public abstract class HBaseFilteredIndexQuery extends
 
 		final List<Filter> distributableFilters = getDistributableFilter();
 
-		CloseableIterator<DataAdapter<?>> adapters = null;
-		if ((fieldIds != null) && !fieldIds.isEmpty()) {
-			adapters = adapterStore.getAdapters();
-		}
-
 		final List<Scan> scanners = getScanners(
 				limit,
-				distributableFilters,
-				adapters);
+				distributableFilters
+		// ,adapters
+		);
 
 		final List<Iterator<Result>> resultsIterators = new ArrayList<Iterator<Result>>();
 		final List<ResultScanner> results = new ArrayList<ResultScanner>();
@@ -178,8 +166,7 @@ public abstract class HBaseFilteredIndexQuery extends
 
 	protected List<Scan> getScanners(
 			final Integer limit,
-			final List<Filter> distributableFilters,
-			final CloseableIterator<DataAdapter<?>> adapters ) {
+			final List<Filter> distributableFilters ) {
 		FilterList filterList = null;
 		if ((distributableFilters != null) && (distributableFilters.size() > 0)) {
 			filterList = new FilterList();
@@ -218,14 +205,6 @@ public abstract class HBaseFilteredIndexQuery extends
 
 				scanner.setFilter(filterList);
 
-				// a subset of fieldIds is being requested
-				if ((fieldIds != null) && !fieldIds.isEmpty()) {
-					// configure scanner to fetch only the fieldIds specified
-					handleSubsetOfFieldIds(
-							scanner,
-							adapters);
-				}
-
 				if ((limit != null) && (limit > 0) && (limit < scanner.getBatch())) {
 					scanner.setBatch(limit);
 				}
@@ -235,43 +214,6 @@ public abstract class HBaseFilteredIndexQuery extends
 		}
 
 		return scanners;
-	}
-
-	private void handleSubsetOfFieldIds(
-			final Scan scanner,
-			final CloseableIterator<DataAdapter<?>> dataAdapters ) {
-
-		final Set<ByteArrayId> uniqueDimensions = new HashSet<>();
-		for (final NumericDimensionField<? extends CommonIndexValue> dimension : index.getIndexModel().getDimensions()) {
-			uniqueDimensions.add(dimension.getFieldId());
-		}
-
-		while (dataAdapters.hasNext()) {
-
-			// dimension fields must be included
-			final DataAdapter<?> next = dataAdapters.next();
-			for (final ByteArrayId dimension : uniqueDimensions) {
-				scanner.addColumn(
-						next.getAdapterId().getBytes(),
-						dimension.getBytes());
-			}
-
-			// configure scanner to fetch only the specified fieldIds
-			for (final String fieldId : fieldIds) {
-				scanner.addColumn(
-						next.getAdapterId().getBytes(),
-						StringUtils.stringToBinary(fieldId));
-			}
-		}
-
-		try {
-			dataAdapters.close();
-		}
-		catch (final IOException e) {
-			LOGGER.error(
-					"Unable to close iterator",
-					e);
-		}
 	}
 
 	protected Iterator initIterator(

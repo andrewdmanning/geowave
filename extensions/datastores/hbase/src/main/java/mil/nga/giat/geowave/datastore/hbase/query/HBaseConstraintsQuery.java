@@ -45,6 +45,7 @@ public class HBaseConstraintsQuery extends
 			final Pair<DataAdapter<?>, Aggregation<?, ?, ?>> aggregation,
 			final IndexMetaData[] indexMetaData,
 			final DuplicateEntryCount duplicateCounts,
+			final Pair<List<String>, DataAdapter<?>> fieldIds,
 			final String[] authorizations ) {
 		this(
 				adapterIds,
@@ -56,6 +57,7 @@ public class HBaseConstraintsQuery extends
 				aggregation,
 				indexMetaData,
 				duplicateCounts,
+				fieldIds,
 				authorizations);
 	}
 
@@ -69,12 +71,14 @@ public class HBaseConstraintsQuery extends
 			final Pair<DataAdapter<?>, Aggregation<?, ?, ?>> aggregation,
 			final IndexMetaData[] indexMetaData,
 			final DuplicateEntryCount duplicateCounts,
+			final Pair<List<String>, DataAdapter<?>> fieldIds,
 			final String[] authorizations ) {
 
 		super(
 				adapterIds,
 				index,
 				scanCallback,
+				fieldIds,
 				authorizations);
 
 		base = new ConstraintsQuery(

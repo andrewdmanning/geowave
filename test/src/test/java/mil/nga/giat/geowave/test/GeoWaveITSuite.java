@@ -27,12 +27,10 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 @SuiteClasses({
 	GeoWaveBasicIT.class,
 	BasicKafkaIT.class,
-	BasicMapReduceIT.class,
+	// BasicMapReduceIT.class, // commented out to reduce runtime
 	GeoWaveRasterIT.class,
 	LandsatIT.class,
-
 	// BulkIngestInputGenerationIT.class, // Accumulo-dependent
-
 	KDERasterResizeIT.class,
 	GeoWaveKMeansIT.class,
 	GeoWaveNNIT.class,
@@ -59,11 +57,8 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 	SecondaryIndexingQueryIT.class,
 	DBScanIT.class,
 	SpatialTemporalQueryIT.class,
-	 PolygonDataIdQueryIT.class,
-
-	// ConfigCacheIT.class, // Accumulo-dependent - change from Accumulo*** to
-	// Memory*** and put in core-store
-
+	PolygonDataIdQueryIT.class,
+	ConfigCacheIT.class,
 	DataStatisticsStoreIT.class,
 })
 public class GeoWaveITSuite
@@ -71,16 +66,14 @@ public class GeoWaveITSuite
 	@BeforeClass
 	public static void setupSuite() {
 		synchronized (GeoWaveITRunner.MUTEX) {
-			GeoWaveITRunner.DEFER_CLEANUP.set(
-					true);
+			GeoWaveITRunner.DEFER_CLEANUP.set(true);
 		}
 	}
 
 	@AfterClass
 	public static void tearDownSuite() {
 		synchronized (GeoWaveITRunner.MUTEX) {
-			GeoWaveITRunner.DEFER_CLEANUP.set(
-					false);
+			GeoWaveITRunner.DEFER_CLEANUP.set(false);
 		}
 	}
 }

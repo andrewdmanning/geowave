@@ -310,6 +310,7 @@ public class HBaseDataStore extends
 						adapterIdsToQuery,
 						statisticsStore,
 						sanitizedQueryOptions.getAuthorizations()),
+				sanitizedQueryOptions.getFieldIdsAdapterPair(),
 				sanitizedQueryOptions.getAuthorizations());
 
 		return hbaseQuery.query(

@@ -1,6 +1,7 @@
 package mil.nga.giat.geowave.test.query;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.log4j.Logger;
 import org.geotools.data.DataUtilities;
@@ -56,8 +57,9 @@ public class PolygonDataIdQueryIT
 						new ByteArrayId(
 								StringUtils.stringToBinary(DATA_ID))));
 		int numResults = 0;
+		ArrayList<SimpleFeature> results = new ArrayList<SimpleFeature>();
 		while (matches.hasNext()) {
-			matches.next();
+			results.add(matches.next());
 			numResults++;
 		}
 		Assert.assertTrue(
