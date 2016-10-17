@@ -388,7 +388,9 @@ public class NoDataMetadataFactory
 											x,
 											y,
 											b));
-									noDataValuesPerBand[b].add(allNoDataValues[b][i]);
+									if(noDataValuesPerBand[b] != null){
+										noDataValuesPerBand[b].add(allNoDataValues[b][i]);
+									}
 								}
 							}
 						}

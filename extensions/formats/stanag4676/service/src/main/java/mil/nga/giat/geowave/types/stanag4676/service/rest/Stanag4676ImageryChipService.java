@@ -165,8 +165,7 @@ public class Stanag4676ImageryChipService
 					return Response
 							.serverError()
 							.entity(
-									"Error generating JPEG from image chip for mission = '" + mission + "', track = '"
-											+ track + "'")
+									"Error generating JPEG from image chip for mission/track.")
 							.build();
 				}
 			}
@@ -174,8 +173,7 @@ public class Stanag4676ImageryChipService
 		return Response
 				.serverError()
 				.entity(
-						"Cannot find image chip with mission = '" + mission + "', track = '" + track + "', time = '"
-								+ cal.getTime() + "'")
+						"Cannot find image chip with mission/track/time.")
 				.build();
 	}
 

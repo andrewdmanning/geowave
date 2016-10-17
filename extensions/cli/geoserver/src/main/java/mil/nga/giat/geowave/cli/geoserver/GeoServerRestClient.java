@@ -1213,7 +1213,12 @@ public class GeoServerRestClient
 
 		try {
 			// create the post XML
-			Document xmlDoc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+			factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+			
+			Document xmlDoc = factory.newDocumentBuilder().newDocument();
 
 			Element rootEl = xmlDoc.createElement("coverageStore");
 			xmlDoc.appendChild(rootEl);
