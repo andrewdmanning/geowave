@@ -155,6 +155,13 @@ public class GeoWaveRasterConfig
 		dbf.setIgnoringElementContentWhitespace(true);
 		dbf.setIgnoringComments(true);
 
+		dbf.setFeature(
+				"http://xml.org/sax/features/external-general-entities",
+				false);
+		dbf.setFeature(
+				"http://xml.org/sax/features/external-parameter-entities",
+				false);
+
 		final DocumentBuilder db = dbf.newDocumentBuilder();
 
 		// db.setEntityResolver(new ConfigEntityResolver(xmlURL));

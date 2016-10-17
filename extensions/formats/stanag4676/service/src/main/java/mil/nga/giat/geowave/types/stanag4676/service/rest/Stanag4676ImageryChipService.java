@@ -132,7 +132,7 @@ public class Stanag4676ImageryChipService
 					"Unablable to find image chip for " + chipNameStr + " at " + cal,
 					e1);
 			return Response.serverError().entity(
-					"Error generating JPEG from image chip for " + chipNameStr).build();
+					"Error generating JPEG from image chip").build();
 		}
 
 		if ((imageChip != null) && (imageChip instanceof ImageChip)) {
@@ -239,8 +239,7 @@ public class Stanag4676ImageryChipService
 			return Response
 					.serverError()
 					.entity(
-							"Video generation failed for " + videoNameStr + "'" + "\nException: "
-									+ e1.getLocalizedMessage() + "\n stack trace: "
+							"Video generation failed \nException: " + e1.getLocalizedMessage() + "\n stack trace: "
 									+ Arrays.toString(e1.getStackTrace()))
 					.build();
 		}
@@ -249,7 +248,7 @@ public class Stanag4676ImageryChipService
 
 		if (imageChips.isEmpty()) {
 			return Response.serverError().entity(
-					"Unable to retrieve image chips for " + videoNameStr).build();
+					"Unable to retrieve image chips").build();
 		}
 		else {
 			LOGGER.info("Sending Video for " + videoNameStr);
