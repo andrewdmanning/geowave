@@ -19,6 +19,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Transformer;
@@ -1267,6 +1268,7 @@ public class GeoServerRestClient
 			xformerFactory.setFeature(
 					"http://xml.org/sax/features/external-parameter-entities",
 					false);
+			xformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
 
 			Transformer xformer = xformerFactory.newTransformer();
 

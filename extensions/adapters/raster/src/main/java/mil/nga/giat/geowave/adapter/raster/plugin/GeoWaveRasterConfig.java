@@ -208,7 +208,8 @@ public class GeoWaveRasterConfig
 		}
 		final String scaleTo8Bit = params.get(ConfigParameter.SCALE_TO_8BIT.getConfigName());
 		if (scaleTo8Bit != null) {
-			if (scaleTo8Bit.trim().toLowerCase().equals(
+			if (scaleTo8Bit.trim().toLowerCase(
+					Locale.ENGLISH).equals(
 					"true")) {
 				result.scaleTo8Bit = true;
 			}
