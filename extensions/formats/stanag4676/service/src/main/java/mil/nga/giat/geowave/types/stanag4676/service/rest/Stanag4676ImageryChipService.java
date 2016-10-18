@@ -435,8 +435,10 @@ public class Stanag4676ImageryChipService
 				LOGGER.error("Image sequence not found");
 				return null;
 			}
-			LOGGER.debug("Found " + y + " of " + i + " new frames." + "  videoTrack timescale is "
-					+ videoTrack.getTimescale());
+			if (videoTrack != null) {
+				LOGGER.debug("Found " + y + " of " + i + " new frames." + "  videoTrack timescale is "
+						+ videoTrack.getTimescale());
+			}
 			muxer.mux(sink);
 
 			// ------------------------------------------------------------------
