@@ -263,9 +263,8 @@ public class GPXConsumerTest
 		}
 		else if (dir.getName().endsWith(
 				"gpx")) {
-			final InputStream is = new FileInputStream(
-					dir);
-			try {
+			try (final InputStream is = new FileInputStream(
+					dir);) {
 				final ByteArrayId indexId = new ByteArrayId(
 						"123".getBytes(StringUtils.GEOWAVE_CHAR_SET));
 				final Collection<ByteArrayId> indexIds = new ArrayList<ByteArrayId>();
@@ -298,10 +297,6 @@ public class GPXConsumerTest
 				System.out.println("Failed " + dir);
 				throw ex;
 			}
-			finally {
-				is.close();
-			}
-
 		}
 
 	}

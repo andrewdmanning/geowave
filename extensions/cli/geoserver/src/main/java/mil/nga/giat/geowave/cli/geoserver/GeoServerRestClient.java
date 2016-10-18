@@ -1267,9 +1267,9 @@ public class GeoServerRestClient
 			xformerFactory.setFeature(
 					"http://xml.org/sax/features/external-parameter-entities",
 					false);
-			
+
 			Transformer xformer = xformerFactory.newTransformer();
-			
+
 			DOMSource source = new DOMSource(
 					xmlDoc);
 			StreamResult result = new StreamResult(
