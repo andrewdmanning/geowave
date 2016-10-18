@@ -162,19 +162,13 @@ public class Stanag4676ImageryChipService
 					LOGGER.error(
 							"Unable to write image chip content to JPEG",
 							e);
-					return Response
-							.serverError()
-							.entity(
-									"Error generating JPEG from image chip for mission/track.")
-							.build();
+					return Response.serverError().entity(
+							"Error generating JPEG from image chip for mission/track.").build();
 				}
 			}
 		}
-		return Response
-				.serverError()
-				.entity(
-						"Cannot find image chip with mission/track/time.")
-				.build();
+		return Response.serverError().entity(
+				"Cannot find image chip with mission/track/time.").build();
 	}
 
 	// ------------------------------------------------------------------------------
@@ -291,14 +285,14 @@ public class Stanag4676ImageryChipService
 							"Unable to find video file",
 							fnfe);
 					return Response.serverError().entity(
-							"Video generation failed for " + videoNameStr).build();
+							"Video generation failed.").build();
 				}
 				catch (final IOException e) {
 					LOGGER.error(
 							"Unable to write video file",
 							e);
 					return Response.serverError().entity(
-							"Video generation failed for " + videoNameStr).build();
+							"Video generation failed.").build();
 				}
 
 			}
@@ -307,7 +301,7 @@ public class Stanag4676ImageryChipService
 						"Unable to write video file",
 						e);
 				return Response.serverError().entity(
-						"Video generation failed for " + videoNameStr).build();
+						"Video generation failed.").build();
 			}
 		}
 	}

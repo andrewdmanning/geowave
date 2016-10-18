@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.media.jai.Interpolation;
@@ -196,7 +197,8 @@ public class GeoWaveRasterConfig
 		}
 		final String equalizeHistogram = params.get(ConfigParameter.EQUALIZE_HISTOGRAM.getConfigName());
 		if (equalizeHistogram != null) {
-			if (equalizeHistogram.trim().toLowerCase().equals(
+			if (equalizeHistogram.trim().toLowerCase(
+					Locale.ENGLISH).equals(
 					"true")) {
 				result.equalizeHistogramOverride = true;
 			}

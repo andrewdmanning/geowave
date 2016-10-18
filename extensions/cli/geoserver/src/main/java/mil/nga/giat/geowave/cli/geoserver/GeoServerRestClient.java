@@ -1215,9 +1215,13 @@ public class GeoServerRestClient
 			// create the post XML
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-			factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-			factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-			
+			factory.setFeature(
+					"http://xml.org/sax/features/external-general-entities",
+					false);
+			factory.setFeature(
+					"http://xml.org/sax/features/external-parameter-entities",
+					false);
+
 			Document xmlDoc = factory.newDocumentBuilder().newDocument();
 
 			Element rootEl = xmlDoc.createElement("coverageStore");
@@ -1255,7 +1259,17 @@ public class GeoServerRestClient
 			rootEl.appendChild(urlEl);
 
 			// use a transformer to create the xml string for the rest call
-			Transformer xformer = TransformerFactory.newInstance().newTransformer();
+			TransformerFactory xformerFactory = TransformerFactory.newInstance();
+
+			xformerFactory.setFeature(
+					"http://xml.org/sax/features/external-general-entities",
+					false);
+			xformerFactory.setFeature(
+					"http://xml.org/sax/features/external-parameter-entities",
+					false);
+			
+			Transformer xformer = xformerFactory.newTransformer();
+			
 			DOMSource source = new DOMSource(
 					xmlDoc);
 			StreamResult result = new StreamResult(

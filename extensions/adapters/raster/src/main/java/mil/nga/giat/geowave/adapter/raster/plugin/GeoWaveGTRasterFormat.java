@@ -208,7 +208,8 @@ public class GeoWaveGTRasterFormat extends
 			return false;
 		}
 
-		if (!sourceUrl.getPath().toLowerCase(Locale.ENGLISH).endsWith(
+		if (!sourceUrl.getPath().toLowerCase(
+				Locale.ENGLISH).endsWith(
 				".xml")) {
 			return false;
 		}
