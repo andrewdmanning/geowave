@@ -1269,6 +1269,7 @@ public class GeoServerRestClient
 					"http://xml.org/sax/features/external-parameter-entities",
 					false);
 			xformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+			xformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
 
 			Transformer xformer = xformerFactory.newTransformer();
 
