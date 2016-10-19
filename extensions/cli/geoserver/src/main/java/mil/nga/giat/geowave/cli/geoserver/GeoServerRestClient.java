@@ -1260,33 +1260,33 @@ public class GeoServerRestClient
 			rootEl.appendChild(urlEl);
 
 			// use a transformer to create the xml string for the rest call
-			TransformerFactory xformerFactory = TransformerFactory.newInstance();
-
-			xformerFactory.setFeature(
-					"http://xml.org/sax/features/external-general-entities",
-					false);
-			xformerFactory.setFeature(
-					"http://xml.org/sax/features/external-parameter-entities",
-					false);
-			xformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-			xformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-
-			Transformer xformer = xformerFactory.newTransformer();
-
-			DOMSource source = new DOMSource(
-					xmlDoc);
-			StreamResult result = new StreamResult(
-					new StringWriter());
-
-			xformer.transform(
-					source,
-					result);
-
-			coverageXml = result.getWriter().toString();
+//			TransformerFactory xformerFactory = TransformerFactory.newInstance();
+//
+//			xformerFactory.setFeature(
+//					"http://xml.org/sax/features/external-general-entities",
+//					false);
+//			xformerFactory.setFeature(
+//					"http://xml.org/sax/features/external-parameter-entities",
+//					false);
+//			xformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+//			xformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+//
+//			Transformer xformer = xformerFactory.newTransformer();
+//
+//			DOMSource source = new DOMSource(
+//					xmlDoc);
+//			StreamResult result = new StreamResult(
+//					new StringWriter());
+//
+//			xformer.transform(
+//					source,
+//					result);
+//
+//			coverageXml = result.getWriter().toString();
 		}
-		catch (TransformerException e) {
-			e.printStackTrace();
-		}
+//		catch (TransformerException e) {
+//			e.printStackTrace();
+//		}
 		catch (ParserConfigurationException e) {
 			e.printStackTrace();
 		}
