@@ -105,6 +105,7 @@ public class GpxUtils
 		try (final FileInputStream fis = new FileInputStream(
 				metadataFile); final InputStream in = new BufferedInputStream(
 				fis);) {
+			inputFactory.setProperty("javax.xml.stream.isSupportingExternalEntities", false);			
 			eventReader = inputFactory.createXMLEventReader(in);
 			while (eventReader.hasNext()) {
 				XMLEvent event = eventReader.nextEvent();
