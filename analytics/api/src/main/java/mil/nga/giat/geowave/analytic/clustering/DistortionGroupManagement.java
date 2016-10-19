@@ -222,7 +222,7 @@ public class DistortionGroupManagement
 		}
 		catch (final Exception ex) {
 			LOGGER.error(
-					"Cannot detremine groups for batch" + batchId,
+					"Cannot determine groups for batch",
 					ex);
 			return 1;
 		}
