@@ -174,7 +174,8 @@ public class KMeansJumpJobRunner extends
 						GlobalParameters.Global.BATCH_ID,
 						iterationBatchId);
 				jumpRunner.setReducerCount(k);
-//				LOGGER.info("KMeans for k: " + k + " and batch " + currentBatchId);
+				// LOGGER.info("KMeans for k: " + k + " and batch " +
+				// currentBatchId);
 				final int status = super.run(
 						configuration,
 						propertyManagement);

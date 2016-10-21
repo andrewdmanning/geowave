@@ -81,48 +81,28 @@ public class KafkaCommandLineOptions
 	private static boolean readAndVerifyProperties(
 			final String kafkaPropertiesPath,
 			final Properties properties ) {
-		InputStreamReader inputStreamReader = null;
-		FileInputStream fileInputStream = null;
-		try {
-			final File propFile = new File(
-					kafkaPropertiesPath);
-			if (!propFile.exists()) {
-				LOGGER.fatal("File does not exist: " + kafkaPropertiesPath);
-				return false;
-			}
-			fileInputStream = new FileInputStream(
-					propFile);
-			inputStreamReader = new InputStreamReader(
-					fileInputStream,
-					"UTF-8");
+
+		final File propFile = new File(
+				kafkaPropertiesPath);
+		if (!propFile.exists()) {
+			LOGGER.fatal("File does not exist: " + kafkaPropertiesPath);
+			return false;
+		}
+
+		try (final FileInputStream fileInputStream = new FileInputStream(
+				propFile); final InputStreamReader inputStreamReader = new InputStreamReader(
+				fileInputStream,
+				"UTF-8")) {
 			properties.load(inputStreamReader);
 
 			inputStreamReader.close();
-		}
-		catch (final FileNotFoundException e) {
-			LOGGER.fatal(
-					"Kafka properties file not found: ",
-					e);
-			return false;
+
 		}
 		catch (final IOException e) {
 			LOGGER.fatal(
 					"Unable to load Kafka properties file: ",
 					e);
 			return false;
-		}
-		finally {
-			try {
-				if (inputStreamReader != null) {
-					inputStreamReader.close();
-				}
-				if (fileInputStream != null) {
-					fileInputStream.close();
-				}
-			}
-			catch (IOException e) {
-				LOGGER.warn("Unable to close input streams.");
-			}
 		}
 
 		return true;

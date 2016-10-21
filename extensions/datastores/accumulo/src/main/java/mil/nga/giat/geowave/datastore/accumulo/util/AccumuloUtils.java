@@ -755,11 +755,11 @@ public class AccumuloUtils
 				BigDecimal delta = dMax.subtract(dMin);
 				delta = delta.divideToIntegralValue(new BigDecimal(
 						numSplits));
-	
+
 				for (int ii = 1; ii <= numberSplits; ii++) {
 					final BigDecimal temp = delta.multiply(BigDecimal.valueOf(ii));
 					final BigInteger value = min.add(temp.toBigInteger());
-	
+
 					final Text split = new Text(
 							value.toByteArray());
 					splits.add(split);

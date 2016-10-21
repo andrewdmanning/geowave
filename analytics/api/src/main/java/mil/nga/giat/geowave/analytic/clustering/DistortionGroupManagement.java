@@ -210,7 +210,8 @@ public class DistortionGroupManagement
 
 			for (final DistortionGroup grp : groupDistortions.values()) {
 				final int optimalK = grp.bestCount();
-//				LOGGER.info("Batch: " + batchId + "; Group: " + grp.groupID + "; Optimal Cluster Size: " + optimalK);
+				// LOGGER.info("Batch: " + batchId + "; Group: " + grp.groupID +
+				// "; Optimal Cluster Size: " + optimalK);
 				final String kbatchId = batchId + "_" + optimalK;
 				centroidManager.transferBatch(
 						kbatchId,
