@@ -98,14 +98,14 @@ public class BasicAccumuloOperations implements
 			final String zookeeperUrl,
 			final String instanceName,
 			final String userName,
-			final String stupid,
+			final String password,
 			final String tableNamespace )
 			throws AccumuloException,
 			AccumuloSecurityException {
 		this(
 				null,
 				tableNamespace);
-		this.password = stupid;
+		this.password = password;
 		connector = ConnectorPool.getInstance().getConnector(
 				zookeeperUrl,
 				instanceName,

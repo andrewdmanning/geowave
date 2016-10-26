@@ -37,7 +37,7 @@ public class JCommanderTranslationMap
 	// classpath.
 	public static final String NAMES_MEMBER = "names";
 	public static final String REQUIRED_MEMBER = "required";
-	public static final String STUPID_MEMBER = "password";
+	public static final String PASSWORD_MEMBER = "password";
 	public static final String PREFIX_SEPARATOR = ".";
 
 	// Tells us how to translate a field (indexed by facade field id) to
@@ -271,7 +271,7 @@ public class JCommanderTranslationMap
 
 				if (entry.isPassword() && entry.hasValue()) {
 					disableBooleanMember(
-							STUPID_MEMBER,
+							PASSWORD_MEMBER,
 							newField);
 				}
 

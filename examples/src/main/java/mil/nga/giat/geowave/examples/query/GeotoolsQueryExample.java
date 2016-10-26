@@ -124,7 +124,7 @@ public class GeotoolsQueryExample
 			InterruptedException {
 
 		final String ACCUMULO_USER = "root";
-		final String ACCUMULO_STUPID = "Ge0wave";
+		final String ACCUMULO_PASSWORD = "Ge0wave";
 		final String TABLE_NAMESPACE = "";
 
 		tempAccumuloDir = Files.createTempDir();
@@ -132,7 +132,7 @@ public class GeotoolsQueryExample
 		accumulo = MiniAccumuloClusterFactory.newAccumuloCluster(
 				new MiniAccumuloConfigImpl(
 						tempAccumuloDir,
-						ACCUMULO_STUPID),
+						ACCUMULO_PASSWORD),
 				GeotoolsQueryExample.class);
 
 		accumulo.start();
@@ -142,7 +142,7 @@ public class GeotoolsQueryExample
 						accumulo.getZooKeepers(),
 						accumulo.getInstanceName(),
 						ACCUMULO_USER,
-						ACCUMULO_STUPID,
+						ACCUMULO_PASSWORD,
 						TABLE_NAMESPACE));
 	}
 

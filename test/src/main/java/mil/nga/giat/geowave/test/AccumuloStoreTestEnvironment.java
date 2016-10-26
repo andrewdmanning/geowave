@@ -52,7 +52,7 @@ public class AccumuloStoreTestEnvironment implements
 	}
 
 	private final static Logger LOGGER = Logger.getLogger(AccumuloStoreTestEnvironment.class);
-	protected static final String DEFAULT_MINI_ACCUMULO_STUPID = "Ge0wave";
+	protected static final String DEFAULT_MINI_ACCUMULO_PASSWORD = "Ge0wave";
 	protected static final String HADOOP_WINDOWS_UTIL = "winutils.exe";
 	protected static final String HADOOP_DLL = "hadoop.dll";
 	protected static final File TEMP_DIR = new File(
@@ -71,7 +71,7 @@ public class AccumuloStoreTestEnvironment implements
 	protected String zookeeper;
 	protected String accumuloInstance;
 	protected String accumuloUser;
-	protected String accumuloStupid;
+	protected String accumuloPassword;
 	protected MiniAccumuloClusterImpl miniAccumulo;
 
 	private ExecutorService executor;
@@ -91,13 +91,13 @@ public class AccumuloStoreTestEnvironment implements
 			}
 		}
 
-		if (!TestUtils.isSet(accumuloInstance) || !TestUtils.isSet(accumuloUser) || !TestUtils.isSet(accumuloStupid)) {
+		if (!TestUtils.isSet(accumuloInstance) || !TestUtils.isSet(accumuloUser) || !TestUtils.isSet(accumuloPassword)) {
 
 			accumuloInstance = System.getProperty("instance");
 			accumuloUser = System.getProperty("username");
-			accumuloStupid = System.getProperty("password");
+			accumuloPassword = System.getProperty("password");
 			if (!TestUtils.isSet(accumuloInstance) || !TestUtils.isSet(accumuloUser)
-					|| !TestUtils.isSet(accumuloStupid)) {
+					|| !TestUtils.isSet(accumuloPassword)) {
 				try {
 
 					// TEMP_DIR = Files.createTempDir();
@@ -110,7 +110,7 @@ public class AccumuloStoreTestEnvironment implements
 					TEMP_DIR.deleteOnExit();
 					final MiniAccumuloConfigImpl config = new MiniAccumuloConfigImpl(
 							TEMP_DIR,
-							DEFAULT_MINI_ACCUMULO_STUPID);
+							DEFAULT_MINI_ACCUMULO_PASSWORD);
 					config.setZooKeeperPort(Integer.parseInt(zookeeper.split(":")[1]));
 					config.setNumTservers(2);
 
@@ -121,7 +121,7 @@ public class AccumuloStoreTestEnvironment implements
 					startMiniAccumulo(config);
 					accumuloInstance = miniAccumulo.getInstanceName();
 					accumuloUser = "root";
-					accumuloStupid = DEFAULT_MINI_ACCUMULO_STUPID;
+					accumuloPassword = DEFAULT_MINI_ACCUMULO_PASSWORD;
 				}
 				catch (IOException | InterruptedException e) {
 					LOGGER.warn(
@@ -245,7 +245,7 @@ public class AccumuloStoreTestEnvironment implements
 		zookeeper = null;
 		accumuloInstance = null;
 		accumuloUser = null;
-		accumuloStupid = null;
+		accumuloPassword = null;
 		if (miniAccumulo != null) {
 			try {
 
@@ -318,7 +318,7 @@ public class AccumuloStoreTestEnvironment implements
 		final AccumuloRequiredOptions opts = new AccumuloRequiredOptions();
 		opts.setGeowaveNamespace(namespace);
 		opts.setUser(accumuloUser);
-		opts.setPassword(accumuloStupid);
+		opts.setPassword(accumuloPassword);
 		opts.setInstance(accumuloInstance);
 		opts.setZookeeper(zookeeper);
 		pluginOptions.selectPlugin(new AccumuloDataStoreFactory().getName());
@@ -339,7 +339,7 @@ public class AccumuloStoreTestEnvironment implements
 	}
 
 	public String getAccumuloPassword() {
-		return accumuloStupid;
+		return accumuloPassword;
 	}
 
 	@Override
