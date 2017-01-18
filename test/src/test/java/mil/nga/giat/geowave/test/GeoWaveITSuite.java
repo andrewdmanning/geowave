@@ -28,27 +28,27 @@ import mil.nga.giat.geowave.test.store.DataStatisticsStoreIT;
 
 @RunWith(GeoWaveITSuiteRunner.class)
 @SuiteClasses({
-	GeoWaveBasicSpatialVectorIT.class,
-	GeoWaveBasicSpatialTemporalVectorIT.class,
-	GeoWaveVectorSerializationIT.class,
-	BasicKafkaIT.class,
-	BasicMapReduceIT.class,
-	GeoWaveBasicRasterIT.class,
+//	GeoWaveBasicSpatialVectorIT.class,
+//	GeoWaveBasicSpatialTemporalVectorIT.class,
+//	GeoWaveVectorSerializationIT.class,
+//	BasicKafkaIT.class,
+//	BasicMapReduceIT.class,
+//	GeoWaveBasicRasterIT.class,
 	LandsatIT.class,
-	BulkIngestInputGenerationIT.class,
-	KDERasterResizeIT.class,
-	// GeoWaveKMeansIT.class,
-	GeoWaveNNIT.class,
-	GeoServerIT.class,
-	GeoWaveServicesIT.class,
-	GeoWaveIngestGeoserverIT.class,
-	AttributesSubsetQueryIT.class,
-	DBScanIT.class,
+//	BulkIngestInputGenerationIT.class,
+//	KDERasterResizeIT.class,
+//	// GeoWaveKMeansIT.class,
+//	GeoWaveNNIT.class,
+//	GeoServerIT.class,
+//	GeoWaveServicesIT.class,
+//	GeoWaveIngestGeoserverIT.class,
+//	AttributesSubsetQueryIT.class,
+//	DBScanIT.class,
 	SpatialTemporalQueryIT.class,
-	PolygonDataIdQueryIT.class,
-	ConfigCacheIT.class,
-	DataStatisticsStoreIT.class,
-	SecondaryIndexIT.class
+//	PolygonDataIdQueryIT.class,
+//	ConfigCacheIT.class,
+//	DataStatisticsStoreIT.class,
+//	SecondaryIndexIT.class
 })
 public class GeoWaveITSuite
 {
