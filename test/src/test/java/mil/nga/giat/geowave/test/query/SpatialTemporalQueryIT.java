@@ -625,23 +625,23 @@ public class SpatialTemporalQueryIT
 
 	}
 
-	@Test
-	public void testQueryMultipleBinsYear()
-			throws IOException,
-			CQLException {
-		final QueryOptions options = new QueryOptions();
-		options.setIndex(YEAR_INDEX);
-		currentGeotoolsIndex = YEAR_INDEX;
-		final Calendar cal = getInitialYearCalendar();
-
-		testQueryMultipleBins(
-				cal,
-				Calendar.YEAR,
-				MULTI_YEAR_MIN,
-				MULTI_YEAR_MAX,
-				options,
-				"year");
-	}
+//	@Test
+//	public void testQueryMultipleBinsYear()
+//			throws IOException,
+//			CQLException {
+//		final QueryOptions options = new QueryOptions();
+//		options.setIndex(YEAR_INDEX);
+//		currentGeotoolsIndex = YEAR_INDEX;
+//		final Calendar cal = getInitialYearCalendar();
+//
+//		testQueryMultipleBins(
+//				cal,
+//				Calendar.YEAR,
+//				MULTI_YEAR_MIN,
+//				MULTI_YEAR_MAX,
+//				options,
+//				"year");
+//	}
 
 	private void testTimeRangeAcrossBins(
 			final Calendar cal,
