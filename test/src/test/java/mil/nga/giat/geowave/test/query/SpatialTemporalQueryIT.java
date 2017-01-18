@@ -89,6 +89,7 @@ public class SpatialTemporalQueryIT
 
 	@GeoWaveTestStore({
 		GeoWaveStoreType.ACCUMULO,
+		// GeoWaveStoreType.BIGTABLE,
 		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStoreOptions;
@@ -558,7 +559,7 @@ public class SpatialTemporalQueryIT
 				fidResults);
 
 		final Set<String> geotoolsFidResults = new HashSet<String>();
-		// now make sure geotools results match
+		// now make sure geotools results match//
 		try (final SimpleFeatureIterator features = geowaveGtDataStore.getFeatureSource(
 				adapterId).getFeatures(
 				CQL.toFilter(cqlPredicate)).features()) {
